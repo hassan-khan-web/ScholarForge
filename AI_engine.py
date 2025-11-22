@@ -11,8 +11,6 @@ import json
 import markdown
 from lxml import html
 import html as html_parser # Import for escaping
-
-# --- MODIFIED: Imports for PDF Fix ---
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -22,7 +20,7 @@ from reportlab.lib import colors
 
 # ---
 # ---
-AI_MODEL_STRING = "nvidia/nemotron-nano-12b-v2-vl:free"
+AI_MODEL_STRING = "x-ai/grok-4.1-fast:free"
 # ---
 # ---
 
