@@ -7,24 +7,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <style>
-        /* ========================================
-           1. THEME ENGINE
-           ========================================
-        */
-
-        /* --- DEFAULT THEME (Tokyo Night) --- */
+        /* --- THEME ENGINE (Tokyo Night Default) --- */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a1b26; /* Deep Storm Blue */
+            background-color: #1a1b26;
             background-image: radial-gradient(circle at 0% 0%, #2f334d 0%, transparent 40%), 
                               radial-gradient(circle at 100% 100%, #16161e 0%, transparent 40%);
-            color: #a9b1d6; /* Soft Blue-Grey */
+            color: #a9b1d6;
             transition: background 0.3s ease, color 0.3s ease;
             height: 100vh; 
             overflow: hidden; 
@@ -32,7 +26,7 @@
 
         h1, h2, h3, .sidebar-title { color: #c0caf5; letter-spacing: -0.02em; }
 
-        /* --- GLASS CONTAINERS --- */
+        /* Glass Effect */
         .glass-container {
             background: rgba(36, 40, 59, 0.8); 
             backdrop-filter: blur(16px);
@@ -42,26 +36,22 @@
             transition: all 0.3s ease;
         }
 
-        /* --- SIDEBAR & BORDERS --- */
+        /* Sidebar & Borders */
         #sidebar {
             background: rgba(26, 27, 38, 0.95) !important; 
             border-right: 1px solid rgba(122, 162, 247, 0.1);
         }
-        /* Sidebar Footer Line (Default) */
         .sidebar-footer { border-top: 1px solid rgba(122, 162, 247, 0.1); }
         
-        #sidebar .sidebar-title { color: #7aa2f7; }
         #sidebar button, #sidebar a { color: #565f89; }
         #sidebar button:hover, #sidebar a:hover { color: #c0caf5; background: rgba(122, 162, 247, 0.1); }
 
-        /* --- PANEL HEADERS (Settings/Download) --- */
+        /* Panels & Settings */
         .panel-header { border-bottom: 1px solid rgba(122, 162, 247, 0.1); }
-
-        /* --- TEXT COLORS (Settings) --- */
         .settings-text-main { color: #c0caf5; }
         .settings-text-sub { color: #565f89; }
 
-        /* --- INPUTS --- */
+        /* Inputs */
         #query, #chat-input {
             background: #16161e; border: 1px solid #292e42; color: #c0caf5; font-family: 'Inter', sans-serif;
         }
@@ -74,211 +64,141 @@
             background-clip: text; text-fill-color: transparent;
         }
 
-
-        /* ========================================
-           2. LIGHT THEME OVERRIDES (Day Mode)
-           ========================================
-        */
+        /* --- LIGHT THEME OVERRIDES --- */
         body.light-theme {
-            background-color: #f3f4f6; 
-            background-image: none;
-            color: #1f2937; 
+            background-color: #f3f4f6; background-image: none; color: #1f2937; 
         }
-
         .light-theme .glass-container {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #e5e7eb; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            background: rgba(255, 255, 255, 0.95); border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
-
-        /* Sidebar Light */
         .light-theme #sidebar {
-            background: #ffffff !important;
-            border-right: 1px solid #e5e7eb;
+            background: #ffffff !important; border-right: 1px solid #e5e7eb;
         }
-        .light-theme .sidebar-footer { border-top: 1px solid #e5e7eb; } /* Visible Light Grey Line */
-        
-        .light-theme .sidebar-title { color: #2563eb; }
+        .light-theme .sidebar-footer { border-top: 1px solid #e5e7eb; }
         .light-theme #sidebar button, .light-theme #sidebar a { color: #64748b; }
-        .light-theme #sidebar button:hover, .light-theme #sidebar a:hover { 
-            color: #1f2937; background: #f1f5f9; 
-        }
-
-        /* Panels Light */
+        .light-theme #sidebar button:hover, .light-theme #sidebar a:hover { color: #1f2937; background: #f1f5f9; }
         .light-theme .panel-header { border-bottom: 1px solid #e5e7eb; }
-        .light-theme .settings-text-main { color: #111827; } /* Pitch Black for readability */
-        .light-theme .settings-text-sub { color: #4b5563; } /* Dark Grey */
-
-        /* Inputs Light */
+        .light-theme .settings-text-main { color: #111827; }
+        .light-theme .settings-text-sub { color: #4b5563; }
         .light-theme #query, .light-theme #chat-input {
             background: #ffffff; border: 1px solid #d1d5db; color: #1f2937;
         }
         .light-theme #query:focus, .light-theme #chat-input:focus {
             border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
         }
-
         .light-theme h1, .light-theme h2, .light-theme h3 { color: #111827; }
         .light-theme .gradient-text {
             background: none; -webkit-text-fill-color: #2563eb; text-fill-color: #2563eb;
         }
 
-
-        /* ========================================
-           3. DARK THEME OVERRIDES (OLED Mode)
-           ========================================
-        */
+        /* --- DARK THEME OVERRIDES --- */
         body.dark-theme {
-            background-color: #000000; 
-            background-image: none;
-            color: #e5e5e5;
+            background-color: #000000; background-image: none; color: #e5e5e5;
         }
-
         .dark-theme .glass-container {
-            background: rgba(18, 18, 18, 0.9);
-            border: 1px solid #333;
-            box-shadow: none;
+            background: rgba(18, 18, 18, 0.9); border: 1px solid #333; box-shadow: none;
         }
-
-        /* Sidebar Dark */
         .dark-theme #sidebar {
-            background: #000000 !important;
-            border-right: 1px solid #333;
+            background: #000000 !important; border-right: 1px solid #333;
         }
-        .dark-theme .sidebar-footer { border-top: 1px solid #333; } /* Visible Dark Line */
-
-        .dark-theme .sidebar-title { color: #ffffff; }
+        .dark-theme .sidebar-footer { border-top: 1px solid #333; }
         .dark-theme #sidebar button, .dark-theme #sidebar a { color: #a3a3a3; }
-        .dark-theme #sidebar button:hover, .dark-theme #sidebar a:hover { 
-            color: #ffffff; background: #1a1a1a; 
-        }
-
-        /* Panels Dark */
+        .dark-theme #sidebar button:hover, .dark-theme #sidebar a:hover { color: #ffffff; background: #1a1a1a; }
         .dark-theme .panel-header { border-bottom: 1px solid #333; }
         .dark-theme .settings-text-main { color: #ffffff; }
         .dark-theme .settings-text-sub { color: #a3a3a3; }
-
-        /* Inputs Dark */
         .dark-theme #query, .dark-theme #chat-input {
             background: #171717; border: 1px solid #404040; color: #ffffff;
         }
         .dark-theme #query:focus, .dark-theme #chat-input:focus {
             border-color: #ffffff; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
         }
-
         .dark-theme h1, .dark-theme h2, .dark-theme h3 { color: #ffffff; }
         .dark-theme .gradient-text {
-            background: linear-gradient(to right, #ffffff, #a3a3a3);
-            -webkit-background-clip: text; text-fill-color: transparent;
+            background: linear-gradient(to right, #ffffff, #a3a3a3); -webkit-background-clip: text; text-fill-color: transparent;
         }
 
-
-        /* ========================================
-           4. UTILS
-           ========================================
-        */
+        /* --- UTILS --- */
         .custom-select {
             -webkit-appearance: none; appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237aa2f7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
             background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1em 1em; padding-right: 2.5rem;
         }
-        .light-theme .custom-select {
-             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f2937' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-        }
-        .dark-theme .custom-select {
-             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-        }
+        .light-theme .custom-select { background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f2937' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); }
 
-        /* Chat Styles */
-        .chat-turn { display: flex; gap: 1rem; margin-bottom: 2rem; line-height: 1.7; }
-        .chat-icon { width: 2rem; height: 2rem; flex-shrink: 0; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; }
-        .chat-content { flex-grow: 1; padding-top: 0.25rem; }
-        
-        .chat-icon.bot-icon { background-color: #bb9af7; }
-        .chat-icon.user-icon { background-color: #7aa2f7; }
-        #chat-submit-btn { background-color: #7aa2f7; position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); width: 2.75rem; height: 2.75rem; border-radius: 0.75rem; color: white; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s ease; }
-        #chat-submit-btn:hover { background-color: #2ac3de; }
-
-        .light-theme .chat-icon.bot-icon { background-color: #4f46e5; }
-        .light-theme .chat-icon.user-icon { background-color: #2563eb; }
-        .light-theme #chat-submit-btn { background-color: #2563eb; }
-        
-        .dark-theme .chat-icon.bot-icon { background-color: #6366f1; }
-        .dark-theme .chat-icon.user-icon { background-color: #ffffff; color: black; }
-        .dark-theme #chat-submit-btn { background-color: #ffffff; color: black; }
-
-        /* Report Typography */
+        /* Report Output */
         #report-output h1 { font-size: 2.5rem; margin-top: 2rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(122, 162, 247, 0.2); color: #c0caf5; }
         #report-output h2 { font-size: 1.875rem; font-weight: 600; margin-top: 1.75rem; margin-bottom: 1rem; }
         #report-output h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; }
         #report-output p { line-height: 1.8; margin-bottom: 1.5rem; font-size: 1.05rem; }
         #report-output ul, #report-output ol { margin-left: 1.5rem; margin-bottom: 1.25rem; list-style-position: outside; }
         #report-output pre { background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
-
-        /* Scrollbars & Animations */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(86, 95, 137, 0.5); border-radius: 20px; }
-        
-        .nav-text, .sidebar-title { opacity: 0; visibility: hidden; max-width: 0; white-space: nowrap; transition: all 0.3s ease; }
-        #sidebar.is-expanded { width: 16rem; }
-        #sidebar.is-expanded .nav-text, #sidebar.is-expanded .sidebar-title { opacity: 1; visibility: visible; max-width: 200px; margin-left: 0.75rem; }
+
+        /* SIDEBAR EXPANSION ANIMATIONS */
+        .nav-text { opacity: 0; visibility: hidden; max-width: 0; white-space: nowrap; transition: all 0.3s ease; }
+        #sidebar.is-expanded { width: 13rem; }
+        #sidebar.is-expanded .nav-text { opacity: 1; visibility: visible; max-width: 200px; margin-left: 0.75rem; }
 
     </style>
 </head>
 <body class="min-h-screen flex">
     
-    <!-- SIDEBAR -->
-    <nav id="sidebar" class="flex flex-col h-screen w-20 glass-container border-r-0 rounded-r-2xl z-50 transition-all duration-300 ease-in-out shrink-0">
+    <nav id="sidebar" class="flex flex-col h-screen w-16 glass-container border-r-0 rounded-r-2xl z-50 transition-all duration-300 ease-in-out shrink-0">
         
-        <div class="p-4 flex items-center justify-center" id="logo-container">
-            <button id="menu-toggle-btn" class="p-2 rounded-xl transition-colors hover:bg-white/5 text-gray-400 hover:text-white">
+        <div class="p-3 flex items-center justify-center h-16" id="logo-container">
+            <button id="menu-toggle-btn" class="p-2 rounded-xl transition-colors hover:bg-white/5 text-gray-400 hover:text-white shrink-0">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
             </button>
-            <h2 class="sidebar-title font-bold text-xl tracking-tight">ScholarForge</h2>
         </div>
 
-        <div class="flex-grow flex flex-col gap-2 p-3 mt-4">
-            <a href="{{ url_for('index') }}" class="flex items-center p-3 rounded-xl transition-all group text-gray-400 hover:text-white hover:bg-white/5">
+        <div class="flex-grow flex flex-col gap-2 p-2 mt-4">
+            <a href="{{ url_for('index') }}" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-400 hover:text-white hover:bg-white/5 justify-center">
                 <svg class="w-6 h-6 shrink-0 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 <span class="nav-text font-medium">Research</span>
             </a>
             
-            <a href="{{ url_for('chat_page') }}" class="flex items-center p-3 rounded-xl transition-all group text-gray-400 hover:text-white hover:bg-white/5">
+            <a href="{{ url_for('chat_page') }}" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-400 hover:text-white hover:bg-white/5 justify-center">
                 <svg class="w-6 h-6 shrink-0 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
                 <span class="nav-text font-medium">Assistant</span>
             </a>
         </div>
 
-        <!-- SIDEBAR FOOTER: Uses 'sidebar-footer' class for border styling -->
-        <div class="p-4 mt-auto sidebar-footer">
-            <button id="settings-open-btn" class="flex items-center justify-center w-full p-3 rounded-xl transition-all group text-gray-400 hover:text-white hover:bg-white/5">
+        <div class="p-2 mt-auto sidebar-footer">
+            <button id="settings-open-btn" class="flex items-center justify-center w-full p-2.5 rounded-xl transition-all group text-gray-400 hover:text-white hover:bg-white/5">
                 <svg class="w-6 h-6 shrink-0 group-hover:rotate-90 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 <span class="nav-text font-medium">Settings</span>
             </button>
         </div>
     </nav>
     
-    <!-- MAIN CONTENT AREA -->
     <div id="main-content" class="flex-1 h-screen flex flex-col overflow-hidden relative">
+        
+        <header class="absolute top-0 left-0 w-full p-6 z-40 pointer-events-none">
+            <div class="pointer-events-auto inline-block">
+                <h1 class="font-bold text-2xl tracking-tight gradient-text">
+                    ScholarForge
+                </h1>
+            </div>
+        </header>
+
         {% block content %}{% endblock %}
     </div>
     
-    <!-- SETTINGS OVERLAY -->
     <div id="settings-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden transition-opacity"></div>
     <div id="settings-panel" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass-container rounded-2xl p-6 z-[70] hidden shadow-2xl transform transition-all scale-95 opacity-0">
-        <!-- Uses 'panel-header' for border -->
         <div class="flex justify-between items-center mb-6 panel-header pb-4">
             <h3 class="text-lg font-bold settings-text-main">Settings</h3>
             <button id="settings-close-btn" class="text-gray-400 hover:text-white transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
-        
         <div class="space-y-4">
             <div class="flex items-center justify-between">
                 <div class="flex flex-col">
                     <span class="text-sm font-medium settings-text-main">Appearance</span>
                     <span class="text-xs settings-text-sub">Customize interface theme</span>
                 </div>
-                
                 <div class="flex gap-2 bg-black/40 dark:bg-black/20 light-theme:bg-gray-100 p-1 rounded-lg">
                     <button id="theme-light-btn" class="px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 hover:text-white transition-all hover:bg-white/5">Light</button>
                     <button id="theme-dark-btn" class="px-3 py-1.5 rounded-md text-xs font-medium text-gray-400 hover:text-white transition-all hover:bg-white/5">Dark</button>
@@ -288,15 +208,11 @@
         </div>
     </div>
 
-    <!-- DOWNLOAD PANEL -->
     <div id="download-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden"></div>
     <div id="download-panel" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm glass-container rounded-2xl p-6 z-[70] hidden transition-all duration-300">
-        <!-- Uses 'panel-header' for border -->
         <div class="flex justify-between items-center mb-6 panel-header pb-4">
             <h3 class="text-lg font-semibold settings-text-main">Export Report</h3>
-            <button id="download-close-btn" class="text-gray-400 hover:text-white transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+            <button id="download-close-btn" class="text-gray-400 hover:text-white transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
         <div class="space-y-3">
             <form action="{{ url_for('download') }}" method="POST" class="block">
@@ -330,12 +246,11 @@
     </div>
     
     <script>
-        // SIDEBAR LOGIC
+        // LOGIC
         const sidebar = document.getElementById('sidebar');
         const menuBtn = document.getElementById('menu-toggle-btn');
         menuBtn.onclick = () => sidebar.classList.toggle('is-expanded');
 
-        // SETTINGS LOGIC
         const settingsOverlay = document.getElementById('settings-overlay');
         const settingsPanel = document.getElementById('settings-panel');
         const openSettingsBtn = document.getElementById('settings-open-btn');
@@ -345,90 +260,42 @@
             dark: document.getElementById('theme-dark-btn'),
             default: document.getElementById('theme-default-btn')
         };
-
         function openSettings() {
-            settingsOverlay.classList.remove('hidden');
-            settingsPanel.classList.remove('hidden');
-            setTimeout(() => {
-                settingsPanel.classList.remove('scale-95', 'opacity-0');
-                settingsPanel.classList.add('scale-100', 'opacity-100');
-            }, 10);
+            settingsOverlay.classList.remove('hidden'); settingsPanel.classList.remove('hidden');
+            setTimeout(() => { settingsPanel.classList.remove('scale-95', 'opacity-0'); settingsPanel.classList.add('scale-100', 'opacity-100'); }, 10);
         }
-
         function closeSettings() {
-            settingsPanel.classList.remove('scale-100', 'opacity-100');
-            settingsPanel.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                settingsOverlay.classList.add('hidden');
-                settingsPanel.classList.add('hidden');
-            }, 300);
+            settingsPanel.classList.remove('scale-100', 'opacity-100'); settingsPanel.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { settingsOverlay.classList.add('hidden'); settingsPanel.classList.add('hidden'); }, 300);
         }
-
-        openSettingsBtn.onclick = openSettings;
-        closeSettingsBtn.onclick = closeSettings;
-        settingsOverlay.onclick = closeSettings;
+        openSettingsBtn.onclick = openSettings; closeSettingsBtn.onclick = closeSettings; settingsOverlay.onclick = closeSettings;
 
         function applyTheme(theme) {
-            document.body.className = 'min-h-screen flex'; // Reset
-            
+            document.body.className = 'min-h-screen flex';
             if (theme === 'light') document.body.classList.add('light-theme');
             if (theme === 'dark') document.body.classList.add('dark-theme');
-            
             localStorage.setItem('theme', theme);
-            
-            // Reset all buttons to "Inactive" style
             Object.values(themeBtns).forEach(btn => {
                 btn.classList.remove('bg-white', 'text-black', 'shadow-sm', 'dark:bg-white', 'dark:text-black', 'bg-[#7aa2f7]', 'text-[#1a1b26]', 'light-theme:bg-white', 'light-theme:text-black'); 
                 btn.classList.add('text-gray-400', 'hover:bg-white/5'); 
             });
-            
-            // Set Active Button Style
             if(themeBtns[theme]) {
                 const btn = themeBtns[theme];
                 btn.classList.remove('text-gray-400', 'hover:bg-white/5');
-                if(theme === 'default') {
-                    btn.classList.add('bg-[#7aa2f7]', 'text-[#1a1b26]', 'shadow-lg', 'shadow-blue-500/20'); // Tokyo Active
-                } else if (theme === 'light') {
-                    btn.classList.add('bg-white', 'text-black', 'shadow-sm');
-                } else {
-                    btn.classList.add('bg-white', 'text-black', 'shadow-sm');
-                }
+                if(theme === 'default') { btn.classList.add('bg-[#7aa2f7]', 'text-[#1a1b26]', 'shadow-lg', 'shadow-blue-500/20'); } 
+                else { btn.classList.add('bg-white', 'text-black', 'shadow-sm'); }
             }
         }
+        themeBtns.light.onclick = () => applyTheme('light'); themeBtns.dark.onclick = () => applyTheme('dark'); themeBtns.default.onclick = () => applyTheme('default');
+        applyTheme(localStorage.getItem('theme') || 'default');
 
-        // Event Listeners for Theme Buttons
-        themeBtns.light.onclick = () => applyTheme('light');
-        themeBtns.dark.onclick = () => applyTheme('dark');
-        themeBtns.default.onclick = () => applyTheme('default');
-
-        // Init Theme
-        const savedTheme = localStorage.getItem('theme') || 'default';
-        applyTheme(savedTheme);
-
-        // DOWNLOAD PANEL LOGIC
-        const downloadOpenBtn = document.getElementById('download-open-btn'); 
         const downloadCloseBtn = document.getElementById('download-close-btn');
         const downloadPanel = document.getElementById('download-panel');
         const downloadOverlay = document.getElementById('download-overlay');
-
-        window.openDownloadPanel = function() {
-            downloadPanel.classList.remove('hidden');
-            downloadOverlay.classList.remove('hidden');
-        }
-        
-        function closeDownloadPanel() {
-            downloadPanel.classList.add('hidden');
-            downloadOverlay.classList.add('hidden');
-        }
-
-        downloadCloseBtn.onclick = closeDownloadPanel;
-        downloadOverlay.onclick = closeDownloadPanel;
-        
-        if (downloadOpenBtn) downloadOpenBtn.onclick = window.openDownloadPanel;
-
+        window.openDownloadPanel = function() { downloadPanel.classList.remove('hidden'); downloadOverlay.classList.remove('hidden'); }
+        function closeDownloadPanel() { downloadPanel.classList.add('hidden'); downloadOverlay.classList.add('hidden'); }
+        downloadCloseBtn.onclick = closeDownloadPanel; downloadOverlay.onclick = closeDownloadPanel;
     </script>
-
     {% block scripts %}{% endblock %}
-
 </body>
 </html>

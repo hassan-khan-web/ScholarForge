@@ -7,10 +7,11 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import markdown
-from lxml import html
+import re
+from lxml import html as lxml_html 
 import html as html_parser
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Preformatted
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 
@@ -18,44 +19,37 @@ AI_MODEL_STRING = "x-ai/grok-4.1-fast:free"
 SEARCH_RESULTS_COUNT = 10
 MAX_RESULTS_TO_SCRAPE = 3
 
+# --- SCRAPING & SEARCHING ---
 def _get_article_text(url: str) -> str:
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
-        }
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
         response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code != 200:
-            return f"Failed to retrieve content (Status code: {response.status_code})"
+        if response.status_code != 200: return f"Failed to retrieve content (Status code: {response.status_code})"
 
         soup = BeautifulSoup(response.text, 'html.parser')
-        paragraphs = soup.find_all('p')
-        article_text = "\n".join([p.get_text() for p in paragraphs])
+        for script in soup(["script", "style", "nav", "footer", "header", "aside"]): script.decompose()
 
-        if not article_text:
-            return "No paragraph text found on this page."
-            
+        content = soup.find('article') or soup.find('main') or soup
+        paragraphs = content.find_all(['p', 'h1', 'h2', 'h3', 'li'])
+        text_content = []
+        for p in paragraphs:
+            text = p.get_text().strip()
+            if len(text.split()) > 5 or (len(text) > 20 and text[-1] in '.!?'): text_content.append(text)
+
+        article_text = "\n\n".join(text_content)
+        if not article_text or len(article_text) < 100: return "No substantial content found on this page."
         return article_text
-    except requests.exceptions.RequestException as e:
-        return f"Error during web request: {e}"
-    except Exception as e:
-        return f"Error parsing page: {e}"
+    except Exception as e: return f"Error parsing page: {e}"
 
 def get_search_results(query: str) -> str:
     try:
         api_key = os.environ.get("API_KEY") 
-        if not api_key:
-            return "Error: API_KEY environment variable not set."
-            
-        params = {
-            "q": query, "location": "India", "hl": "en", "gl": "us",
-            "num": SEARCH_RESULTS_COUNT, "api_key": api_key, "engine": "google"
-        }
+        if not api_key: return "Error: API_KEY environment variable not set."
+        params = {"q": query, "location": "India", "hl": "en", "gl": "us", "num": SEARCH_RESULTS_COUNT, "api_key": api_key, "engine": "google"}
 
         client = serpapi.Client()
         results = client.search(params)
-        
-        if "error" in results:
-            return f"Error from SerpApi: {results['error']}"
+        if "error" in results: return f"Error from SerpApi: {results['error']}"
 
         snippets = []
         if "organic_results" in results:
@@ -63,269 +57,130 @@ def get_search_results(query: str) -> str:
                 snippet_text = result.get("snippet", "No snippet available.")
                 source_url = result.get("link", "No URL available.")
                 title = result.get('title', 'No Title')
-
                 full_content_text = ""
                 if i < MAX_RESULTS_TO_SCRAPE:
-                    print(f"Fetching full text from: {source_url}...")
-                    full_content_text = _get_article_text(source_url)
-                    full_content_text = f"\n\n--- Full Text (Source {i+1}) ---\n{full_content_text}\n--- End of Full Text ---"
-
-                formatted_snippet = (
-                    f"[{i+1}] Title: {title}\nSnippet: {snippet_text}\nSource: {source_url}{full_content_text}" 
-                )
+                    try:
+                        print(f"Fetching full text from: {source_url}...")
+                        raw_text = _get_article_text(source_url)
+                        full_content_text = f"\n\n--- Full Text (Source {i+1}) ---\n{raw_text[:3000]}\n--- End of Full Text ---" 
+                    except Exception as e: print(f"Skipping scrape: {e}")
+                formatted_snippet = f"[{i+1}] Title: {title}\nSnippet: {snippet_text}\nSource: {source_url}{full_content_text}" 
                 snippets.append(formatted_snippet)
 
         return "\n\n---\n\n".join(snippets) if snippets else "No relevant search results were found."
+    except Exception as e: return f"Search Error: {e}"
 
-    except Exception as e:
-        return f"An unexpected error occurred during search: {e}"
-
-def generate_summary(search_content: str, topic: str, page_count: int) -> str:
-    """
-    Generates summary. Accepts 'page_count' to instruct AI on depth.
-    """
+# --- AI GENERATION (THE CHAIN) ---
+def generate_summary(search_content: str, topic: str) -> str:
     try:
         api_key = os.environ.get("OPENROUTER_API_KEY")
-        if not api_key:
-            return "Error: OPENROUTER_API_KEY environment variable not set."
-
-        system_instruction = (
-            '''
-            You are a meticulous, critical research analyst. Your task is to perform a deep,
-            structured analysis of the provided search results.
-            
-            IMPORTANT: This is NOT a request for a brief summary. You are to create a
-            HIGHLY DETAILED, MULTI-PAGE SYNTHESIS of all the provided text.
-            Your goal is to extract every key theme, argument, data point, and conflict.
-            
-            For each major theme you identify, you MUST provide a deep, multi-paragraph
-            explanation, citing the sources.
-            '''
-            f"This output will be the ONLY source material for a full {page_count}-page report, "
-            "so you MUST be exhaustive and detailed. Do not skip details.\n"
-            f"Your analysis is for the topic: '{topic}'. Use citation numbers [1], [2], etc."
-        )
-
-        prompt = f"Search Results:\n{search_content}"
+        if not api_key: return "Error: OPENROUTER_API_KEY not set."
+        system_instruction = "You are a Senior Research Analyst. Synthesize the provided search results into a detailed research briefing. Focus on extracting facts, statistics, conflicting arguments, and key dates. Retain citation numbers [1], [2]."
+        prompt = f"Topic: {topic}\n\nRaw Data:\n{search_content[:15000]}" 
 
         response = requests.post(
             url="https://openrouter.ai/api/v1/chat/completions",
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            data=json.dumps({
-                "model": AI_MODEL_STRING,
-                "messages": [
-                    {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.4
-            })
-        )
-        response.raise_for_status() 
-        result = response.json()
-        return result['choices'][0]['message']['content'] or "No summary generated."
-
-    except Exception as e:
-        return f"Summarization Error: {e}"
-
-def generate_report(summary: str, topic: str, user_format: str, page_count: int) -> str:
-    """
-    Generates report. Accepts 'page_count' to instruct AI on length.
-    """
-    try:
-        api_key = os.environ.get("OPENROUTER_API_KEY")
-        if not api_key:
-            return "Error: OPENROUTER_API_KEY environment variable not set."
-
-        system_instruction = (
-            "You are a world-class research analyst and professional report writer. "
-            f"Your task is to generate a comprehensive, {page_count}-page report on the topic: '{topic}'.\n\n"
-            
-            "**CRITICAL CONTENT REQUIREMENT:**\n"
-            "You MUST ensure **even content distribution**. The last sections of the report MUST be as detailed as the first.\n"
-            "Every single sub-section (e.g., 2.1, 2.1.1) **MUST** contain a minimum of **5 to 6 full lines of text**.\n"
-            f"To achieve the {page_count}-page requirement, you must Elaborate, Explain, and Provide Examples for every point.\n\n"
-            
-            "You MUST follow this user-provided structure EXACTLY:\n"
-            f"USER-PROVIDED STRUCTURE:\n{user_format}"
-        )
-
-        prompt = (
-            "Here is the synthesized summary of my research findings. "
-            f"Generate the full {page_count}-page report following the structure provided.\n\n"
-            f"SUMMARY:\n{summary}"
-        )
-
-        response = requests.post(
-            url="https://openrouter.ai/api/v1/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            data=json.dumps({
-                "model": AI_MODEL_STRING,
-                "messages": [
-                    {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.4,
-            })
+            data=json.dumps({"model": AI_MODEL_STRING, "messages": [{"role": "system", "content": system_instruction}, {"role": "user", "content": prompt}], "temperature": 0.4, "max_tokens": 3000})
         )
         response.raise_for_status()
-        result = response.json()
-        return result['choices'][0]['message']['content'] or "No report generated."
+        return response.json()['choices'][0]['message']['content']
+    except Exception as e: return f"Summarization Error: {e}"
 
+def generate_outline(topic: str, summary: str, user_format: str) -> list:
+    try:
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+        system_instruction = "You are an Architect. Create a detailed Table of Contents for a report. You MUST return ONLY a raw JSON array of strings. No markdown formatting. Example: [\"1. Introduction\", \"2. History\", \"3. Analysis\"]"
+        prompt = f"Topic: {topic}\nBased on this structure preference:\n{user_format}\n\nGenerate a list of 5 to 7 main section headers for a long report."
+
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            data=json.dumps({"model": AI_MODEL_STRING, "messages": [{"role": "system", "content": system_instruction}, {"role": "user", "content": prompt}], "temperature": 0.3})
+        )
+        content = response.json()['choices'][0]['message']['content'].replace("```json", "").replace("```", "").strip()
+        sections = json.loads(content)
+        return sections if isinstance(sections, list) else ["1. Comprehensive Report"]
     except Exception as e:
-        return f"Report Generation Error: {e}"
+        print(f"Outline generation failed: {e}")
+        return ["1. Introduction", "2. Main Analysis", "3. Conclusion"]
+
+def write_section(section_title: str, topic: str, summary: str, previous_context: str) -> str:
+    try:
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+        system_instruction = "You are a Report Writer. Write ONE section of a larger report. Be extremely detailed. Write at least 800 words. Use academic language. Use citations [1] from the summary. Do NOT write a conclusion unless the section title asks for it."
+        prompt = f"Report Topic: {topic}\nCurrent Section to Write: {section_title}\n\nResearch Context:\n{summary}\n\nPrevious Section ending (for continuity): ...{previous_context[-200:] if previous_context else 'Start of report'}"
+
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            data=json.dumps({"model": AI_MODEL_STRING, "messages": [{"role": "system", "content": system_instruction}, {"role": "user", "content": prompt}], "temperature": 0.4, "max_tokens": 2000})
+        )
+        return response.json()['choices'][0]['message']['content']
+    except Exception as e: return f"\n(Error writing section {section_title}: {e})\n"
 
 def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15, task=None) -> tuple[str, str] | str: 
-    """
-    Runs the full report generation pipeline.
-    """
     def _update_status(message: str):
         print(message) 
-        if task:
-            task.update_state(state='PROGRESS', meta={'message': message})
+        if task: task.update_state(state='PROGRESS', meta={'message': message})
 
     if not query: return "Please provide a search query."
-    if not user_format: return "Error: No report format provided."
 
-    _update_status("Step 1/4: Fetching search results...")
+    _update_status("Step 1/5: Searching & Scraping...")
     search_content = get_search_results(query)
-    if search_content.startswith(("Error:", "No relevant")):
-        return f"Failed to run search pipeline: {search_content}"
+    if search_content.startswith("Error"): return f"Search failed: {search_content}"
 
-    _update_status(f"Step 2/4: Generating summary for {page_count} pages...")
-    summary = generate_summary(search_content, query, page_count)
-    if summary.startswith(("Error:", "Summarization Error")):
-        return f"Failed to summarize: {summary}"
-
-    _update_status(f"Step 3/4: Writing full {page_count}-page report...")
-    report_content = generate_report(summary, query, user_format, page_count)
+    _update_status("Step 2/5: Synthesizing Research...")
+    summary = generate_summary(search_content, query)
     
-    if report_content.startswith(("Error:", "Report Generation Error")):
-        return f"Failed to generate report: {report_content}"
-        
-    _update_status("Step 4/4: Pipeline complete.")
-    return search_content, report_content
+    _update_status("Step 3/5: Planning Report Structure...")
+    outline = generate_outline(query, summary, user_format)
+    
+    full_report = f"# {query.upper()}\n\n"
+    total_sections = len(outline)
+    for i, section in enumerate(outline):
+        _update_status(f"Step 4/5: Writing Section {i+1}/{total_sections}: {section}...")
+        section_content = write_section(section, query, summary, full_report)
+        full_report += f"\n## {section}\n{section_content}\n\n"
+    
+    _update_status("Step 5/5: Final Polish...")
+    return search_content, full_report
 
-# --- CONVERTERS (Unchanged) ---
-
+# --- CONVERTERS ---
 def convert_to_txt(report_content: str, filepath: str) -> str:
     try:
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(report_content)
+        with open(filepath, "w", encoding="utf-8") as f: f.write(report_content)
         return f"Success: TXT file created at {filepath}"
-    except Exception as e:
-        return f"Error creating TXT file: {e}"
-
-def add_markdown_to_doc(doc, md_text):
-    html_content = markdown.markdown(md_text)
-    tree = html.fromstring(f"<html><body>{html_content}</body></html>")
-    for el in tree.xpath('//body/*'):
-        if el.tag == 'h1':
-            p = doc.add_paragraph(el.text_content().strip(), style='Heading 1')
-            p.runs[0].font.size = Pt(20)
-            p.runs[0].font.bold = True
-        elif el.tag == 'h2':
-            p = doc.add_paragraph(el.text_content().strip(), style='Heading 2')
-            p.runs[0].font.size = Pt(16)
-            p.runs[0].font.bold = True
-        elif el.tag == 'h3':
-            p = doc.add_paragraph(el.text_content().strip(), style='Heading 3')
-            p.runs[0].font.size = Pt(14)
-            p.runs[0].font.bold = True
-        elif el.tag in ['p', 'ul', 'ol', 'li']:
-            is_list = el.tag in ['ul', 'ol', 'li']
-            if el.tag == 'p' and not el.text and not len(el):
-                doc.add_paragraph() 
-                continue
-            style = 'List Bullet' if is_list else 'Normal'
-            p = doc.add_paragraph(style=style)
-            if el.text: p.add_run(el.text)
-            for child in el:
-                text = child.text_content() or '' 
-                run = None
-                if child.tag in ['strong', 'b']:
-                    run = p.add_run(text)
-                    run.font.bold = True
-                elif child.tag in ['em', 'i']:
-                    run = p.add_run(text)
-                    run.font.italic = True
-                else:
-                    run = p.add_run(text)
-                if child.tail: p.add_run(child.tail)
-        else:
-            p = doc.add_paragraph(el.text_content().strip())
+    except Exception as e: return f"Error creating TXT: {e}"
 
 def convert_to_docx(report_content: str, topic: str, filepath: str) -> str:
     try:
         doc = Document()
-        styles = doc.styles
-        styles['Heading 1'].font.name = 'Inter'
-        styles['Heading 2'].font.name = 'Inter'
-        styles['Heading 3'].font.name = 'Inter'
-        styles['Normal'].font.name = 'Inter'
-        
-        title = doc.add_heading(topic, level=0)
-        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        title.runs[0].font.size = Pt(24)
-        title.runs[0].font.bold = True
-        doc.add_paragraph() 
-        add_markdown_to_doc(doc, report_content)
+        doc.add_heading(topic, 0)
+        lines = report_content.split('\n')
+        for line in lines:
+            line = line.strip()
+            if not line: continue
+            if line.startswith('## '): doc.add_heading(line.replace('## ', ''), level=2)
+            elif line.startswith('# '): doc.add_heading(line.replace('# ', ''), level=1)
+            elif line.startswith('### '): doc.add_heading(line.replace('### ', ''), level=3)
+            elif line.startswith('* ') or line.startswith('- '): doc.add_paragraph(line[2:], style='List Bullet')
+            else: doc.add_paragraph(line)
         doc.save(filepath)
         return f"Success: DOCX file created at {filepath}"
-    except Exception as e:
-        return f"Error creating DOCX file: {e}"
-
-def _get_inner_html_for_reportlab(element):
-    inner_content_list = []
-    if element.text: inner_content_list.append(html_parser.escape(element.text))
-    for child in element:
-        inner_content_list.append(html.tostring(child, encoding='unicode'))
-        if child.tail: inner_content_list.append(html_parser.escape(child.tail))
-    inner_html = "".join(inner_content_list)
-    inner_html = inner_html.replace('<strong>', '<b>').replace('</strong>', '</b>')
-    inner_html = inner_html.replace('<em>', '<i>').replace('</em>', '</i>')
-    return inner_html
+    except Exception as e: return f"Error creating DOCX: {e}"
 
 def convert_to_pdf(report_content: str, topic: str, filepath: str) -> str:
     try:
-        margin = 1 * inch
-        doc = SimpleDocTemplate(filepath, pagesize=A4, leftMargin=margin, rightMargin=margin, topMargin=margin, bottomMargin=margin)
+        doc = SimpleDocTemplate(filepath, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
         styles = getSampleStyleSheet()
-        styles.add(ParagraphStyle(name='H1', fontSize=20, fontName='Helvetica-Bold', spaceAfter=14))
-        styles.add(ParagraphStyle(name='H2', fontSize=16, fontName='Helvetica-Bold', spaceAfter=12))
-        styles.add(ParagraphStyle(name='H3', fontSize=14, fontName='Helvetica-Bold', spaceAfter=10))
-        styles.add(ParagraphStyle(name='Body', fontSize=11, fontName='Helvetica', leading=14, spaceAfter=10, alignment=4))
-        styles.add(ParagraphStyle(name='List', fontSize=11, fontName='Helvetica', leading=14, leftIndent=20, spaceAfter=5, bulletIndent=10))
-
         flowables = []
-        topic_html = topic.replace('\n', '<br/>')
-        title_style = styles['H1']
-        title_style.alignment = 1 
-        flowables.append(Paragraph(topic_html, title_style))
-        flowables.append(Spacer(1, 0.25 * inch))
-
-        html_content = markdown.markdown(report_content, extensions=['nl2br'])
-        tree = html.fromstring(f"<html><body>{html_content}</body></html>")
-        
-        for el in tree.xpath('//body/*'):
-            inner_html = _get_inner_html_for_reportlab(el)
-            inner_html = inner_html.replace('<br>', '<br/>')
-            
-            if el.tag == 'h1': flowables.append(Paragraph(inner_html, styles['H1']))
-            elif el.tag == 'h2': flowables.append(Paragraph(inner_html, styles['H2']))
-            elif el.tag == 'h3': flowables.append(Paragraph(inner_html, styles['H3']))
-            elif el.tag == 'p' and inner_html.strip(): flowables.append(Paragraph(inner_html, styles['Body']))
-            elif el.tag in ['ul', 'ol']:
-                list_counter = 1
-                for li in el.xpath('.//li'):
-                    li_inner_html = _get_inner_html_for_reportlab(li).replace('<br>', '<br/>')
-                    if li_inner_html.strip():
-                        bullet = "&bull; " if el.tag == 'ul' else f"{list_counter}. "
-                        if el.tag == 'ol': list_counter += 1
-                        flowables.append(Paragraph(f"{bullet}{li_inner_html}", styles['List']))
-        
+        flowables.append(Paragraph(topic, styles['Title']))
+        flowables.append(Spacer(1, 12))
+        style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=10, leading=14)
+        clean_text = report_content.replace('#', '')
+        para = Paragraph(clean_text.replace('\n', '<br/>'), style)
+        flowables.append(para)
         doc.build(flowables)
         return f"Success: PDF file created at {filepath}"
-    except Exception as e:
-        import traceback
-        print(traceback.format_exc())
-        return f"Error creating PDF file: {e}"
+    except Exception as e: return f"Error creating PDF: {e}"
