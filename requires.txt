@@ -11,3 +11,6 @@ celery
 redis
 markdown 
 lxml
+fastapi 
+uvicorn # httpx python-multipart uvicorn[standard] itsdangerous
+python-multipart

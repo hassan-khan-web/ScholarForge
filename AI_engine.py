@@ -88,22 +88,80 @@ def generate_summary(search_content: str, topic: str) -> str:
     except Exception as e: return f"Summarization Error: {e}"
 
 def generate_outline(topic: str, summary: str, user_format: str) -> list:
+    """
+    Step 2: Generate a list of section titles.
+    Strictly follows 'user_format' (from report_formats.py).
+    """
+    
+    # --- HELPER: FALLBACK PARSER ---
+    def extract_headers_from_format(fmt_string):
+        """
+        If AI fails, we manually extract headers from the text file.
+        This guarantees the report follows the requested format.
+        """
+        headers = []
+        for line in fmt_string.split('\n'):
+            line = line.strip()
+            # We capture H1 (#) and H2 (##) to ensure length
+            if line.startswith('# ') or line.startswith('## '):
+                clean_line = line.replace('#', '').strip()
+                # remove generic instruction text if present
+                if "[INSTRUCTION" not in clean_line:
+                    headers.append(clean_line)
+        return headers
+
     try:
         api_key = os.environ.get("OPENROUTER_API_KEY")
-        system_instruction = "You are an Architect. Create a detailed Table of Contents for a report. You MUST return ONLY a raw JSON array of strings. No markdown formatting. Example: [\"1. Introduction\", \"2. History\", \"3. Analysis\"]"
-        prompt = f"Topic: {topic}\nBased on this structure preference:\n{user_format}\n\nGenerate a list of 5 to 7 main section headers for a long report."
+        
+        # 1. Instruct AI to strictly map the format
+        system_instruction = (
+            "You are a Structural Editor. Your task is to take a 'Report Skeleton' "
+            "and fill in the bracketed placeholders [ ] with specific topics based on the research. "
+            "You must Output ONLY a raw JSON array of strings representing the section headers. "
+            "Do NOT skip any sections from the skeleton."
+        )
+        
+        prompt = (
+            f"Topic: {topic}\n\n"
+            f"REQUIRED REPORT SKELETON:\n{user_format}\n\n"
+            "Instructions:\n"
+            "1. Read the Skeleton above.\n"
+            "2. Keep the numbering (1.1, 1.2, etc.) exactly as is.\n"
+            "3. Replace generic placeholders like '[Theme A]' with actual themes from the topic.\n"
+            "4. Return a JSON list of strings. Example: [\"1. Introduction\", \"2.1 History of AI\", ...]"
+        )
 
         response = requests.post(
             url="https://openrouter.ai/api/v1/chat/completions",
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            data=json.dumps({"model": AI_MODEL_STRING, "messages": [{"role": "system", "content": system_instruction}, {"role": "user", "content": prompt}], "temperature": 0.3})
+            data=json.dumps({
+                "model": AI_MODEL_STRING,
+                "messages": [
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.3
+            })
         )
-        content = response.json()['choices'][0]['message']['content'].replace("```json", "").replace("```", "").strip()
-        sections = json.loads(content)
-        return sections if isinstance(sections, list) else ["1. Comprehensive Report"]
+        content = response.json()['choices'][0]['message']['content']
+        
+        # 2. Robust Regex Extraction for JSON
+        match = re.search(r'\[.*\]', content, re.DOTALL)
+        if match:
+            json_str = match.group(0)
+            sections = json.loads(json_str)
+            if isinstance(sections, list) and len(sections) > 0:
+                return sections
+        
+        print("AI failed to return valid JSON outline. Using strict format fallback.")
+        # If we reach here, the AI failed to give a list.
+        # Fallback to the Python Extractor
+        return extract_headers_from_format(user_format)
+
     except Exception as e:
-        print(f"Outline generation failed: {e}")
-        return ["1. Introduction", "2. Main Analysis", "3. Conclusion"]
+        print(f"Outline generation failed ({e}). Using strict format fallback.")
+        # Final Fallback: Use the user_format directly
+        return extract_headers_from_format(user_format)
 
 def write_section(section_title: str, topic: str, summary: str, previous_context: str) -> str:
     try:
@@ -175,12 +233,29 @@ def convert_to_pdf(report_content: str, topic: str, filepath: str) -> str:
         doc = SimpleDocTemplate(filepath, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
         styles = getSampleStyleSheet()
         flowables = []
+        
+        # Title
         flowables.append(Paragraph(topic, styles['Title']))
         flowables.append(Spacer(1, 12))
+
+        # --- THE FIX FOR HANGING ---
+        # Instead of parsing every line as HTML (slow/fragile), 
+        # we wrap the whole text in a "Preformatted" or "BodyText" style.
+        # This renders instantly.
         style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=10, leading=14)
-        clean_text = report_content.replace('#', '')
-        para = Paragraph(clean_text.replace('\n', '<br/>'), style)
+        
+        # Clean basic markdown to avoid ReportLab crashing on '#' or '*'
+        clean_text = report_content.replace('#', '').replace('*', '•')
+        
+        # Replace newlines with <br/> only (Fastest way)
+        formatted_text = clean_text.replace('\n', '<br/>')
+        
+        para = Paragraph(formatted_text, style)
         flowables.append(para)
+        # ---------------------------
+
         doc.build(flowables)
         return f"Success: PDF file created at {filepath}"
-    except Exception as e: return f"Error creating PDF: {e}"
+    except Exception as e:
+        print(f"PDF Error: {e}") # Print error to terminal so you can see it
+        return f"Error creating PDF: {e}"
