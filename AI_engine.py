@@ -1,8 +1,7 @@
 import os
 import serpapi
 from docx import Document
-from docx.shared import Pt
-import requests
+import httpx
 from bs4 import BeautifulSoup
 import json
 import re
@@ -10,10 +9,22 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-AI_MODEL_STRING = "x-ai/grok-4.1-fast:free" # Check your specific model string
+# IMPORT THE FORMAT LOGIC
+from report_formats import get_template_instructions
+
+AI_MODEL_STRING = "x-ai/grok-4.1-fast:free" 
 SEARCH_RESULTS_COUNT = 10
 MAX_RESULTS_TO_SCRAPE = 3
-WORDS_PER_PAGE = 500  # THE ANCHOR: 500 words = approx 1 page.
+WORDS_PER_PAGE = 400
+
+# --- HELPER FUNCTIONS ---
+
+def clean_ai_output(text: str) -> str:
+    """Strips markdown fences to prevent raw code block rendering."""
+    if not text: return ""
+    cleaned = re.sub(r'^```\w*\n?', '', text)
+    cleaned = re.sub(r'\n?```$', '', cleaned)
+    return cleaned.strip()
 
 # --- SCRAPING & SEARCHING ---
 
@@ -22,31 +33,32 @@ def _get_article_text(url: str) -> str:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
-        response = requests.get(url, headers=headers, timeout=10)
+        with httpx.Client(timeout=10.0, follow_redirects=True) as client:
+            response = client.get(url, headers=headers)
+            
         if response.status_code != 200:
-            return f"Failed to retrieve content (Status code: {response.status_code})"
+            return ""
 
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
+        for script in soup(["script", "style", "nav", "footer", "header", "aside", "form", "iframe"]):
             script.decompose()
 
-        content = soup.find('article')
-        if not content: content = soup.find('main')
+        content = soup.find('article') or soup.find('main') or soup.find('div', class_=re.compile(r'content|post|article|body'))
         if not content: content = soup
 
-        paragraphs = content.find_all(['p', 'h1', 'h2', 'h3', 'li'])
+        paragraphs = content.find_all(['p', 'h2', 'h3', 'li'])
         text_content = []
         
         for p in paragraphs:
             text = p.get_text().strip()
-            if len(text.split()) > 5:
+            if len(text.split()) > 6:
                 text_content.append(text)
 
         article_text = "\n\n".join(text_content)
-        return article_text[:4000] # Limit char count per article
-    except Exception as e:
-        return f"Error parsing page: {e}"
+        return article_text[:3000]
+    except Exception:
+        return ""
 
 def get_search_results(query: str) -> str:
     try:
@@ -54,7 +66,7 @@ def get_search_results(query: str) -> str:
         if not api_key: return "Error: SERPAPI_KEY environment variable not set."
             
         params = {
-            "q": query, "location": "India", "hl": "en", "gl": "us",
+            "q": query, "location": "US", "hl": "en", "gl": "us",
             "num": SEARCH_RESULTS_COUNT, "api_key": api_key, "engine": "google"
         }
 
@@ -66,23 +78,20 @@ def get_search_results(query: str) -> str:
         snippets = []
         if "organic_results" in results:
             for i, result in enumerate(results["organic_results"]):
-                snippet_text = result.get("snippet", "No snippet available.")
-                source_url = result.get("link", "No URL available.")
+                snippet_text = result.get("snippet", "")
+                source_url = result.get("link", "")
                 title = result.get('title', 'No Title')
 
                 full_content_text = ""
-                if i < MAX_RESULTS_TO_SCRAPE:
-                    try:
-                        print(f"Fetching full text from: {source_url}...")
-                        raw_text = _get_article_text(source_url)
-                        full_content_text = f"\n\n--- Full Text (Source {i+1}) ---\n{raw_text[:2000]}\n--- End of Full Text ---" 
-                    except Exception as e:
-                        print(f"Skipping scrape: {e}")
+                if i < MAX_RESULTS_TO_SCRAPE and source_url:
+                    raw_text = _get_article_text(source_url)
+                    if raw_text:
+                        full_content_text = f"\n[Full Content Source {i+1}]:\n{raw_text}\n"
 
-                formatted_snippet = f"[{i+1}] Title: {title}\nSnippet: {snippet_text}\nSource: {source_url}{full_content_text}" 
+                formatted_snippet = f"Source [{i+1}]: {title}\nURL: {source_url}\nSummary: {snippet_text}{full_content_text}" 
                 snippets.append(formatted_snippet)
 
-        return "\n\n---\n\n".join(snippets) if snippets else "No relevant search results were found."
+        return "\n\n".join(snippets) if snippets else "No relevant search results were found."
     except Exception as e:
         return f"Search Error: {e}"
 
@@ -93,159 +102,148 @@ def generate_summary(search_content: str, topic: str) -> str:
         api_key = os.environ.get("OPENROUTER_API_KEY")
         if not api_key: return "Error: OPENROUTER_API_KEY not set."
 
-        system_instruction = "You are a Senior Research Analyst. Synthesize the search results into a detailed research briefing."
-        
-        prompt = f"Topic: {topic}\n\nRaw Data:\n{search_content[:15000]}" 
+        system_instruction = "You are a Senior Research Analyst. Synthesize the raw data into a structured research briefing."
+        prompt = f"Topic: {topic}\n\nRaw Search Data:\n{search_content[:12000]}\n\nTask: Create a comprehensive research summary." 
 
-        response = requests.post(
-            url="https://openrouter.ai/api/v1/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            data=json.dumps({
-                "model": AI_MODEL_STRING,
-                "messages": [
-                    {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.4,
-                "max_tokens": 2000
-            })
-        )
-        return response.json()['choices'][0]['message']['content']
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(
+                url="https://openrouter.ai/api/v1/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": AI_MODEL_STRING,
+                    "messages": [
+                        {"role": "system", "content": system_instruction},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.4,
+                    "max_tokens": 1500
+                }
+            )
+            response.raise_for_status()
+            return response.json()['choices'][0]['message']['content']
     except Exception as e:
         return f"Summarization Error: {e}"
 
-def generate_outline(topic: str, summary: str, user_format: str, target_pages: int) -> list:
-    """
-    Generates a FLAT outline scaled to the target page count.
-    """
+def generate_outline(topic: str, summary: str, format_type: str, target_pages: int) -> list:
     try:
         api_key = os.environ.get("OPENROUTER_API_KEY")
         
-        # LOGIC: 10 Pages / 1.5 = 6.6 -> 7 Sections.
-        ideal_section_count = max(4, int(target_pages / 1.5))
-        
-        system_instruction = (
-            "You are a Structural Editor. Generate a flat report outline (JSON array). "
-            "Do NOT use sub-headers (e.g. 1.1). One level only."
-        )
-        
+        format_data = get_template_instructions(format_type, target_pages)
+        target_sections = format_data['target_sections']
+        template_text = format_data['template_text']
+        tier = format_data['tier']
+
+        system_instruction = "You are a Report Architect. Return ONLY a valid JSON array of strings."
         prompt = (
             f"Topic: {topic}\n"
-            f"Target Report Length: {target_pages} pages.\n"
-            f"Base Format Template:\n{user_format}\n\n"
-            "INSTRUCTIONS:\n"
-            f"1. Generate exactly {ideal_section_count} main section headers to fit the target length.\n"
-            "2. Ignore complex numbering in the template. Use simple headers.\n"
-            "3. Return ONLY a JSON list of strings (e.g. [\"1. Introduction\", \"2. Analysis\"])."
+            f"Target: {target_sections} main sections ({tier}).\n"
+            f"Structure Logic: {template_text}\n"
+            f"Context: {summary[:2000]}\n\n"
+            "Output Format: JSON Array ONLY. Example: [\"1. Introduction\", \"2. Analysis\", \"3. Conclusion\"]"
         )
 
-        response = requests.post(
-            url="https://openrouter.ai/api/v1/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            data=json.dumps({
-                "model": AI_MODEL_STRING,
-                "messages": [
-                    {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.3
-            })
-        )
-        content = response.json()['choices'][0]['message']['content']
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(
+                url="https://openrouter.ai/api/v1/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": AI_MODEL_STRING,
+                    "messages": [
+                        {"role": "system", "content": system_instruction},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.3
+                }
+            )
+            content = response.json()['choices'][0]['message']['content']
         
-        match = re.search(r'\[.*\]', content, re.DOTALL)
+        match = re.search(r'\[.*\]', content.replace('\n', ' '), re.DOTALL)
         if match:
             return json.loads(match.group(0))
-        return ["1. Introduction", "2. Main Analysis", "3. Conclusion"] # Fallback
+            
+        if tier == "short": return ["1. Introduction", "2. Main Analysis", "3. Conclusion"]
+        return ["1. Intro", "2. Background", "3. Analysis A", "4. Analysis B", "5. Conclusion"]
 
-    except Exception:
+    except Exception as e:
+        print(f"Outline Error: {e}")
         return ["1. Introduction", "2. Main Analysis", "3. Conclusion"]
 
 def write_section(section_title: str, topic: str, summary: str, previous_context: str, word_limit: int) -> str:
-    """
-    Writes a section with a specific word limit.
-    """
     try:
         api_key = os.environ.get("OPENROUTER_API_KEY")
         
         system_instruction = (
-            f"You are a Report Writer. Write ONE section of a report. "
-            f"Target word count: approximately {word_limit} words. "
-            "Be academic and detailed. Use citations [1] from the research."
+            f"You are a Report Writer. Write detailed, academic content for the section: '{section_title}'."
+            " Use Markdown formatting (bold, lists). Do not include the Section Title at the start."
         )
         
         prompt = (
             f"Report Topic: {topic}\n"
-            f"Current Section: {section_title}\n"
-            f"Target Words: {word_limit}\n\n"
-            f"Research Context:\n{summary}\n\n"
-            f"Previous context: ...{previous_context[-300:] if previous_context else 'Start'}"
+            f"Research Brief: {summary}\n"
+            f"Write Section: {section_title}\n"
+            f"Target Length: {word_limit} words.\n"
         )
 
-        response = requests.post(
-            url="https://openrouter.ai/api/v1/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            data=json.dumps({
-                "model": AI_MODEL_STRING,
-                "messages": [
-                    {"role": "system", "content": system_instruction},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.4,
-                "max_tokens": int(word_limit * 2.5) # Buffer for tokens
-            })
-        )
-        return response.json()['choices'][0]['message']['content']
+        with httpx.Client(timeout=60.0) as client:
+            response = client.post(
+                url="https://openrouter.ai/api/v1/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": AI_MODEL_STRING,
+                    "messages": [
+                        {"role": "system", "content": system_instruction},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.5,
+                    "max_tokens": 2000 
+                }
+            )
+            raw_content = response.json()['choices'][0]['message']['content']
+            return clean_ai_output(raw_content)
     except Exception as e:
-        return f"\n(Error writing section {section_title}: {e})\n"
+        return f"(Error writing section {section_title}: {e})"
 
-def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15, task=None) -> tuple[str, str] | str: 
-    """
-    Orchestrates the Chain of Agents with Math Logic.
-    """
-    # 1. DEFINE UPDATE HELPER
+# --- MAIN ORCHESTRATOR ---
+
+def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15, task=None) -> tuple[str, str]: 
+    
     def _update_status(message: str):
         print(message) 
         if task: task.update_state(state='PROGRESS', meta={'message': message})
 
-    if not query: return "Please provide a search query."
+    if not query: return "No query provided.", ""
 
-    # 2. SEARCH
-    _update_status("Step 1/5: Searching & Scraping...")
+    # 1. SEARCH
+    _update_status("Step 1/5: Gathering Intelligence...")
     search_content = get_search_results(query)
-    if search_content.startswith("Error"): return f"Search failed: {search_content}"
+    if search_content.startswith("Search Error"):
+        search_content = "Search failed, proceeding with general knowledge."
 
-    # 3. SUMMARY
-    _update_status("Step 2/5: Synthesizing Research...")
+    # 2. SUMMARY
+    _update_status("Step 2/5: Analyzing Data...")
     summary = generate_summary(search_content, query)
     
-    # 4. OUTLINE
-    _update_status(f"Step 3/5: Planning {page_count}-Page Structure...")
-    # Pass page_count to outline generator
+    # 3. OUTLINE
+    _update_status(f"Step 3/5: Structuring Report...")
     outline = generate_outline(query, summary, user_format, page_count)
     
-    # 5. MATH LOGIC (The Fix)
+    # 4. MATH LOGIC 
     total_target_words = page_count * WORDS_PER_PAGE 
-    # Calculate words per section
     words_per_section = int(total_target_words / max(1, len(outline)))
+    words_per_section = max(300, min(words_per_section, 1500))
     
-    # Safety Bounds
-    if words_per_section < 300: words_per_section = 300
-    if words_per_section > 1200: words_per_section = 1200
-    
-    # 6. WRITE SECTIONS
+    # 5. WRITE SECTIONS
     full_report = f"# {query.upper()}\n\n"
     total_sections = len(outline)
     
     for i, section in enumerate(outline):
-        _update_status(f"Step 4/5: Writing Section {i+1}/{total_sections} (~{words_per_section} words)...")
-        
-        # Pass word_limit to writer
+        _update_status(f"Step 4/5: Writing Section {i+1}/{total_sections}...")
         section_content = write_section(section, query, summary, full_report, words_per_section)
-        
-        full_report += f"\n## {section}\n{section_content}\n\n"
+        full_report += f"\n\n## {section}\n{section_content}\n"
     
-    _update_status("Step 5/5: Final Polish...")
+    _update_status("Step 5/5: Finalizing Document...")
+    full_report = clean_ai_output(full_report)
+    
     return search_content, full_report
 
 # --- CONVERTERS ---
@@ -281,12 +279,31 @@ def convert_to_pdf(report_content: str, topic: str, filepath: str) -> str:
         flowables.append(Paragraph(topic, styles['Title']))
         flowables.append(Spacer(1, 12))
         
-        style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=10, leading=14)
-        clean_text = report_content.replace('#', '').replace('*', '•')
-        para = Paragraph(clean_text.replace('\n', '<br/>'), style)
-        flowables.append(para)
+        style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=11, leading=15, spaceAfter=10)
+        heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontSize=14, spaceAfter=10, spaceBefore=10)
+        
+        lines = report_content.split('\n')
+        for line in lines:
+            clean_line = line.strip().replace('#', '').replace('*', '&bull;')
+            if not clean_line: continue
+            if line.startswith('#'):
+                flowables.append(Paragraph(clean_line, heading_style))
+            else:
+                flowables.append(Paragraph(clean_line, body_style))
 
         doc.build(flowables)
         return f"Success: PDF file created at {filepath}"
     except Exception as e: 
         return f"Error creating PDF: {e}"
+
+def convert_to_json(report_content: str, topic: str, filepath: str) -> str:
+    try:
+        data = {
+            "topic": topic,
+            "content": report_content,
+            "generated_by": "ScholarForge"
+        }
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+        return f"Success: JSON file created at {filepath}"
+    except Exception as e: return f"Error creating JSON: {e}"

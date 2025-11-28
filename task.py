@@ -1,38 +1,37 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
 from celery import Celery
-import AI_engine 
+import AI_engine  # This imports your engine
 
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
-
-celery_app = Celery('task', broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
-
-# In task.py
+# Configure Celery
+# We use Redis as the message broker
+celery_app = Celery(
+    'scholarforge_tasks',
+    broker=os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0'),
+    backend=os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+)
 
 @celery_app.task(bind=True)
-def generate_report_task(self, query: str, user_format: str, page_count: int) -> dict:
+def generate_report_task(self, query: str, format_content: str, page_count: int):
+    """
+    Background task to run the AI Engine.
+    Takes 'page_count' to support the new tiered logic.
+    """
     try:
-        # 1. Run the Engine
-        result = AI_engine.run_ai_engine_with_return(query, user_format, page_count, task=self)
+        self.update_state(state='PROGRESS', meta={'message': 'Initializing AI Engine...'})
         
-        if isinstance(result, str):
-            self.update_state(state='FAILURE', meta={'message': result})
-            return {'status': 'FAILURE', 'error': result}
-        
-        search_content, report_content = result
-        
-        # 2. Force an update right before returning to ensure frontend sees it
-        self.update_state(state='PROGRESS', meta={'message': 'Step 5/5: Finalizing document...'})
-        
-        # 3. Return the result
+        # Call the engine
+        # We pass 'self' (the task instance) so the engine can update the progress status
+        search_content, report_content = AI_engine.run_ai_engine_with_return(
+            query, 
+            format_content, 
+            page_count,
+            task=self
+        )
+
         return {
             'status': 'SUCCESS',
             'search_content': search_content,
             'report_content': report_content
         }
-
     except Exception as e:
-        self.update_state(state='FAILURE', meta={'message': f"Critical Error: {str(e)}"})
         return {'status': 'FAILURE', 'error': str(e)}

@@ -10,6 +10,8 @@ from fastapi.responses import JSONResponse, FileResponse
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 from celery.result import AsyncResult
+
+# Import your modules
 from task import generate_report_task, celery_app
 import AI_engine 
 import chat_engine 
@@ -17,13 +19,14 @@ import report_formats
 
 app = FastAPI(title="ScholarForge")
 
-# Add Session Middleware (Replaces Flask app.secret_key)
-app.add_middleware(SessionMiddleware, secret_key=os.environ.get("APP_SECRET_KEY", "secret"))
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get("APP_SECRET_KEY", "super-secret-key"))
 
-# Setup Templates
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
 templates = Jinja2Templates(directory="templates")
 
-# --- Pydantic Models (Data Validation) ---
+# --- Pydantic Models ---
 class ReportRequest(BaseModel):
     query: str
     format_key: str
@@ -44,9 +47,6 @@ async def index(request: Request):
 
 @app.post("/start-report")
 async def start_report(data: ReportRequest):
-    """
-    Starts the background Celery task.
-    """
     try:
         if not data.query:
             return JSONResponse({'error': 'No query provided'}, status_code=400)
@@ -55,15 +55,13 @@ async def start_report(data: ReportRequest):
         if data.format_key == "custom":
             if not data.format_content or data.format_content.strip() == "":
                 return JSONResponse({'error': 'Custom format selected but no content provided.'}, status_code=400)
-            user_format = data.format_content
+            user_format = "custom" 
         else:
-            user_format = report_formats.FORMAT_TEMPLATES.get(data.format_key)
-            if not user_format:
+            if data.format_key not in report_formats.FORMAT_TEMPLATES:
                 return JSONResponse({'error': f'Invalid format key: {data.format_key}'}, status_code=400)
+            user_format = data.format_key
 
-        # Start Celery Task
         task = generate_report_task.delay(data.query, user_format, data.page_count)
-
         return {"task_id": task.id}
         
     except Exception as e:
@@ -82,13 +80,13 @@ async def report_status(task_id: str):
 
     elif task.state == 'SUCCESS':
         result = task.result
-        if result['status'] == 'FAILURE':
-            return {'status': 'FAILURE', 'error': result['error']}
+        if isinstance(result, dict) and result.get('status') == 'FAILURE':
+            return {'status': 'FAILURE', 'error': result.get('error')}
         
         return {
             'status': 'SUCCESS',
-            'report_content': result['report_content'],
-            'search_content': result['search_content']
+            'report_content': result.get('report_content'),
+            'search_content': result.get('search_content')
         }
 
     elif task.state == 'FAILURE':
@@ -97,20 +95,28 @@ async def report_status(task_id: str):
     else:
         return {'status': task.state}
 
+def cleanup_file(path: str):
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+    except Exception as e:
+        print(f"Error cleaning up file {path}: {e}")
+
 @app.post("/download")
 async def download(
+    background_tasks: BackgroundTasks, 
     report_content: str = Form(...),
     topic: str = Form(...),
     format: str = Form(...)
 ):
-    return send_converted_file(report_content, topic, format)
+    return send_converted_file(report_content, topic, format, background_tasks)
 
 @app.get("/get-report-formats")
 async def get_report_formats():
     return report_formats.FORMAT_TEMPLATES
 
 # --- Helper for File Download ---
-def send_converted_file(report_content, topic, format_type):
+def send_converted_file(report_content, topic, format_type, background_tasks):
     if not report_content or not topic:
         raise HTTPException(status_code=400, detail="Missing report data.")
 
@@ -121,6 +127,10 @@ def send_converted_file(report_content, topic, format_type):
             temp_filepath = f.name
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating temp file: {e}")
+
+    result = "Error"
+    media_type = "text/plain"
+    filename = "report.txt"
 
     if format_type == 'pdf':
         filename = f"{safe_topic}_Report.pdf"
@@ -134,17 +144,21 @@ def send_converted_file(report_content, topic, format_type):
         filename = f"{safe_topic}_Report.txt"
         result = AI_engine.convert_to_txt(report_content, temp_filepath)
         media_type = 'text/plain'
+    # NEW JSON HANDLING
+    elif format_type == 'json':
+        filename = f"{safe_topic}_Report.json"
+        result = AI_engine.convert_to_json(report_content, topic, temp_filepath)
+        media_type = 'application/json'
     else:
         if os.path.exists(temp_filepath): os.remove(temp_filepath)
         raise HTTPException(status_code=400, detail="Invalid format.")
 
     if result.startswith("Success"):
-        # Background task to clean up file after sending
+        background_tasks.add_task(cleanup_file, temp_filepath)
         return FileResponse(
             path=temp_filepath, 
             filename=filename, 
-            media_type=media_type, 
-            background=None # File cleanup in FastAPI is tricky with tempfiles, usually OS handles /tmp
+            media_type=media_type
         )
     else:
         if os.path.exists(temp_filepath): os.remove(temp_filepath)
@@ -158,21 +172,15 @@ async def chat_page(request: Request):
 
 @app.post("/chat")
 async def handle_chat(data: ChatRequest, request: Request):
-    # Access session data via request.session
     chat_history = request.session.get('chat_history', [])
-
-    # We use await here because we updated chat_engine to be async
     ai_response = await chat_engine.get_chat_response_async(data.message, chat_history)
-    
     chat_history.append({'role': 'user', 'content': data.message})
     chat_history.append({'role': 'assistant', 'content': ai_response})
-    
     request.session['chat_history'] = chat_history
     return {'response': ai_response}
 
 @app.post("/add-hook")
 async def add_hook(data: HookRequest):
-    # Placeholder
     return {'status': 'success', 'message': 'Hook saved!'}
 
 if __name__ == '__main__':

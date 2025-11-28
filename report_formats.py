@@ -1,90 +1,84 @@
-"""
-This file stores the prompt templates for various report formats.
-The AI_engine.py will import this file to access the formats.
-"""
+# report_formats.py
 
-DEFAULT_FORMAT = ""
-
-# Format 1: Literature Review (Condensed)
-# We removed the hardcoded "Theme A, B, C" and "2.1.1, 2.1.2" nesting.
-LITERATURE_REVIEW = """
-# 1. Introduction
-## 1.1. Background and Rationale
-## 1.2. Scope and Methodology
-# 2. Main Body: Thematic Synthesis
-[INSTRUCTION TO AI: This is the core of the report. Based on the target page count, generate 3 to 5 MAJOR sections representing key themes in the literature. Do NOT use sub-sub-headings like 2.1.1. Keep it to Main Headers (e.g., "2. The Evolution of AI", "3. Economic Impacts").]
-# 3. Critical Discussion
-## 3.1. Comparison of Perspectives
-## 3.2. Identification of Gaps
-# 4. Conclusion
-## 4.1. Summary of Insights
-## 4.2. Future Research Directions
-# 5. References
+LIT_REVIEW_BASE = """
+# 1. Introduction (Scope & Rationale)
+# 2. Main Thematic Analysis
+[INSTRUCTION: Generate {section_count} distinct thematic sections based on the research. 
+{complexity_note}]
+# {last_n}. Conclusion & Future Research
+# {last}. References
 """
 
-# Format 2: Case Study (Condensed)
-# We removed the hardcoded "Phase 1, Phase 2, Phase 3" structure.
-CASE_STUDY = """
+CASE_STUDY_BASE = """
 # 1. Executive Summary
-# 2. Introduction
-## 2.1. Case Subject Profile
-## 2.2. Problem Statement
-# 3. Context and Background
-[INSTRUCTION TO AI: Describe the environment, history, or market conditions before the main event.]
-# 4. Analysis of the Case
-[INSTRUCTION TO AI: Break the case down into chronological phases or key challenges. Generate 3 to 4 sections appropriate for the requested report length. e.g., "4. The Initial Challenge", "5. The Strategic Pivot", "6. The Outcome".]
-# 5. Key Findings and Lessons
-## 5.1. Success Factors
-## 5.2. Failures and Bottlenecks
-# 6. Conclusion
+# 2. Introduction & Problem Statement
+# 3. Context/Background
+[INSTRUCTION: Analyze the case phases. Generate {section_count} sections covering the Strategy, Execution, and Outcome. 
+{complexity_note}]
+# {last_n}. Key Lessons Learned
+# {last}. Conclusion
 """
 
-# Format 3: Business White Paper (Condensed)
-# Removed the specific "Page 1, Page 2" breakdown which confused the AI.
-BUSINESS_WHITE_PAPER = """
+WHITE_PAPER_BASE = """
 # 1. Executive Summary
-# 2. The Market Context
-## 2.1. Current Trends
-## 2.2. The Business Challenge
-# 3. Analysis of Solutions
-[INSTRUCTION TO AI: Compare current legacy solutions vs. the proposed new solution. Generate distinct sections analyzing the pros, cons, and ROI of adopting the new approach.]
-# 4. Proposed Framework / Solution
-[INSTRUCTION TO AI: Detail the solution. Break this into 2 or 3 descriptive sections focusing on implementation and benefits.]
-# 5. Real-World Implications (Case Examples)
-# 6. Strategic Recommendations & Call to Action
+# 2. Market Context
+[INSTRUCTION: Compare solutions. Generate {section_count} sections analyzing the technical and business ROI of the proposed solution. 
+{complexity_note}]
+# {last_n}. Implementation Framework
+# {last}. Call to Action
 """
 
-# Format 4: Technical Manual (Condensed)
-TECHNICAL_MANUAL = """
-# 1. Overview
-## 1.1. Purpose and Scope
-## 1.2. System Requirements
-# 2. Installation and Setup
-[INSTRUCTION TO AI: Provide a step-by-step guide for installation.]
-# 3. Core Features and Operations
-[INSTRUCTION TO AI: Identify the 3-5 most important features of this technology. Create a dedicated section for each feature explaining how it works and how to use it.]
-# 4. Maintenance and Troubleshooting
-## 4.1. Routine Maintenance
-## 4.2. Common Issues and Fixes
-# 5. Appendix and Specs
+TECH_MANUAL_BASE = """
+# 1. System Overview
+# 2. Quick Start Guide
+[INSTRUCTION: Technical Breakdown. Generate {section_count} sections covering Core Features, Advanced Configuration, and API usage. 
+{complexity_note}]
+# {last_n}. Troubleshooting
+# {last}. Glossary/Appendix
 """
 
-# Format 5: Journalistic Article (Condensed)
-JOURNALISTIC_ARTICLE = """
-# 1. The Lead (Headline & Hook)
-# 2. The Nut Graf (Context & Significance)
-# 3. The Narrative Body
-[INSTRUCTION TO AI: Tell the story. Break the body into 3-4 thematic or chronological sections. Use descriptive, catchy headers. Quote key figures and cite data.]
-# 4. Counter-Perspectives
-[INSTRUCTION TO AI: Discuss alternative viewpoints or challenges.]
-# 5. Conclusion (The Kicker)
+ARTICLE_BASE = """
+# 1. The Lead (Headline)
+[INSTRUCTION: Narrative Flow. Generate {section_count} sections that tell the story chronologically or thematically. Use punchy headers.
+{complexity_note}]
+# {last}. The Kicker (Conclusion)
 """
 
 FORMAT_TEMPLATES = {
-    "custom": DEFAULT_FORMAT,
-    "literature_review": LITERATURE_REVIEW,
-    "case_study": CASE_STUDY,
-    "business_white_paper": BUSINESS_WHITE_PAPER,
-    "technical_manual": TECHNICAL_MANUAL,
-    "journalistic_article": JOURNALISTIC_ARTICLE,
+    "literature_review": LIT_REVIEW_BASE,
+    "case_study": CASE_STUDY_BASE,
+    "business_white_paper": WHITE_PAPER_BASE,
+    "technical_manual": TECH_MANUAL_BASE,
+    "journalistic_article": ARTICLE_BASE,
+    "custom": LIT_REVIEW_BASE
 }
+
+def get_template_instructions(format_type: str, page_count: int) -> dict:
+    if page_count <= 5:
+        tier = "short"
+        target_sections = 4
+        complexity_instruction = "Keep the structure concise. Focus only on the most critical high-level points."
+    elif page_count <= 12:
+        tier = "medium"
+        target_sections = 7
+        complexity_instruction = "Standard report depth. Include background, main analysis, and distinct sub-themes."
+    else:
+        tier = "long"
+        target_sections = 10 
+        complexity_instruction = "Comprehensive deep-dive. Add extra sections for Context, Economic Impact, Future Outlook."
+
+    selected_template = FORMAT_TEMPLATES.get(format_type, LIT_REVIEW_BASE)
+    dynamic_middle_count = max(2, target_sections - 3)
+
+    final_template = selected_template.format(
+        section_count=str(dynamic_middle_count) + " to " + str(dynamic_middle_count + 2),
+        complexity_note=complexity_instruction,
+        last_n=str(target_sections - 1),
+        last=str(target_sections)
+    )
+
+    return {
+        "template_text": final_template,
+        "target_sections": target_sections,
+        "tier": tier
+    }
