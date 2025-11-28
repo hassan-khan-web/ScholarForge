@@ -16,7 +16,7 @@
         /* --- THEME ENGINE --- */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a1b26; /* Tokyo Default */
+            background-color: #1a1b26;
             background-image: radial-gradient(circle at 0% 0%, #2f334d 0%, transparent 40%), 
                               radial-gradient(circle at 100% 100%, #16161e 0%, transparent 40%);
             color: #a9b1d6;
@@ -25,7 +25,7 @@
             overflow: hidden; 
         }
 
-        /* Glass Effect (General) */
+        /* Glass Effect */
         .glass-container {
             background: rgba(36, 40, 59, 0.8); 
             backdrop-filter: blur(16px);
@@ -35,121 +35,112 @@
             transition: all 0.3s ease;
         }
 
-        /* --- SPECIFIC COMPONENT STYLING --- */
+        /* --- COMPONENT STYLING --- */
 
-        /* 1. Sidebar */
+        /* Sidebar & Z-Index Layering */
         #sidebar {
             background: rgba(26, 27, 38, 0.95) !important; 
             border-right: 1px solid rgba(122, 162, 247, 0.1);
+            z-index: 50; /* Top layer */
         }
 
-        /* 2. Inputs */
-        #query, .custom-select {
-            background: #16161e; border: 1px solid #292e42; color: #c0caf5;
+        /* HISTORY PANEL (SLIDE-OUT) */
+        #history-panel {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 4rem; /* Start right after the collapsed sidebar width (w-16) */
+            width: 20rem; /* Width of the history drawer */
+            background: rgba(26, 27, 38, 0.98);
+            border-right: 1px solid rgba(122, 162, 247, 0.1);
+            backdrop-filter: blur(20px);
+            z-index: 40; /* Behind sidebar (50), above content (0) */
+            transform: translateX(-105%); /* Hide off-screen to the left */
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* Smooth apple-like slide */
+            display: flex;
+            flex-direction: column;
         }
-        #query:focus, .custom-select:focus {
-            border-color: #7aa2f7; box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.2);
+        
+        #history-panel.is-open {
+            transform: translateX(0); /* Slide in */
+            box-shadow: 10px 0 30px -10px rgba(0, 0, 0, 0.5);
         }
 
-        /* 3. Result Bar (Default Tokyo) */
-        #result-bar {
-            background-color: rgba(26, 27, 38, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #c0caf5;
+        /* Hide History Button by default (collapsed state) */
+        .history-btn-wrapper {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
-        .action-btn {
-            background-color: rgba(122, 162, 247, 0.1);
-            color: #7aa2f7;
-            border: 1px solid rgba(122, 162, 247, 0.2);
-        }
-        .action-btn:hover {
-            background-color: rgba(122, 162, 247, 0.2);
+        
+        /* Show History Button only when sidebar expanded */
+        #sidebar.is-expanded .history-btn-wrapper {
+            display: flex;
+            opacity: 1;
         }
 
-        /* 4. Report Text (Default) */
+        /* Inputs */
+        #query, .custom-select { background: #16161e; border: 1px solid #292e42; color: #c0caf5; }
+        #query:focus, .custom-select:focus { border-color: #7aa2f7; box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.2); }
+
+        /* Result Bar */
+        #result-bar { background-color: rgba(26, 27, 38, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); color: #c0caf5; }
+        .action-btn { background-color: rgba(122, 162, 247, 0.1); color: #7aa2f7; border: 1px solid rgba(122, 162, 247, 0.2); }
+        .action-btn:hover { background-color: rgba(122, 162, 247, 0.2); }
+
+        /* Report Text */
         #report-output { color: #d1d5db; }
-        .prose h1, .prose h2, .prose h3 { color: #e5e7eb !important; }
+        .prose h1, .prose h2 { color: #e5e7eb !important; }
         .prose strong { color: #f3f4f6 !important; }
         .prose code { background-color: #1f2937; color: #e5e7eb !important; }
 
-        /* --- LIGHT THEME OVERRIDES --- */
-        body.light-theme {
-            background-color: #f3f4f6; background-image: none; color: #1f2937; 
+        /* History List Items */
+        .history-item {
+            padding: 14px;
+            margin: 0 12px 8px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .light-theme .glass-container {
-            background: rgba(255, 255, 255, 0.95); border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-        .light-theme #sidebar {
-            background: #ffffff !important; border-right: 1px solid #e5e7eb;
-        }
-        .light-theme #query, .light-theme .custom-select {
-            background: #ffffff; border: 1px solid #d1d5db; color: #1f2937;
-        }
-        
-        /* Light Theme Result Bar */
-        .light-theme #result-bar {
-            background-color: #ffffff; 
-            border: 1px solid #e5e7eb;
-            color: #1f2937;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .light-theme .action-btn {
-            background-color: #f3f4f6;
-            color: #374151;
-            border: 1px solid #d1d5db;
-        }
-        .light-theme .action-btn:hover {
-            background-color: #e5e7eb;
-            color: #111827;
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(122, 162, 247, 0.3);
+            transform: translateX(4px);
         }
 
+        /* --- THEME OVERRIDES --- */
+        
+        /* LIGHT */
+        body.light-theme { background-color: #f3f4f6; background-image: none; color: #1f2937; }
+        .light-theme .glass-container, .light-theme #sidebar { background: #ffffff !important; border-color: #e5e7eb; }
+        .light-theme #history-panel { background: #ffffff; border-right: 1px solid #e5e7eb; }
+        .light-theme #query, .light-theme .custom-select { background: #ffffff; border: 1px solid #d1d5db; color: #1f2937; }
+        .light-theme #result-bar { background-color: #ffffff; border: 1px solid #e5e7eb; color: #1f2937; }
+        .light-theme .action-btn { background-color: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+        .light-theme .action-btn:hover { background-color: #e5e7eb; color: #111827; }
+        .light-theme .history-item { background: #f9fafb; border: 1px solid #e5e7eb; color: #1f2937; }
+        .light-theme .history-item:hover { background: #f3f4f6; border-color: #2563eb; }
         .light-theme #report-output { color: #374151; }
         .light-theme .prose h1, .light-theme .prose h2 { color: #111827 !important; }
-        .light-theme .prose strong { color: #111827 !important; }
         .light-theme .prose code { background-color: #f3f4f6; color: #111827 !important; }
 
-        /* --- DARK THEME OVERRIDES --- */
-        body.dark-theme {
-            background-color: #000000; background-image: none; color: #e5e5e5;
-        }
-        .dark-theme .glass-container {
-            background: rgba(18, 18, 18, 0.9); border: 1px solid #333; box-shadow: none;
-        }
-        .dark-theme #sidebar {
-            background: #000000 !important; border-right: 1px solid #333;
-        }
-        .dark-theme #query, .dark-theme .custom-select {
-            background: #171717; border: 1px solid #404040; color: #ffffff;
-        }
+        /* DARK */
+        body.dark-theme { background-color: #000000; background-image: none; color: #e5e5e5; }
+        .dark-theme .glass-container, .dark-theme #sidebar { background: #000000 !important; border-color: #333; }
+        .dark-theme #history-panel { background: #0a0a0a; border-right: 1px solid #333; }
+        .dark-theme #query, .dark-theme .custom-select { background: #171717; border: 1px solid #404040; color: #ffffff; }
+        .dark-theme #result-bar { background-color: #000000; border: 1px solid #333; color: #e5e5e5; }
+        .dark-theme .action-btn { background-color: #262626; color: #a3a3a3; border: 1px solid #404040; }
+        .dark-theme .action-btn:hover { background-color: #404040; color: #ffffff; }
+        .dark-theme .history-item { background: #171717; border: 1px solid #333; color: #e5e5e5; }
+        .dark-theme .history-item:hover { background: #262626; border-color: #525252; }
 
-        /* Dark Theme Result Bar */
-        .dark-theme #result-bar {
-            background-color: #000000;
-            border: 1px solid #333;
-            color: #e5e5e5;
-        }
-        .dark-theme .action-btn {
-            background-color: #262626;
-            color: #a3a3a3;
-            border: 1px solid #404040;
-        }
-        .dark-theme .action-btn:hover {
-            background-color: #404040;
-            color: #ffffff;
-        }
-
-        /* Utils */
-        .gradient-text {
-            background: linear-gradient(to right, #7aa2f7, #bb9af7); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text; text-fill-color: transparent;
-        }
-        .light-theme .gradient-text {
-            background: none; -webkit-text-fill-color: #2563eb; text-fill-color: #2563eb;
-        }
-        .dark-theme .gradient-text {
-            background: linear-gradient(to right, #ffffff, #a3a3a3); -webkit-background-clip: text; text-fill-color: transparent;
-        }
+        /* UTILS */
+        .gradient-text { background: linear-gradient(to right, #7aa2f7, #bb9af7); -webkit-background-clip: text; text-fill-color: transparent; }
+        .light-theme .gradient-text { background: none; -webkit-text-fill-color: #2563eb; text-fill-color: #2563eb; }
+        .dark-theme .gradient-text { background: linear-gradient(to right, #ffffff, #a3a3a3); -webkit-background-clip: text; text-fill-color: transparent; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(86, 95, 137, 0.5); border-radius: 20px; }
@@ -160,19 +151,39 @@
 </head>
 <body class="min-h-screen flex">
     
-    <nav id="sidebar" class="flex flex-col h-screen w-16 glass-container border-r-0 rounded-r-2xl z-50 transition-all duration-300 ease-in-out shrink-0">
+    <aside id="history-panel">
+        <div class="p-5 flex justify-between items-center border-b border-white/5">
+            <h3 class="font-bold text-lg" style="color: inherit;">Archives</h3>
+            <button onclick="toggleHistoryPanel()" class="text-gray-500 hover:text-current transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="history-list" class="flex-1 overflow-y-auto custom-scrollbar pt-3 pb-3">
+            <div class="text-center text-gray-500 text-xs py-4">Loading...</div>
+        </div>
+    </aside>
+
+    <nav id="sidebar" class="flex flex-col h-screen w-16 glass-container border-r-0 rounded-r-2xl transition-all duration-300 ease-in-out shrink-0">
         <div class="p-3 flex items-center justify-center h-16">
             <button id="menu-toggle-btn" class="p-2 rounded-xl transition-colors hover:bg-white/5 text-gray-400 hover:text-white shrink-0">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
             </button>
         </div>
-        <div class="flex-grow flex flex-col gap-2 p-2 mt-4">
+        <div class="flex-grow flex flex-col gap-1 p-2 mt-4">
             <a href="{{ url_for('index') }}" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-400 hover:text-white hover:bg-white/5 justify-center">
                 <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 <span class="nav-text font-medium">Research</span>
             </a>
+            
+            <div class="history-btn-wrapper">
+                <button onclick="toggleHistoryPanel()" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-400 hover:text-white hover:bg-white/5 w-full justify-center">
+                    <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="nav-text font-medium">History</span>
+                </button>
+            </div>
+
             <a href="{{ url_for('chat_page') }}" class="flex items-center p-2.5 rounded-xl transition-all group text-gray-400 hover:text-white hover:bg-white/5 justify-center">
-                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
                 <span class="nav-text font-medium">Assistant</span>
             </a>
         </div>
@@ -184,7 +195,7 @@
         </div>
     </nav>
     
-    <div id="main-content" class="flex-1 h-screen flex flex-col overflow-hidden relative">
+    <div id="main-content" class="flex-1 h-screen flex flex-col overflow-hidden relative z-0">
         
         <header class="absolute top-0 left-0 w-full p-6 z-40 pointer-events-none">
             <div class="pointer-events-auto inline-block">
@@ -197,20 +208,14 @@
 
                 <div id="input-section" class="flex-1 flex flex-col justify-center transition-all duration-700 ease-in-out transform translate-x-0 opacity-100">
                     <header class="text-center mb-8">
-                        <h1 class="text-3xl md:text-4xl font-bold gradient-text mb-3 tracking-tight">
-                            AI Research Report Generator
-                        </h1>
-                        <p class="text-gray-400 text-sm md:text-base max-w-lg mx-auto">
-                            Generate comprehensive, citation-backed reports in minutes.
-                        </p>
+                        <h1 class="text-3xl md:text-4xl font-bold gradient-text mb-3 tracking-tight">AI Research Report Generator</h1>
+                        <p class="text-gray-400 text-sm md:text-base max-w-lg mx-auto">Generate comprehensive, citation-backed reports in minutes.</p>
                     </header>
-
                     <form id="report-form" class="w-full max-w-2xl mx-auto bg-gray-800/60 backdrop-blur-xl border border-gray-700/50 p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden group">
                         <div class="mb-6">
                             <label for="query" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 ml-1">Research Topic</label>
                             <input type="text" id="query" name="query" class="w-full rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder-gray-600" placeholder="e.g. Quantum Computing in Healthcare..." required>
                         </div>
-
                         <div class="mb-6">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div class="md:col-span-2">
@@ -234,15 +239,11 @@
                                 </div>
                             </div>
                         </div>
-                        
                         <div id="custom-format-container" class="mb-6 hidden">
                             <label class="block text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2 ml-1">Define Your Structure</label>
                             <textarea id="custom-format-input" rows="6" class="w-full bg-gray-900/80 border border-blue-500/30 text-gray-300 text-xs font-mono rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all custom-scrollbar" placeholder="# 1. Introduction..."></textarea>
                         </div>
-
-                        <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-3.5 rounded-xl shadow-lg transform transition-all duration-200 active:scale-[0.98]">
-                            Start Research Agent
-                        </button>
+                        <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-3.5 rounded-xl shadow-lg transform transition-all duration-200 active:scale-[0.98]">Start Research Agent</button>
                     </form>
                 </div>
 
@@ -253,30 +254,23 @@
                         <p class="text-blue-300 text-sm" id="step-1-text">Searching global databases...</p>
                     </div>
                     <div id="step-2" class="progress-step absolute flex flex-col items-center transition-all duration-1000 ease-in-out opacity-0 translate-y-12 scale-90">
-                        <div class="w-14 h-14 rounded-full bg-gray-800 border-2 border-purple-500 flex items-center justify-center mb-4 shadow-lg">
-                            <svg class="w-7 h-7 text-purple-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                        </div>
+                        <div class="w-14 h-14 rounded-full bg-gray-800 border-2 border-purple-500 flex items-center justify-center mb-4 shadow-lg"><svg class="w-7 h-7 text-purple-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg></div>
                         <h2 class="text-2xl font-bold text-white mb-1">Planning Report</h2>
                         <p class="text-purple-300 text-sm" id="step-2-text">Synthesizing & Structuring...</p>
                     </div>
                     <div id="step-3" class="progress-step absolute flex flex-col items-center transition-all duration-1000 ease-in-out opacity-0 translate-y-12 scale-90">
-                        <div class="w-14 h-14 rounded-full bg-gray-800 border-2 border-green-500 flex items-center justify-center mb-4 shadow-lg">
-                             <svg class="w-7 h-7 text-green-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                        </div>
+                        <div class="w-14 h-14 rounded-full bg-gray-800 border-2 border-green-500 flex items-center justify-center mb-4 shadow-lg"><svg class="w-7 h-7 text-green-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></div>
                         <h2 class="text-2xl font-bold text-white mb-1">Drafting Content</h2>
                         <p class="text-green-300 text-sm" id="step-3-text">Writing detailed sections...</p>
                     </div>
                     <div id="step-4" class="progress-step absolute flex flex-col items-center transition-all duration-1000 ease-in-out opacity-0 translate-y-12 scale-90">
-                        <div class="w-14 h-14 rounded-full bg-gray-800 border-2 border-cyan-500 flex items-center justify-center mb-4 shadow-lg">
-                            <svg class="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        </div>
+                        <div class="w-14 h-14 rounded-full bg-gray-800 border-2 border-cyan-500 flex items-center justify-center mb-4 shadow-lg"><svg class="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
                         <h2 class="text-2xl font-bold text-white mb-1">Finalizing</h2>
                         <p class="text-cyan-300 text-sm" id="step-4-text">Formatting document...</p>
                     </div>
                 </div>
 
                 <div id="results-container" class="hidden flex-col w-full transition-opacity duration-700">
-                    
                     <div id="result-bar" class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 p-4 rounded-2xl sticky top-0 z-40 shadow-xl backdrop-blur-xl transition-colors duration-300">
                         <div class="flex items-center gap-3">
                             <div class="p-2 bg-green-500/10 rounded-lg">
@@ -295,11 +289,8 @@
                             <button onclick="resetView()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg transition-colors shadow-lg shadow-indigo-500/20 border border-transparent">New</button>
                         </div>
                     </div>
-
-                    <article id="report-output" class="w-full p-8 md:p-12 rounded-lg shadow-2xl mx-auto min-h-[800px] prose prose-invert prose-sm md:prose-base max-w-none">
-                    </article>
+                    <article id="report-output" class="w-full p-8 md:p-12 rounded-lg shadow-2xl mx-auto min-h-[800px] prose prose-invert prose-sm md:prose-base max-w-none"></article>
                 </div>
-
             </main>
         </div>
     </div>
@@ -338,16 +329,68 @@
         const menuBtn = document.getElementById('menu-toggle-btn');
         menuBtn.onclick = () => sidebar.classList.toggle('is-expanded');
 
-        // SETTINGS LOGIC
+        // SETTINGS
         const settingsOverlay = document.getElementById('settings-overlay');
         const settingsPanel = document.getElementById('settings-panel');
         const openSettingsBtn = document.getElementById('settings-open-btn');
         const closeSettingsBtn = document.getElementById('settings-close-btn');
-        const themeBtns = {
-            light: document.getElementById('theme-light-btn'),
-            dark: document.getElementById('theme-dark-btn'),
-            default: document.getElementById('theme-default-btn')
-        };
+        
+        // HISTORY
+        const historyPanel = document.getElementById('history-panel');
+        const historyList = document.getElementById('history-list');
+
+        function toggleHistoryPanel() {
+            historyPanel.classList.toggle('is-open');
+            fetchHistory();
+        }
+        
+        // Close history when clicking on main content (optional UX improvement)
+        document.getElementById('main-content').onclick = () => {
+            if(historyPanel.classList.contains('is-open')) historyPanel.classList.remove('is-open');
+        }
+
+        async function fetchHistory() {
+            try {
+                const res = await fetch("/api/history");
+                const data = await res.json();
+                historyList.innerHTML = "";
+                if(data.length === 0) {
+                    historyList.innerHTML = '<div class="text-center text-gray-500 py-4 text-xs">No reports yet.</div>';
+                    return;
+                }
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "history-item";
+                    div.onclick = () => loadHistoryItem(item.id);
+                    div.innerHTML = `
+                        <div class="text-xs font-bold text-current mb-1 line-clamp-1">${item.topic}</div>
+                        <div class="text-[10px] opacity-60">${item.date}</div>
+                    `;
+                    historyList.appendChild(div);
+                });
+            } catch(e) {
+                historyList.innerHTML = '<div class="text-center text-red-400 py-4 text-xs">Error.</div>';
+            }
+        }
+
+        async function loadHistoryItem(id) {
+            historyPanel.classList.remove('is-open');
+            inputSection.classList.add('hidden');
+            progressSection.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.classList.remove('opacity-0');
+            
+            try {
+                const res = await fetch(`/api/report/${id}`);
+                const data = await res.json();
+                if(data.content) {
+                    currentQuery = data.topic;
+                    showResults(data.content);
+                }
+            } catch(e) {
+                alert("Failed to load report.");
+            }
+        }
 
         function openSettings() {
             settingsOverlay.classList.remove('hidden'); settingsPanel.classList.remove('hidden');
@@ -358,6 +401,13 @@
             setTimeout(() => { settingsOverlay.classList.add('hidden'); settingsPanel.classList.add('hidden'); }, 300);
         }
         openSettingsBtn.onclick = openSettings; closeSettingsBtn.onclick = closeSettings; settingsOverlay.onclick = closeSettings;
+
+        // THEME LOGIC
+        const themeBtns = {
+            light: document.getElementById('theme-light-btn'),
+            dark: document.getElementById('theme-dark-btn'),
+            default: document.getElementById('theme-default-btn')
+        };
 
         function applyTheme(theme) {
             document.body.className = 'min-h-screen flex';
@@ -476,6 +526,8 @@
                         resultsContainer.classList.remove('hidden');
                         setTimeout(() => resultsContainer.classList.remove('opacity-0'), 100);
                         showResults(data.report_content);
+                        // Refresh history list so the new report appears immediately
+                        fetchHistory(); 
                     }, 1000);
 
                 } else if (data.status === 'FAILURE') {

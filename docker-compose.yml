@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  # Service 1: The Database
+  # Service 1: The Database (Redis for Celery)
   redis:
     image: redis:alpine
     container_name: scholarforge_redis
@@ -15,13 +13,13 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
     volumes:
       - .:/app  # Syncs code changes
+      - ./data:/app/data # SHARED DATA FOLDER
     ports:
       - "5000:5000"
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      # CHANGED: Standardized to SERPAPI_KEY (Make sure your .env file uses this name)
       - SERPAPI_KEY=${SERPAPI_KEY} 
       - APP_SECRET_KEY=${APP_SECRET_KEY}
     depends_on:
@@ -31,15 +29,14 @@ services:
   worker:
     build: .
     container_name: scholarforge_worker
-    # The command to start the celery worker
     command: celery -A task.celery_app worker --loglevel=info
     volumes:
       - .:/app  # Syncs code changes
+      - ./data:/app/data # SHARED DATA FOLDER
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      # CHANGED: Standardized to SERPAPI_KEY
       - SERPAPI_KEY=${SERPAPI_KEY}
     depends_on:
       - redis

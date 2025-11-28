@@ -12,3 +12,4 @@ reportlab
 python-dotenv
 httpx
 itsdangerous
+sqlalchemy

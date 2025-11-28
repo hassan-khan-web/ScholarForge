@@ -11,11 +11,12 @@ from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 from celery.result import AsyncResult
 
-# Import your modules
+# Import modules
 from task import generate_report_task, celery_app
 import AI_engine 
 import chat_engine 
 import report_formats
+import database # Import DB
 
 app = FastAPI(title="ScholarForge")
 
@@ -25,6 +26,11 @@ if os.path.exists("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
+
+# --- DATABASE INIT ON STARTUP ---
+@app.on_event("startup")
+def startup():
+    database.init_db()
 
 # --- Pydantic Models ---
 class ReportRequest(BaseModel):
@@ -44,6 +50,27 @@ class HookRequest(BaseModel):
 @app.get("/")
 async def index(request: Request):
     return templates.TemplateResponse("report_generator.html", {"request": request})
+
+# NEW: History Endpoints
+@app.get("/api/history")
+def get_history():
+    reports = database.get_all_reports()
+    # Convert DB objects to simple JSON list
+    data = []
+    for r in reports:
+        data.append({
+            "id": r.id, 
+            "topic": r.topic, 
+            "date": r.created_at.strftime("%b %d, %H:%M") # Format: Nov 28, 14:30
+        })
+    return data
+
+@app.get("/api/report/{id}")
+def get_report(id: int):
+    report = database.get_report_content(id)
+    if report:
+        return {"topic": report.topic, "content": report.content}
+    return {"error": "Not found"}
 
 @app.post("/start-report")
 async def start_report(data: ReportRequest):
@@ -144,7 +171,6 @@ def send_converted_file(report_content, topic, format_type, background_tasks):
         filename = f"{safe_topic}_Report.txt"
         result = AI_engine.convert_to_txt(report_content, temp_filepath)
         media_type = 'text/plain'
-    # NEW JSON HANDLING
     elif format_type == 'json':
         filename = f"{safe_topic}_Report.json"
         result = AI_engine.convert_to_json(report_content, topic, temp_filepath)
@@ -173,15 +199,25 @@ async def chat_page(request: Request):
 @app.post("/chat")
 async def handle_chat(data: ChatRequest, request: Request):
     chat_history = request.session.get('chat_history', [])
+    
     ai_response = await chat_engine.get_chat_response_async(data.message, chat_history)
+    
     chat_history.append({'role': 'user', 'content': data.message})
     chat_history.append({'role': 'assistant', 'content': ai_response})
     request.session['chat_history'] = chat_history
+    
+    database.save_chat_message("user", data.message)
+    database.save_chat_message("assistant", ai_response)
+
     return {'response': ai_response}
 
 @app.post("/add-hook")
 async def add_hook(data: HookRequest):
-    return {'status': 'success', 'message': 'Hook saved!'}
+    try:
+        database.save_hook(data.content)
+        return {'status': 'success', 'message': 'Hook saved to Database!'}
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}
 
 if __name__ == '__main__':
     import uvicorn
