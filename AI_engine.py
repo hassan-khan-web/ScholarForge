@@ -279,7 +279,8 @@ def convert_to_pdf(report_content: str, topic: str, filepath: str) -> str:
         flowables.append(Paragraph(topic, styles['Title']))
         flowables.append(Spacer(1, 12))
         
-        style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=11, leading=15, spaceAfter=10)
+        # FIXED: Variable was previously named 'style' but used as 'body_style'
+        body_style = ParagraphStyle('Body', parent=styles['Normal'], fontSize=11, leading=15, spaceAfter=10)
         heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontSize=14, spaceAfter=10, spaceBefore=10)
         
         lines = report_content.split('\n')
