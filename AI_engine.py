@@ -14,9 +14,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from collections import Counter
-import fitz  # PyMuPDF for PDF parsing
-
-# IMPORT THE FORMAT LOGIC
+import fitz  
 from report_formats import get_template_instructions
 
 AI_MODEL_STRING = "x-ai/grok-4.1-fast:free" 
