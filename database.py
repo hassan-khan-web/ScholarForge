@@ -1,30 +1,22 @@
 import os
 from datetime import datetime, timezone
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, event, text
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, text
 from sqlalchemy.orm import sessionmaker, relationship, declarative_base
-from sqlalchemy.engine import Engine
 
 # 1. SETUP
-DB_FOLDER = "/app/data"
-if not os.path.exists(DB_FOLDER):
-    os.makedirs(DB_FOLDER, exist_ok=True)
+# Get URL from environment or fallback to default (Docker service name is 'db')
+SQLALCHEMY_DATABASE_URL = os.environ.get(
+    "DATABASE_URL", 
+    "postgresql://scholar:forgepass@db:5432/scholarforge"
+)
 
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_FOLDER}/scholarforge.db"
-
-# Connect args needed for SQLite in threaded env
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-
-# ENABLE WAL MODE
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL")
-    cursor.close()
+# Postgres engine does not need "check_same_thread"
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# 2. MODELS
+# 2. MODELS (Unchanged)
 
 class ReportDB(Base):
     __tablename__ = "reports"
@@ -65,25 +57,21 @@ class Hook(Base):
     content = Column(Text)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-# 3. INIT (AUTO-FIXER)
+# 3. INIT
 def init_db():
-    # Check if we need to rebuild due to missing columns (The Fix)
     try:
-        with engine.connect() as conn:
-            # Try to select the new column. If it fails, we rebuild.
-            conn.execute(text("SELECT folder_id FROM chat_sessions LIMIT 1"))
-    except Exception:
-        print(">>> DETECTED OLD SCHEMA. REBUILDING DATABASE...")
-        Base.metadata.drop_all(bind=engine)
-    
-    Base.metadata.create_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        print(">>> Database initialized (PostgreSQL).")
+    except Exception as e:
+        print(f">>> Database Init Error: {e}")
 
-# 4. CRUD OPERATIONS
+# 4. CRUD OPERATIONS (Unchanged)
 
-# --- Folders ---
 def create_folder(name: str):
     db = SessionLocal()
     try:
+        existing = db.query(ProjectFolder).filter(ProjectFolder.name == name).first()
+        if existing: raise Exception("Folder already exists")
         folder = ProjectFolder(name=name)
         db.add(folder)
         db.commit()
@@ -101,7 +89,6 @@ def get_folders_with_sessions():
         folders = db.query(ProjectFolder).order_by(ProjectFolder.created_at.desc()).all()
         result = []
         for f in folders:
-            # Sort sessions newest first
             sessions = sorted(f.sessions, key=lambda s: s.created_at, reverse=True)
             result.append({
                 "id": f.id,
@@ -112,7 +99,6 @@ def get_folders_with_sessions():
     finally:
         db.close()
 
-# --- Sessions ---
 def create_chat_session(folder_id: int, title: str):
     db = SessionLocal()
     try:
@@ -140,7 +126,6 @@ def save_chat_message(session_id: int, role: str, content: str):
     finally:
         db.close()
 
-# --- Reports ---
 def save_report(topic: str, content: str):
     db = SessionLocal()
     try:

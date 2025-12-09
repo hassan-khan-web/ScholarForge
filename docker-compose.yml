@@ -1,10 +1,28 @@
+version: '3.8'
+
 services:
+  # 1. REDIS (Task Queue)
   redis:
     image: redis:alpine
     container_name: scholarforge_redis
     ports:
       - "6379:6379"
 
+  # 2. POSTGRESQL (Database) - NEW
+  db:
+    image: postgres:15-alpine
+    container_name: scholarforge_db
+    restart: always
+    environment:
+      - POSTGRES_USER=scholar
+      - POSTGRES_PASSWORD=forgepass
+      - POSTGRES_DB=scholarforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 3. WEB SERVER (FastAPI)
   web:
     build: .
     container_name: scholarforge_web
@@ -16,23 +34,33 @@ services:
       - "5000:5000"
     env_file:
       - .env
+    # Connection String passed here to override .env defaults if needed
     environment:
+      - DATABASE_URL=postgresql://scholar:forgepass@db:5432/scholarforge
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - redis
+      - db
 
+  # 4. WORKER (Celery)
   worker:
     build: .
     container_name: scholarforge_worker
-    command: celery -A task.celery_app worker --loglevel=info
+    # Hot-reload enabled via watchmedo
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A task.celery_app worker --loglevel=info
     volumes:
       - .:/app
       - ./data:/app/data
     env_file:
       - .env
     environment:
+      - DATABASE_URL=postgresql://scholar:forgepass@db:5432/scholarforge
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - redis
+      - db
+
+volumes:
+  postgres_data:

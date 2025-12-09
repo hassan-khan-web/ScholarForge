@@ -277,6 +277,11 @@ def convert_to_txt(content, path):
     with open(path, "w", encoding="utf-8") as f: f.write(content)
     return "Success"
 
+# NEW: Markdown Converter
+def convert_to_md(content, path):
+    with open(path, "w", encoding="utf-8") as f: f.write(content)
+    return "Success"
+
 def convert_to_json(content, topic, path):
     data = {"topic": topic, "content": content, "generated_by": "ScholarForge"}
     with open(path, "w", encoding="utf-8") as f: json.dump(data, f, indent=4)

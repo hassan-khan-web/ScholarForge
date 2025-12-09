@@ -1,4 +1,5 @@
 import os
+import shutil
 import urllib.parse
 import tempfile
 from dotenv import load_dotenv
@@ -30,6 +31,26 @@ if not os.path.exists("static/charts"):
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
+
+@app.post("/api/system/reset-db")
+def reset_database():
+    """
+    Nuclear option for PostgreSQL: Drops all tables and recreates them.
+    """
+    try:
+        # Close connections
+        database.engine.dispose()
+        
+        # Drop all tables using metadata
+        database.Base.metadata.drop_all(bind=database.engine)
+        
+        # Re-create
+        database.init_db()
+        
+        return {"status": "success", "message": "Database reset (Tables dropped and recreated)."}
+    except Exception as e:
+        print(f"Reset Error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.on_event("startup")
 def startup():
@@ -66,20 +87,38 @@ async def index(request: Request):
 async def chat_page(request: Request):
     return templates.TemplateResponse('ai_assistant.html', {"request": request})
 
+# --- SYSTEM ROUTES ---
+@app.post("/api/system/reset-db")
+def reset_database():
+    try:
+        database.engine.dispose()
+        db_path = f"{database.DB_FOLDER}/scholarforge.db"
+        if os.path.exists(db_path):
+            os.remove(db_path)
+        if os.path.exists(f"{db_path}-wal"): os.remove(f"{db_path}-wal")
+        if os.path.exists(f"{db_path}-shm"): os.remove(f"{db_path}-shm")
+        database.init_db()
+        return {"status": "success", "message": "Database reset successfully."}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 # --- FOLDER & CHAT API ---
 
 @app.get("/api/folders")
 def get_folders():
-    """Get the tree structure of Folders -> Sessions"""
     return database.get_folders_with_sessions()
 
 @app.post("/api/folders")
 def create_new_folder(data: CreateFolderRequest):
+    # Added Debug Print
+    print(f"DEBUG: Attempting to create folder: {data.name}")
     try:
         folder = database.create_folder(data.name)
+        print(f"DEBUG: Folder created ID: {folder.id}")
         return {"status": "success", "folder": {"id": folder.id, "name": folder.name, "sessions": []}}
     except Exception as e:
-        return JSONResponse(status_code=400, content={"error": f"Could not create folder. Name might be duplicate."})
+        print(f"DEBUG: Error creating folder: {e}")
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 @app.post("/api/sessions")
 def create_new_session(data: CreateSessionRequest):
@@ -96,14 +135,11 @@ def get_session_history(session_id: int):
 
 @app.post("/chat")
 async def handle_chat(data: ChatRequest):
-    # Fetch history for context
     db_messages = database.get_session_messages(data.session_id)
     history_context = [{"role": m.role, "content": m.content} for m in db_messages]
     
-    # Get AI Response
     ai_response = await chat_engine.get_chat_response_async(data.message, history_context)
     
-    # Save to DB
     database.save_chat_message(data.session_id, "user", data.message)
     database.save_chat_message(data.session_id, "assistant", ai_response)
     
@@ -225,6 +261,9 @@ def send_converted_file(report_content, topic, format_type, chart_path, backgrou
     elif format_type == 'txt':
         result = AI_engine.convert_to_txt(report_content, temp_filepath)
         media_type = 'text/plain'
+    elif format_type == 'md':
+        result = AI_engine.convert_to_md(report_content, temp_filepath)
+        media_type = 'text/markdown'
     elif format_type == 'json':
         result = AI_engine.convert_to_json(report_content, topic, temp_filepath)
         media_type = 'application/json'

@@ -9,12 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- THEME VARIABLES --- */
+        /* CSS Variables */
         :root {
             --sidebar-width: 16rem;
             --sidebar-collapsed-width: 4.5rem;
-            
-            /* Default (Tokyo Night) */
             --bg-main: #1a1b26;
             --bg-sidebar: #13141f;
             --bg-panel: #1f2335;
@@ -26,7 +24,7 @@
             --active-bg: rgba(122, 162, 247, 0.1);
         }
 
-        /* Light Theme Override */
+        /* Light Theme */
         body.light-theme {
             --bg-main: #f3f4f6;
             --bg-sidebar: #ffffff;
@@ -39,7 +37,7 @@
             --active-bg: #eff6ff;
         }
 
-        /* Dark Theme Override */
+        /* Dark Theme */
         body.dark-theme {
             --bg-main: #000000;
             --bg-sidebar: #0a0a0a;
@@ -52,225 +50,183 @@
             --active-bg: #262626;
         }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-main); 
-            color: var(--text-main); 
-            overflow: hidden; 
-            transition: background-color 0.3s, color 0.3s;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); overflow: hidden; }
         
-        /* --- SIDEBAR --- */
+        .btn-danger { background-color: #ef4444; color: white; transition: opacity 0.2s; }
+        .btn-danger:hover { opacity: 0.9; }
+        
+        /* SIDEBAR Styles */
         #sidebar { 
-            width: var(--sidebar-width);
-            background: var(--bg-sidebar); 
-            border-right: 1px solid var(--border-color); 
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            z-index: 50;
-            display: flex; flex-direction: column; flex-shrink: 0;
+            width: var(--sidebar-width); background: var(--bg-sidebar); border-right: 1px solid var(--border-color); 
+            transition: width 0.3s; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0;
         }
-        
-        /* Collapsed State Logic */
         #sidebar.collapsed { width: var(--sidebar-collapsed-width); }
         
+        /* Hide elements when collapsed */
         #sidebar.collapsed .nav-text, 
         #sidebar.collapsed .logo-text, 
         #sidebar.collapsed .sidebar-divider, 
-        #sidebar.collapsed .section-label,
-        #sidebar.collapsed #folder-tree-container,
-        #sidebar.collapsed .folder-arrow,
-        #sidebar.collapsed .create-folder-btn-text { 
-            display: none !important; opacity: 0; 
+        #sidebar.collapsed #folder-tree-container, 
+        #sidebar.collapsed .create-folder-btn-text,
+        #sidebar.collapsed .section-label { /* Added section-label here */
+            display: none !important; 
         }
         
-        /* Center icons when collapsed */
         #sidebar.collapsed .nav-item { justify-content: center; padding: 12px 0; }
-        #sidebar.collapsed .nav-item svg { margin-right: 0; width: 22px; height: 22px; }
+        #sidebar.collapsed .nav-item svg { margin-right: 0; }
+        
         #sidebar.collapsed .sidebar-header { justify-content: center; }
-        #sidebar.collapsed .settings-container { justify-content: center; }
 
-        /* Navigation Links */
-        .nav-item {
-            display: flex; align-items: center; justify-content: flex-start;
-            padding: 10px 14px; margin-bottom: 4px; border-radius: 8px;
-            color: var(--text-muted); transition: all 0.2s; 
-            font-size: 0.85rem; font-weight: 500;
-            white-space: nowrap; overflow: hidden; cursor: pointer;
-        }
+        .nav-item { display: flex; align-items: center; padding: 10px 14px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; font-weight: 500; }
         .nav-item:hover { background: var(--hover-bg); color: var(--text-main); }
         .nav-item.active { background: var(--active-bg); color: var(--accent-primary); }
-        .nav-item svg { min-width: 20px; width: 20px; height: 20px; margin-right: 12px; transition: margin 0.3s; }
-        
-        /* --- HISTORY PANEL (SLIDE OUT) --- */
+        .nav-item svg { width: 20px; height: 20px; margin-right: 12px; }
+
+        /* Icon Button Class */
+        .icon-btn {
+            width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center;
+            border-radius: 0.5rem; color: var(--text-muted); transition: background-color 0.2s;
+        }
+        .icon-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
+
+        /* HISTORY PANEL */
         #history-panel {
-            position: fixed;
-            top: 0; bottom: 0;
-            left: var(--sidebar-width);
-            width: 20rem;
-            background: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
-            transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 40; 
-            display: flex; flex-direction: column;
-            box-shadow: 10px 0 25px -5px rgba(0,0,0,0.1);
+            position: fixed; top: 0; bottom: 0; left: var(--sidebar-width); width: 20rem; background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color); transform: translateX(-100%); transition: transform 0.3s, left 0.3s; z-index: 40;
+            display: flex; flex-direction: column; box-shadow: 10px 0 25px -5px rgba(0,0,0,0.1);
         }
         #history-panel.open { transform: translateX(0); }
         #sidebar.collapsed ~ #history-panel { left: var(--sidebar-collapsed-width); }
 
-        /* --- FOLDER TREE --- */
+        /* FOLDER TREE */
         .folder-row { 
-            display: flex; align-items: center; padding: 8px 14px; cursor: pointer; 
-            color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
-            transition: color 0.2s; border-radius: 6px;
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 8px 14px; cursor: pointer; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; 
         }
         .folder-row:hover { color: var(--text-main); background: var(--hover-bg); }
-        .folder-arrow { margin-right: 8px; width: 10px; display: inline-block; text-align: center; transition: transform 0.2s; }
+        
+        .folder-content { display: flex; align-items: center; overflow: hidden; }
+        
+        .folder-arrow { margin-right: 8px; width: 10px; display: inline-block; transition: transform 0.2s; }
         .folder-row.open .folder-arrow { transform: rotate(90deg); }
+        
+        .add-chat-btn {
+            opacity: 0; transition: opacity 0.2s; padding: 2px 6px; border-radius: 4px;
+            font-size: 14px; line-height: 1; color: var(--accent-primary);
+        }
+        .folder-row:hover .add-chat-btn { opacity: 1; }
+        .add-chat-btn:hover { background: var(--active-bg); }
 
         .session-list { display: none; margin-left: 19px; border-left: 1px solid var(--border-color); }
         .session-list.open { display: block; }
-
-        .session-item {
-            display: flex; align-items: center; padding: 6px 12px;
-            font-size: 0.8rem; color: var(--text-muted); cursor: pointer;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
+        .session-item { display: flex; align-items: center; padding: 6px 12px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; }
         .session-item:hover { color: var(--accent-primary); background: var(--hover-bg); }
         .session-item.active { color: var(--accent-primary); background: var(--active-bg); border-left: 2px solid var(--accent-primary); }
 
-        /* --- UTILS --- */
-        .sidebar-divider { height: 1px; background: var(--border-color); margin: 16px 0; }
-        .glass-panel { background: var(--bg-panel); border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
-        
-        .icon-btn {
-            width: 40px; height: 40px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 8px;
-            color: var(--text-muted);
-            transition: all 0.2s;
+        /* MODALS */
+        .custom-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            z-index: 100; display: none; align-items: center; justify-content: center;
         }
-        .icon-btn:hover { background: var(--hover-bg); color: var(--text-main); }
-
+        .glass-panel { background: var(--bg-panel); border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
     </style>
 </head>
 <body class="flex h-screen w-full">
 
-    <!-- SIDEBAR (Starts Collapsed) -->
     <nav id="sidebar" class="collapsed">
-        <!-- Header -->
         <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)] shrink-0 sidebar-header">
-            <!-- Logo Text -->
-            <span class="logo-text font-bold text-xl tracking-tight transition-opacity duration-300" style="color: var(--accent-primary);">ScholarForge</span>
-            
-            <!-- Menu Icon (On Right Side) -->
+            <span class="logo-text font-bold text-xl tracking-tight" style="color: var(--accent-primary);">ScholarForge</span>
             <button id="sidebar-toggle" class="icon-btn">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
             </button>
         </div>
 
-        <!-- Scrollable Menu -->
         <div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col py-4 px-2">
-            
-            <!-- Main Nav -->
             <a href="{{ url_for('index') }}" class="nav-item {% if request.path == '/' %}active{% endif %}" title="Report Generator">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 <span class="nav-text">Report Generator</span>
             </a>
             
-            <div onclick="toggleHistory()" class="nav-item" title="Generated History">
+            <div onclick="toggleHistory()" class="nav-item" title="History">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span class="nav-text">Generated History</span>
             </div>
 
-            <a href="{{ url_for('chat_page') }}" class="nav-item {% if request.path == '/chat' %}active{% endif %}" title="Research Assistant">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 01-2 2h14a2 2 0 01-2 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                <span class="nav-text">Research Assistant</span>
-            </a>
+            <div class="h-px bg-[var(--border-color)] mt-4 mb-4 sidebar-divider"></div>
 
-            <!-- Divider -->
-            <div class="sidebar-divider"></div>
+            <div class="px-3 mb-2 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider section-label">
+                Research Assistant
+            </div>
 
-            <!-- Folder Section -->
             <div id="folder-section-wrapper" class="flex flex-col">
-                <button onclick="openFolderModal()" class="nav-item !text-[var(--accent-primary)] hover:!bg-[var(--hover-bg)] mb-2 group border border-dashed border-[var(--border-color)] justify-start" title="Create Folder">
-                    <svg class="group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                <button onclick="openFolderModal()" class="nav-item !text-[var(--accent-primary)] border border-dashed border-[var(--border-color)] justify-start">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                     <span class="nav-text font-semibold create-folder-btn-text">Create Folder</span>
                 </button>
-
-                <div id="folder-tree-container" class="flex flex-col gap-0.5 mt-2 transition-opacity duration-300">
-                    <!-- JS Injected Folders go here -->
+                <div id="folder-tree-container" class="flex flex-col gap-0.5 mt-2">
                     <div class="text-xs text-[var(--text-muted)] pl-4 italic">Loading...</div>
                 </div>
             </div>
         </div>
 
-        <!-- Bottom Settings (Icon Only) -->
-        <div class="mt-auto p-3 border-t border-[var(--border-color)] flex settings-container justify-center">
+        <div class="mt-auto p-3 border-t border-[var(--border-color)] flex justify-center settings-container">
             <button onclick="openSettingsModal()" class="icon-btn" title="Settings">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </button>
         </div>
     </nav>
 
-    <!-- GENERATED HISTORY PANEL (SLIDE OUT) -->
     <aside id="history-panel">
         <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
             <span class="font-bold text-[var(--text-main)]">Generated Reports</span>
-            <button onclick="toggleHistory()" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+            <button onclick="toggleHistory()" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
         </div>
-        <div id="history-list-content" class="flex-1 overflow-y-auto p-4 custom-scrollbar">
-            <!-- Report History Injected Here -->
-            <div class="text-sm text-[var(--text-muted)] text-center mt-10">No generated reports yet.</div>
-        </div>
+        <div id="history-list-content" class="flex-1 overflow-y-auto p-4 custom-scrollbar"></div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col relative overflow-hidden h-full z-0 bg-[var(--bg-main)]">
         {% block content %}{% endblock %}
     </div>
 
-    <!-- MODAL: CREATE FOLDER -->
-    <div id="folder-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
-        <div class="glass-panel rounded-xl p-6 w-full max-w-sm transform scale-95 transition-transform duration-300" id="fm-content">
+    <div id="folder-modal" class="custom-modal-overlay">
+        <div class="glass-panel rounded-xl p-6 w-full max-w-sm">
             <h3 class="text-lg font-bold text-[var(--text-main)] mb-1">New Project Folder</h3>
             <p class="text-xs text-[var(--text-muted)] mb-5">Group your research chats.</p>
             <input type="text" id="fm-input" class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-[var(--text-main)] text-sm focus:outline-none focus:border-[var(--accent-primary)] mb-6" placeholder="Folder Name">
             <div class="flex justify-end gap-2">
                 <button onclick="closeFolderModal()" class="px-4 py-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)]">Cancel</button>
-                <button onclick="submitFolderCreation()" class="px-4 py-2 text-xs font-medium bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg">Create</button>
+                <button onclick="submitFolderCreation()" id="btn-create-folder" class="px-4 py-2 text-xs font-medium bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg">Create</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL: SETTINGS (THEME SELECTOR) -->
-    <div id="settings-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
-        <div class="glass-panel rounded-xl p-6 w-full max-w-sm transform scale-95 transition-transform duration-300" id="sm-content">
+    <div id="settings-modal" class="custom-modal-overlay">
+        <div class="glass-panel rounded-xl p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-6 border-b border-[var(--border-color)] pb-3">
                 <h3 class="text-lg font-bold text-[var(--text-main)]">Settings</h3>
                 <button onclick="closeSettingsModal()" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
             </div>
             
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Interface Theme</label>
+            <div class="space-y-6">
+                <div class="grid grid-cols-[120px_1fr] gap-4 items-center">
+                    <label class="text-xs font-bold text-[var(--text-muted)] uppercase">Theme</label>
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="setTheme('default')" class="theme-btn border border-[var(--border-color)] rounded-lg p-2 text-xs text-center hover:bg-[var(--hover-bg)] text-[var(--text-main)] transition-colors">
-                            Tokyo
-                        </button>
-                        <button onclick="setTheme('light')" class="theme-btn border border-[var(--border-color)] rounded-lg p-2 text-xs text-center hover:bg-[var(--hover-bg)] text-[var(--text-main)] transition-colors">
-                            Light
-                        </button>
-                        <button onclick="setTheme('dark')" class="theme-btn border border-[var(--border-color)] rounded-lg p-2 text-xs text-center hover:bg-[var(--hover-bg)] text-[var(--text-main)] transition-colors">
-                            Dark
-                        </button>
+                        <button onclick="setTheme('default')" class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Tokyo</button>
+                        <button onclick="setTheme('light')" class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Light</button>
+                        <button onclick="setTheme('dark')" class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Dark</button>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-[120px_1fr] gap-4 items-start border-t border-[var(--border-color)] pt-4">
+                     <label class="text-xs font-bold text-red-400 uppercase mt-1">Danger</label>
+                     <div class="flex flex-col gap-2 w-full">
+                         <p class="text-[10px] text-[var(--text-muted)]">Database corrupted? Reset it here.</p>
+                         <button onclick="resetDatabase()" class="w-full btn-danger rounded-lg p-2 text-xs text-center font-bold">Reset Database</button>
+                     </div>
                 </div>
             </div>
         </div>
@@ -278,149 +234,143 @@
 
     <script>
         // --- UI TOGGLES ---
-        const sidebar = document.getElementById('sidebar');
-        const historyPanel = document.getElementById('history-panel');
-        
-        document.getElementById('sidebar-toggle').onclick = () => {
-            sidebar.classList.toggle('collapsed');
-        };
+        document.getElementById('sidebar-toggle').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
+        window.toggleHistory = () => { document.getElementById('history-panel').classList.toggle('open'); fetchHistoryReports(); };
 
-        window.toggleHistory = () => {
-            historyPanel.classList.toggle('open');
-            fetchHistoryReports(); 
+        // --- MODAL LOGIC ---
+        window.openFolderModal = () => { 
+            const m = document.getElementById('folder-modal');
+            m.style.display = 'flex'; 
+            setTimeout(() => document.getElementById('fm-input').focus(), 50);
         };
+        window.closeFolderModal = () => { document.getElementById('folder-modal').style.display = 'none'; };
 
-        // --- FOLDER LOGIC ---
-        const treeContainer = document.getElementById('folder-tree-container');
-        
+        window.openSettingsModal = () => { document.getElementById('settings-modal').style.display = 'flex'; };
+        window.closeSettingsModal = () => { document.getElementById('settings-modal').style.display = 'none'; };
+
+        // --- ENTER KEY ---
+        document.getElementById('fm-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitFolderCreation();
+            }
+        });
+
+        // --- FOLDERS & CHATS ---
         async function fetchFolders() {
             try {
                 const res = await fetch('/api/folders');
                 const folders = await res.json();
                 renderFolderTree(folders);
-            } catch(e) {}
+            } catch(e) { console.error(e); }
         }
 
+        window.createSessionInFolder = async (folderId) => {
+            const title = `Chat ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            try {
+                const res = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ folder_id: folderId, title: title })
+                });
+                const data = await res.json();
+                if(data.status === 'success') {
+                    window.location.href = `/chat?session_id=${data.session.id}`;
+                } else { alert("Failed to create chat"); }
+            } catch(e) { alert("Error creating session"); }
+        };
+
         function renderFolderTree(folders) {
-            treeContainer.innerHTML = '';
-            if(folders.length === 0) {
-                treeContainer.innerHTML = '<div class="text-xs text-[var(--text-muted)] pl-4 italic mt-1">No folders</div>';
-                return;
-            }
+            const container = document.getElementById('folder-tree-container');
+            container.innerHTML = '';
+            if(folders.length === 0) { container.innerHTML = '<div class="text-xs text-[var(--text-muted)] pl-4 italic">No folders</div>'; return; }
+            
+            folders.forEach(f => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div class="folder-row" onclick="this.parentElement.querySelector('.session-list').classList.toggle('open'); this.classList.toggle('open')">
+                        <div class="folder-content">
+                            <span class="folder-arrow">▶</span> <span class="truncate">${f.name}</span>
+                        </div>
+                        <button class="add-chat-btn" onclick="event.stopPropagation(); createSessionInFolder(${f.id})" title="New Chat">+</button>
+                    </div>
+                    <div class="session-list">
+                        ${f.sessions.length ? '' : '<div class="text-[10px] text-[var(--text-muted)] pl-4 italic">Empty</div>'}
+                    </div>
+                `;
+                const list = div.querySelector('.session-list');
+                const row = div.querySelector('.folder-row');
 
-            folders.forEach(folder => {
-                const folderDiv = document.createElement('div');
-                
-                const header = document.createElement('div');
-                header.className = 'folder-row';
-                header.innerHTML = `<span class="folder-arrow">▶</span> <span class="truncate">${folder.name}</span>`;
-                
-                const list = document.createElement('div');
-                list.className = 'session-list';
-                
-                header.onclick = () => {
-                    header.classList.toggle('open');
-                    list.classList.toggle('open');
-                };
-
-                if(folder.sessions.length > 0) {
-                    folder.sessions.forEach(session => {
-                        const item = document.createElement('div');
-                        item.className = 'session-item';
-                        item.innerText = session.title;
-                        
-                        const urlParams = new URLSearchParams(window.location.search);
-                        if (urlParams.get('session_id') == session.id) {
+                f.sessions.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'session-item';
+                    item.innerText = s.title;
+                    if(location.search.includes(s.id)) { 
+                        item.classList.add('active'); 
+                        row.classList.add('open'); 
+                        list.classList.add('open'); 
+                    }
+                    item.onclick = (e) => {
+                        e.stopPropagation();
+                        if(location.pathname.includes('/chat')) {
+                            document.querySelectorAll('.session-item').forEach(x => x.classList.remove('active'));
                             item.classList.add('active');
-                            header.classList.add('open');
-                            list.classList.add('open');
-                        }
+                            window.dispatchEvent(new CustomEvent('scholarforge:load-session', {detail: {folderId: f.id, sessionId: s.id}}));
+                        } else { location.href = '/chat?session_id=' + s.id; }
+                    };
+                    list.appendChild(item);
+                });
+                container.appendChild(div);
+            });
+        }
+        
+        // --- ACTIONS ---
+        window.submitFolderCreation = async () => {
+            const inp = document.getElementById('fm-input');
+            if(!inp.value.trim()) return;
+            const btn = document.getElementById('btn-create-folder');
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/folders', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: inp.value }) });
+                const data = await res.json();
+                if(res.ok) { 
+                    closeFolderModal(); 
+                    fetchFolders(); 
+                    window.createSessionInFolder(data.folder.id);
+                } else { alert("Error: " + data.error); }
+            } catch(e) { alert("Error creating folder"); }
+            finally { btn.disabled = false; }
+        };
 
-                        item.onclick = (e) => {
-                            e.stopPropagation();
-                            if(window.location.pathname.includes('/chat')) {
-                                document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'));
-                                item.classList.add('active');
-                                const event = new CustomEvent('scholarforge:load-session', { detail: { folderId: folder.id, sessionId: session.id } });
-                                window.dispatchEvent(event);
-                            } else {
-                                window.location.href = '/chat?session_id=' + session.id;
-                            }
-                        };
-                        list.appendChild(item);
-                    });
-                } else {
-                    list.innerHTML = '<div class="text-[10px] text-[var(--text-muted)] pl-4 py-1 italic">Empty</div>';
-                }
+        window.resetDatabase = async () => {
+            if(confirm("Delete all data?")) {
+                await fetch('/api/system/reset-db', {method: 'POST'});
+                location.reload();
+            }
+        };
 
-                folderDiv.appendChild(header);
-                folderDiv.appendChild(list);
-                treeContainer.appendChild(folderDiv);
+        // --- HISTORY & THEME ---
+        async function fetchHistoryReports() {
+            const res = await fetch("/api/history");
+            const data = await res.json();
+            const list = document.getElementById('history-list-content');
+            list.innerHTML = data.length ? '' : '<div class="text-sm text-[var(--text-muted)] text-center mt-10">No reports.</div>';
+            data.forEach(item => {
+                const d = document.createElement('div');
+                d.className = "p-3 mb-2 rounded bg-[var(--hover-bg)] border border-[var(--border-color)] cursor-pointer";
+                d.innerHTML = `<div class="text-xs font-bold text-[var(--text-main)] truncate">${item.topic}</div><div class="text-[10px] text-[var(--text-muted)]">${item.date}</div>`;
+                d.onclick = () => window.dispatchEvent(new CustomEvent('scholarforge:view-report', { detail: { reportId: item.id } }));
+                list.appendChild(d);
             });
         }
 
-        // --- HISTORY REPORTS LOGIC ---
-        async function fetchHistoryReports() {
-            try {
-                const res = await fetch("/api/history");
-                const data = await res.json();
-                const list = document.getElementById('history-list-content');
-                
-                if(data.length === 0) {
-                    list.innerHTML = '<div class="text-sm text-[var(--text-muted)] text-center mt-10">No generated reports yet.</div>';
-                    return;
-                }
-                
-                list.innerHTML = '';
-                data.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = "p-3 mb-2 rounded bg-[var(--hover-bg)] border border-[var(--border-color)] cursor-pointer hover:border-[var(--accent-primary)] transition-colors";
-                    div.innerHTML = `
-                        <div class="text-xs font-bold text-[var(--text-main)] mb-1 truncate">${item.topic}</div>
-                        <div class="text-[10px] text-[var(--text-muted)]">${item.date}</div>
-                    `;
-                    list.appendChild(div);
-                });
-            } catch(e) {}
-        }
-
-        // --- THEME LOGIC ---
-        function setTheme(theme) {
-            document.body.classList.remove('light-theme', 'dark-theme');
-            if(theme === 'light') document.body.classList.add('light-theme');
-            if(theme === 'dark') document.body.classList.add('dark-theme');
-            localStorage.setItem('scholarforge-theme', theme);
+        window.setTheme = (t) => {
+            document.body.className = "flex h-screen w-full " + (t === 'default' ? '' : t + '-theme');
+            localStorage.setItem('scholarforge-theme', t);
             closeSettingsModal();
         }
+        setTheme(localStorage.getItem('scholarforge-theme') || 'default');
         
-        const savedTheme = localStorage.getItem('scholarforge-theme') || 'default';
-        setTheme(savedTheme);
-
-        // --- MODALS ---
-        const fModal = document.getElementById('folder-modal');
-        const fContent = document.getElementById('fm-content');
-        const fInput = document.getElementById('fm-input');
-        window.openFolderModal = () => { fModal.classList.remove('hidden'); setTimeout(() => { fModal.classList.remove('opacity-0'); fContent.classList.remove('scale-95'); fContent.classList.add('scale-100'); fInput.focus(); }, 10); };
-        window.closeFolderModal = () => { fModal.classList.add('opacity-0'); fContent.classList.remove('scale-100'); fContent.classList.add('scale-95'); setTimeout(() => fModal.classList.add('hidden'), 300); fInput.value=''; };
-        window.submitFolderCreation = async () => {
-            if(!fInput.value.trim()) return;
-            try {
-                const res = await fetch('/api/folders', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: fInput.value }) });
-                const data = await res.json();
-                if(data.status === 'success') { 
-                    closeFolderModal(); 
-                    fetchFolders(); 
-                    const event = new CustomEvent('scholarforge:folder-created', { detail: { folderId: data.folder.id } });
-                    window.dispatchEvent(event);
-                }
-            } catch(e) {}
-        };
-
-        const sModal = document.getElementById('settings-modal');
-        const sContent = document.getElementById('sm-content');
-        window.openSettingsModal = () => { sModal.classList.remove('hidden'); setTimeout(() => { sModal.classList.remove('opacity-0'); sContent.classList.remove('scale-95'); sContent.classList.add('scale-100'); }, 10); };
-        window.closeSettingsModal = () => { sModal.classList.add('opacity-0'); sContent.classList.remove('scale-100'); sContent.classList.add('scale-95'); setTimeout(() => sModal.classList.add('hidden'), 300); };
-
         document.addEventListener('DOMContentLoaded', fetchFolders);
     </script>
     {% block scripts %}{% endblock %}
