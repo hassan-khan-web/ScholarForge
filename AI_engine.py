@@ -19,7 +19,7 @@ import fitz
 from report_formats import get_template_instructions
 
 # --- 2-LAYER MODEL CONFIGURATION ---
-SMART_MODEL = "x-ai/grok-4.1-fast:free"
+SMART_MODEL = "amazon/nova-2-lite-v1:free"
 BACKUP_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 
 SEARCH_RESULTS_COUNT = 10
@@ -445,4 +445,4 @@ def convert_to_pdf(content, topic, path, chart_path=None):
             story.append(Paragraph(clean_text, normal_style))
             
     doc.build(story)
-    return "Success"
+    return "Success"           

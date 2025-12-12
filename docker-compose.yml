@@ -47,8 +47,13 @@ services:
   worker:
     build: .
     container_name: scholarforge_worker
-    # Hot-reload enabled via watchmedo
+    
+      # OLD COMMAND (Static - requires restart):
+    # command: celery -A task.celery_app worker --loglevel=info
+    
+    # NEW COMMAND (Dynamic - watches for file changes):
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A task.celery_app worker --loglevel=info
+
     volumes:
       - .:/app
       - ./data:/app/data

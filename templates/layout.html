@@ -12,7 +12,7 @@
         /* CSS Variables */
         :root {
             --sidebar-width: 16rem;
-            --sidebar-collapsed-width: 4.5rem;
+            --sidebar-collapsed-width: 4rem; /* 64px */
             --bg-main: #1a1b26;
             --bg-sidebar: #13141f;
             --bg-panel: #1f2335;
@@ -26,118 +26,134 @@
 
         /* Light Theme */
         body.light-theme {
-            --bg-main: #f3f4f6;
-            --bg-sidebar: #ffffff;
-            --bg-panel: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --accent-primary: #2563eb;
-            --border-color: #e5e7eb;
-            --hover-bg: #f9fafb;
-            --active-bg: #eff6ff;
+            --bg-main: #f3f4f6; --bg-sidebar: #ffffff; --bg-panel: #ffffff; --text-main: #1f2937; --text-muted: #6b7280; --accent-primary: #2563eb; --border-color: #e5e7eb; --hover-bg: #f9fafb; --active-bg: #eff6ff;
         }
-
         /* Dark Theme */
         body.dark-theme {
-            --bg-main: #000000;
-            --bg-sidebar: #0a0a0a;
-            --bg-panel: #121212;
-            --text-main: #e5e5e5;
-            --text-muted: #a3a3a3;
-            --accent-primary: #3b82f6;
-            --border-color: #262626;
-            --hover-bg: #1f1f1f;
-            --active-bg: #262626;
+            --bg-main: #000000; --bg-sidebar: #0a0a0a; --bg-panel: #121212; --text-main: #e5e5e5; --text-muted: #a3a3a3; --accent-primary: #3b82f6; --border-color: #262626; --hover-bg: #1f1f1f; --active-bg: #262626;
         }
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); overflow: hidden; }
-        
         .btn-danger { background-color: #ef4444; color: white; transition: opacity 0.2s; }
         .btn-danger:hover { opacity: 0.9; }
         
-        /* SIDEBAR Styles */
+        /* SIDEBAR ANIMATIONS */
         #sidebar { 
-            width: var(--sidebar-width); background: var(--bg-sidebar); border-right: 1px solid var(--border-color); 
-            transition: width 0.3s; z-index: 50; display: flex; flex-direction: column; flex-shrink: 0;
+            width: var(--sidebar-width); 
+            background: var(--bg-sidebar); 
+            border-right: 1px solid var(--border-color); 
+            transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            z-index: 50; display: flex; flex-direction: column; flex-shrink: 0;
+            overflow: hidden; 
         }
         #sidebar.collapsed { width: var(--sidebar-collapsed-width); }
+
+        /* RIGID ICONS & FADING TEXT */
+        .nav-item { 
+            display: flex; align-items: center; 
+            padding-left: 1.25rem; /* Fixed PL */
+            height: 44px; 
+            margin-bottom: 4px; 
+            color: var(--text-muted); cursor: pointer; font-size: 0.85rem; font-weight: 500;
+            white-space: nowrap; 
+            position: relative;
+        }
+        .nav-item:hover { background: var(--hover-bg); color: var(--text-main); border-right: 2px solid var(--accent-primary); }
+        .nav-item.active { background: var(--active-bg); color: var(--accent-primary); border-right: 3px solid var(--accent-primary); }
         
-        /* Hide elements when collapsed */
+        .nav-item svg { 
+            min-width: 22px; width: 22px; height: 22px; 
+            margin-right: 14px; 
+            flex-shrink: 0; 
+        }
+
+        .nav-text, .logo-text, .create-folder-btn-text {
+            opacity: 1;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transform: translateX(0);
+        }
+
         #sidebar.collapsed .nav-text, 
         #sidebar.collapsed .logo-text, 
+        #sidebar.collapsed .create-folder-btn-text {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-10px); 
+        }
+
+        /* Elements hidden in collapsed mode */
         #sidebar.collapsed .sidebar-divider, 
         #sidebar.collapsed #folder-tree-container, 
-        #sidebar.collapsed .create-folder-btn-text,
-        #sidebar.collapsed .section-label { /* Added section-label here */
-            display: none !important; 
+        #sidebar.collapsed .section-label { 
+            opacity: 0; 
+            pointer-events: none;
+            transition: opacity 0.2s;
         }
-        
-        #sidebar.collapsed .nav-item { justify-content: center; padding: 12px 0; }
-        #sidebar.collapsed .nav-item svg { margin-right: 0; }
-        
-        #sidebar.collapsed .sidebar-header { justify-content: center; }
 
-        .nav-item { display: flex; align-items: center; padding: 10px 14px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; font-weight: 500; }
-        .nav-item:hover { background: var(--hover-bg); color: var(--text-main); }
-        .nav-item.active { background: var(--active-bg); color: var(--accent-primary); }
-        .nav-item svg { width: 20px; height: 20px; margin-right: 12px; }
+        .sidebar-header {
+            padding-left: 1.25rem; 
+            display: flex; align-items: center; justify-content: space-between;
+            height: 4rem; 
+        }
+        #sidebar.collapsed .sidebar-header { padding-left: 0; justify-content: center; }
+        #sidebar.collapsed .logo-text { display: none; } 
 
-        /* Icon Button Class */
-        .icon-btn {
-            width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center;
-            border-radius: 0.5rem; color: var(--text-muted); transition: background-color 0.2s;
+        .icon-btn { 
+            width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; color: var(--text-muted); transition: background-color 0.2s; 
         }
         .icon-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
 
         /* HISTORY PANEL */
         #history-panel {
-            position: fixed; top: 0; bottom: 0; left: var(--sidebar-width); width: 20rem; background: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color); transform: translateX(-100%); transition: transform 0.3s, left 0.3s; z-index: 40;
-            display: flex; flex-direction: column; box-shadow: 10px 0 25px -5px rgba(0,0,0,0.1);
+            position: fixed; top: 0; bottom: 0; left: var(--sidebar-width); width: 20rem; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); 
+            transform: translateX(-100%); 
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 40; display: flex; flex-direction: column; box-shadow: 10px 0 25px -5px rgba(0,0,0,0.1);
         }
         #history-panel.open { transform: translateX(0); }
         #sidebar.collapsed ~ #history-panel { left: var(--sidebar-collapsed-width); }
 
+        /* DROPDOWNS */
+        .dropdown-menu { position: absolute; right: 0; top: 100%; margin-top: 4px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); z-index: 100; min-width: 140px; display: none; }
+        .dropdown-menu.show { display: block; }
+        .dropdown-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; font-size: 12px; color: var(--text-main); cursor: pointer; }
+        .dropdown-item:hover { background: var(--hover-bg); color: var(--accent-primary); }
+        
+        #global-download-menu { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 6px; min-width: 120px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); z-index: 2147483647; }
+
         /* FOLDER TREE */
-        .folder-row { 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: 8px 14px; cursor: pointer; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; 
-        }
+        .folder-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 8px 1.25rem; cursor: pointer; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
         .folder-row:hover { color: var(--text-main); background: var(--hover-bg); }
-        
-        .folder-content { display: flex; align-items: center; overflow: hidden; }
-        
         .folder-arrow { margin-right: 8px; width: 10px; display: inline-block; transition: transform 0.2s; }
         .folder-row.open .folder-arrow { transform: rotate(90deg); }
-        
-        .add-chat-btn {
-            opacity: 0; transition: opacity 0.2s; padding: 2px 6px; border-radius: 4px;
-            font-size: 14px; line-height: 1; color: var(--accent-primary);
-        }
-        .folder-row:hover .add-chat-btn { opacity: 1; }
-        .add-chat-btn:hover { background: var(--active-bg); }
+        .action-group { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
+        .folder-row:hover .action-group { opacity: 1; }
+        .tree-btn { padding: 2px 4px; border-radius: 4px; color: var(--text-muted); font-size: 14px; }
+        .tree-btn:hover { background: var(--active-bg); color: var(--accent-primary); }
 
         .session-list { display: none; margin-left: 19px; border-left: 1px solid var(--border-color); }
         .session-list.open { display: block; }
-        .session-item { display: flex; align-items: center; padding: 6px 12px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; }
+        .session-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; }
         .session-item:hover { color: var(--accent-primary); background: var(--hover-bg); }
+        .session-item:hover .action-group { opacity: 1; }
         .session-item.active { color: var(--accent-primary); background: var(--active-bg); border-left: 2px solid var(--accent-primary); }
+        .three-dot-btn { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+        .three-dot-btn:hover { background: var(--border-color); }
 
         /* MODALS */
-        .custom-modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-            z-index: 100; display: none; align-items: center; justify-content: center;
-        }
+        .custom-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; }
         .glass-panel { background: var(--bg-panel); border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        .select-check { display: none; margin-right: 8px; accent-color: var(--accent-primary); }
+        .select-mode .select-check { display: inline-block; }
     </style>
 </head>
-<body class="flex h-screen w-full">
+<body class="flex h-screen w-full" onclick="closeAllDropdowns()">
 
     <nav id="sidebar" class="collapsed">
-        <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)] shrink-0 sidebar-header">
-            <span class="logo-text font-bold text-xl tracking-tight" style="color: var(--accent-primary);">ScholarForge</span>
+        <div class="sidebar-header border-b border-[var(--border-color)] shrink-0">
+            <span class="logo-text font-bold text-xl tracking-tight whitespace-nowrap" style="color: var(--accent-primary);">ScholarForge</span>
             <button id="sidebar-toggle" class="icon-btn">
                 <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
@@ -145,7 +161,7 @@
             </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto custom-scrollbar flex flex-col py-4 px-2">
+        <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col py-4">
             <a href="{{ url_for('index') }}" class="nav-item {% if request.path == '/' %}active{% endif %}" title="Report Generator">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 <span class="nav-text">Report Generator</span>
@@ -156,19 +172,19 @@
                 <span class="nav-text">Generated History</span>
             </div>
 
-            <div class="h-px bg-[var(--border-color)] mt-4 mb-4 sidebar-divider"></div>
+            <div class="h-px bg-[var(--border-color)] mt-4 mb-4 mx-4 sidebar-divider"></div>
 
-            <div class="px-3 mb-2 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider section-label">
+            <div class="px-5 mb-2 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider section-label">
                 Research Assistant
             </div>
 
             <div id="folder-section-wrapper" class="flex flex-col">
-                <button onclick="openFolderModal()" class="nav-item !text-[var(--accent-primary)] border border-dashed border-[var(--border-color)] justify-start">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                <button onclick="openFolderModal()" class="nav-item !text-[var(--accent-primary)] justify-start">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                     <span class="nav-text font-semibold create-folder-btn-text">Create Folder</span>
                 </button>
                 <div id="folder-tree-container" class="flex flex-col gap-0.5 mt-2">
-                    <div class="text-xs text-[var(--text-muted)] pl-4 italic">Loading...</div>
+                    <div class="text-xs text-[var(--text-muted)] pl-5 italic">Loading...</div>
                 </div>
             </div>
         </div>
@@ -183,9 +199,19 @@
     <aside id="history-panel">
         <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
             <span class="font-bold text-[var(--text-main)]">Generated Reports</span>
-            <button onclick="toggleHistory()" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
+            <div class="flex items-center gap-2 relative">
+                <button onclick="event.stopPropagation(); toggleDropdown('history-main-menu')" class="text-[var(--text-muted)] hover:text-[var(--text-main)] font-bold px-2">⋮</button>
+                <div id="history-main-menu" class="dropdown-menu">
+                    <div class="dropdown-item" onclick="toggleSelectMode()">Select Items</div>
+                    <div class="dropdown-item" onclick="selectAllReports()">Select All</div>
+                    <div class="dropdown-item text-red-400" onclick="deleteSelectedReports()">Delete All</div>
+                </div>
+                
+                <div class="w-px h-4 bg-[var(--border-color)]"></div>
+                <button onclick="toggleHistory()" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
+            </div>
         </div>
-        <div id="history-list-content" class="flex-1 overflow-y-auto p-4 custom-scrollbar"></div>
+        <div id="history-list-content" class="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar"></div>
     </aside>
 
     <div class="flex-1 flex flex-col relative overflow-hidden h-full z-0 bg-[var(--bg-main)]">
@@ -220,7 +246,6 @@
                         <button onclick="setTheme('dark')" class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Dark</button>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-[120px_1fr] gap-4 items-start border-t border-[var(--border-color)] pt-4">
                      <label class="text-xs font-bold text-red-400 uppercase mt-1">Danger</label>
                      <div class="flex flex-col gap-2 w-full">
@@ -232,143 +257,199 @@
         </div>
     </div>
 
+    <div id="global-download-menu" class="fixed hidden bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-md shadow-2xl z-[9999] min-w-[120px]" onmouseleave="hideGlobalMenu()">
+        <div class="dropdown-item" onclick="triggerGlobalDownload('pdf')">PDF</div>
+        <div class="dropdown-item" onclick="triggerGlobalDownload('docx')">DOCX</div>
+        <div class="dropdown-item" onclick="triggerGlobalDownload('txt')">TXT</div>
+        <div class="dropdown-item" onclick="triggerGlobalDownload('md')">MD</div>
+        <div class="dropdown-item" onclick="triggerGlobalDownload('json')">JSON</div>
+    </div>
+
+    <form id="dl-helper-form" action="{{ url_for('download') }}" method="POST" target="_blank" class="hidden">
+        <input type="hidden" name="report_content" id="hlp-content">
+        <input type="hidden" name="topic" id="hlp-topic">
+        <input type="hidden" name="format" id="hlp-format">
+    </form>
+
     <script>
         // --- UI TOGGLES ---
         document.getElementById('sidebar-toggle').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
         window.toggleHistory = () => { document.getElementById('history-panel').classList.toggle('open'); fetchHistoryReports(); };
 
-        // --- MODAL LOGIC ---
-        window.openFolderModal = () => { 
-            const m = document.getElementById('folder-modal');
-            m.style.display = 'flex'; 
-            setTimeout(() => document.getElementById('fm-input').focus(), 50);
+        // --- DROPDOWN LOGIC ---
+        window.toggleDropdown = (id) => {
+            closeAllDropdowns();
+            const el = document.getElementById(id);
+            if(el) el.classList.toggle('show');
         };
-        window.closeFolderModal = () => { document.getElementById('folder-modal').style.display = 'none'; };
+        window.closeAllDropdowns = () => {
+            document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('show'));
+            document.getElementById('global-download-menu').style.display = 'none';
+        };
 
-        window.openSettingsModal = () => { document.getElementById('settings-modal').style.display = 'flex'; };
-        window.closeSettingsModal = () => { document.getElementById('settings-modal').style.display = 'none'; };
+        // --- GLOBAL MENU LOGIC ---
+        let currentDownloadId = null;
+        window.showGlobalMenu = (event, id) => {
+            currentDownloadId = id;
+            const rect = event.currentTarget.getBoundingClientRect();
+            const menu = document.getElementById('global-download-menu');
+            menu.style.display = 'block';
+            menu.style.top = `${rect.top}px`; 
+            menu.style.left = `${rect.right - 4}px`; 
+        };
+        window.hideGlobalMenu = () => { document.getElementById('global-download-menu').style.display = 'none'; };
+        window.triggerGlobalDownload = (format) => { if(currentDownloadId) downloadFromHistory(currentDownloadId, format); hideGlobalMenu(); };
 
-        // --- ENTER KEY ---
-        document.getElementById('fm-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                submitFolderCreation();
-            }
-        });
-
-        // --- FOLDERS & CHATS ---
+        // --- FOLDER & CHAT LOGIC ---
         async function fetchFolders() {
             try {
                 const res = await fetch('/api/folders');
-                const folders = await res.json();
-                renderFolderTree(folders);
+                renderFolderTree(await res.json());
             } catch(e) { console.error(e); }
         }
-
-        window.createSessionInFolder = async (folderId) => {
-            const title = `Chat ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-            try {
-                const res = await fetch('/api/sessions', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ folder_id: folderId, title: title })
-                });
-                const data = await res.json();
-                if(data.status === 'success') {
-                    window.location.href = `/chat?session_id=${data.session.id}`;
-                } else { alert("Failed to create chat"); }
-            } catch(e) { alert("Error creating session"); }
-        };
 
         function renderFolderTree(folders) {
             const container = document.getElementById('folder-tree-container');
             container.innerHTML = '';
-            if(folders.length === 0) { container.innerHTML = '<div class="text-xs text-[var(--text-muted)] pl-4 italic">No folders</div>'; return; }
+            if(!folders.length) { container.innerHTML = '<div class="text-xs text-[var(--text-muted)] pl-5 italic">No folders</div>'; return; }
             
             folders.forEach(f => {
                 const div = document.createElement('div');
                 div.innerHTML = `
                     <div class="folder-row" onclick="this.parentElement.querySelector('.session-list').classList.toggle('open'); this.classList.toggle('open')">
-                        <div class="folder-content">
-                            <span class="folder-arrow">▶</span> <span class="truncate">${f.name}</span>
+                        <div class="folder-content flex items-center"><span class="folder-arrow mr-2">▶</span> <span class="truncate">${f.name}</span></div>
+                        <div class="action-group relative">
+                            <button class="tree-btn" onclick="event.stopPropagation(); createSessionInFolder(${f.id})" title="New Chat">+</button>
+                            <button class="tree-btn" onclick="event.stopPropagation(); toggleDropdown('f-menu-${f.id}')">⋮</button>
+                            <div id="f-menu-${f.id}" class="dropdown-menu">
+                                <div class="dropdown-item" onclick="renameFolder(${f.id}, '${f.name}')">Rename</div>
+                                <div class="dropdown-item text-red-400" onclick="deleteFolder(${f.id})">Delete</div>
+                            </div>
                         </div>
-                        <button class="add-chat-btn" onclick="event.stopPropagation(); createSessionInFolder(${f.id})" title="New Chat">+</button>
                     </div>
-                    <div class="session-list">
-                        ${f.sessions.length ? '' : '<div class="text-[10px] text-[var(--text-muted)] pl-4 italic">Empty</div>'}
-                    </div>
+                    <div class="session-list"></div>
                 `;
                 const list = div.querySelector('.session-list');
                 const row = div.querySelector('.folder-row');
-
+                
                 f.sessions.forEach(s => {
                     const item = document.createElement('div');
                     item.className = 'session-item';
-                    item.innerText = s.title;
-                    if(location.search.includes(s.id)) { 
-                        item.classList.add('active'); 
-                        row.classList.add('open'); 
-                        list.classList.add('open'); 
-                    }
+                    item.innerHTML = `
+                        <span class="truncate w-full">${s.title}</span>
+                        <div class="action-group relative">
+                            <button class="three-dot-btn" onclick="event.stopPropagation(); toggleDropdown('s-menu-${s.id}')">⋮</button>
+                            <div id="s-menu-${s.id}" class="dropdown-menu">
+                                <div class="dropdown-item" onclick="renameSession(${s.id}, '${s.title}')">Rename</div>
+                                <div class="dropdown-item text-red-400" onclick="deleteSession(${s.id})">Delete</div>
+                            </div>
+                        </div>
+                    `;
+                    if(location.search.includes(s.id)) { item.classList.add('active'); row.classList.add('open'); list.classList.add('open'); }
                     item.onclick = (e) => {
                         e.stopPropagation();
-                        if(location.pathname.includes('/chat')) {
-                            document.querySelectorAll('.session-item').forEach(x => x.classList.remove('active'));
-                            item.classList.add('active');
-                            window.dispatchEvent(new CustomEvent('scholarforge:load-session', {detail: {folderId: f.id, sessionId: s.id}}));
-                        } else { location.href = '/chat?session_id=' + s.id; }
+                        if(location.pathname.includes('/chat')) window.dispatchEvent(new CustomEvent('scholarforge:load-session', {detail: {folderId: f.id, sessionId: s.id}}));
+                        else location.href = '/chat?session_id=' + s.id;
                     };
                     list.appendChild(item);
                 });
                 container.appendChild(div);
             });
         }
-        
+
         // --- ACTIONS ---
-        window.submitFolderCreation = async () => {
-            const inp = document.getElementById('fm-input');
-            if(!inp.value.trim()) return;
-            const btn = document.getElementById('btn-create-folder');
-            btn.disabled = true;
-            try {
-                const res = await fetch('/api/folders', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: inp.value }) });
-                const data = await res.json();
-                if(res.ok) { 
-                    closeFolderModal(); 
-                    fetchFolders(); 
-                    window.createSessionInFolder(data.folder.id);
-                } else { alert("Error: " + data.error); }
-            } catch(e) { alert("Error creating folder"); }
-            finally { btn.disabled = false; }
+        window.renameFolder = async (id, oldName) => {
+            const newName = prompt("Rename Folder:", oldName);
+            if(newName && newName !== oldName) { await fetch(`/api/folders/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({new_name: newName}) }); fetchFolders(); }
+        };
+        window.renameSession = async (id, oldName) => {
+            const newName = prompt("Rename Chat:", oldName);
+            if(newName && newName !== oldName) { await fetch(`/api/sessions/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({new_name: newName}) }); fetchFolders(); }
+        };
+        window.deleteFolder = async (id) => { if(confirm("Delete folder?")) { await fetch(`/api/folders/${id}`, {method: 'DELETE'}); fetchFolders(); } };
+        window.deleteSession = async (id) => { if(confirm("Delete chat?")) { await fetch(`/api/sessions/${id}`, {method: 'DELETE'}); fetchFolders(); } };
+        window.createSessionInFolder = async (folderId) => {
+            const res = await fetch('/api/sessions', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ folder_id: folderId, title: `Chat ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` }) });
+            const data = await res.json();
+            if(data.status === 'success') window.location.href = `/chat?session_id=${data.session.id}`;
         };
 
-        window.resetDatabase = async () => {
-            if(confirm("Delete all data?")) {
-                await fetch('/api/system/reset-db', {method: 'POST'});
-                location.reload();
-            }
-        };
+        // --- HISTORY ---
+        let isSelectMode = false;
+        window.toggleSelectMode = () => { isSelectMode = !isSelectMode; document.getElementById('history-list-content').classList.toggle('select-mode', isSelectMode); };
+        window.selectAllReports = () => { if(!isSelectMode) toggleSelectMode(); document.querySelectorAll('.select-check').forEach(cb => cb.checked = true); };
 
-        // --- HISTORY & THEME ---
         async function fetchHistoryReports() {
             const res = await fetch("/api/history");
             const data = await res.json();
             const list = document.getElementById('history-list-content');
             list.innerHTML = data.length ? '' : '<div class="text-sm text-[var(--text-muted)] text-center mt-10">No reports.</div>';
+            
             data.forEach(item => {
                 const d = document.createElement('div');
-                d.className = "p-3 mb-2 rounded bg-[var(--hover-bg)] border border-[var(--border-color)] cursor-pointer";
-                d.innerHTML = `<div class="text-xs font-bold text-[var(--text-main)] truncate">${item.topic}</div><div class="text-[10px] text-[var(--text-muted)]">${item.date}</div>`;
-                d.onclick = () => window.dispatchEvent(new CustomEvent('scholarforge:view-report', { detail: { reportId: item.id } }));
+                d.className = "p-3 mb-2 rounded bg-[var(--hover-bg)] border border-[var(--border-color)] flex justify-between items-center group relative";
+                d.innerHTML = `
+                    <div class="flex items-center flex-1 min-w-0">
+                        <input type="checkbox" class="select-check" value="${item.id}">
+                        <div onclick="window.viewReportInstantly(${item.id})" class="cursor-pointer truncate">
+                            <div class="text-xs font-bold text-[var(--text-main)] truncate">${item.topic}</div>
+                            <div class="text-[10px] text-[var(--text-muted)]">${item.date}</div>
+                        </div>
+                    </div>
+                    <button onclick="event.stopPropagation(); toggleDropdown('h-menu-${item.id}')" class="three-dot-btn">⋮</button>
+                    <div id="h-menu-${item.id}" class="dropdown-menu">
+                        <div class="dropdown-item" onmouseenter="showGlobalMenu(event, ${item.id})">
+                            Download ›
+                        </div>
+                        <div class="dropdown-item text-red-400" onclick="deleteReport(${item.id})">Delete</div>
+                    </div>
+                `;
                 list.appendChild(d);
             });
         }
 
-        window.setTheme = (t) => {
-            document.body.className = "flex h-screen w-full " + (t === 'default' ? '' : t + '-theme');
-            localStorage.setItem('scholarforge-theme', t);
-            closeSettingsModal();
+        window.deleteSelectedReports = async () => {
+            const checks = document.querySelectorAll('.select-check:checked');
+            if (checks.length === 0) { if(confirm("Delete ALL history?")) await fetch('/api/reports/all', {method: 'DELETE'}); } 
+            else { if(!confirm(`Delete ${checks.length} items?`)) return; for(const c of checks) await fetch(`/api/report/${c.value}`, {method: 'DELETE'}); }
+            fetchHistoryReports(); if(isSelectMode) toggleSelectMode();
+        };
+        window.deleteReport = async (id) => { if(confirm("Delete report?")) { await fetch(`/api/report/${id}`, {method: 'DELETE'}); fetchHistoryReports(); } };
+
+        window.downloadFromHistory = async (id, format) => {
+            const res = await fetch(`/api/report/${id}`);
+            const data = await res.json();
+            if(data.content) {
+                document.getElementById('hlp-content').value = data.content;
+                document.getElementById('hlp-topic').value = data.topic;
+                document.getElementById('hlp-format').value = format;
+                document.getElementById('dl-helper-form').submit();
+            }
+        };
+
+        window.viewReportInstantly = (id) => {
+            if(window.location.pathname === '/' || window.location.pathname === '/index') {
+                document.getElementById('history-panel').classList.remove('open');
+                window.dispatchEvent(new CustomEvent('scholarforge:view-report', { detail: { reportId: id } }));
+            } else { window.location.href = `/?view_report=${id}`; }
         }
+
+        // --- STANDARD STUFF ---
+        window.openFolderModal = () => { document.getElementById('folder-modal').style.display = 'flex'; setTimeout(() => document.getElementById('fm-input').focus(), 50); };
+        window.closeFolderModal = () => { document.getElementById('folder-modal').style.display = 'none'; };
+        window.openSettingsModal = () => { document.getElementById('settings-modal').style.display = 'flex'; };
+        window.closeSettingsModal = () => { document.getElementById('settings-modal').style.display = 'none'; };
+        window.submitFolderCreation = async () => {
+            const inp = document.getElementById('fm-input');
+            if(!inp.value.trim()) return;
+            try {
+                const res = await fetch('/api/folders', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: inp.value }) });
+                const data = await res.json();
+                if(res.ok) { closeFolderModal(); fetchFolders(); window.createSessionInFolder(data.folder.id); } 
+            } catch(e) {}
+        };
+        window.resetDatabase = async () => { if(confirm("Delete all?")) { await fetch('/api/system/reset-db', {method: 'POST'}); location.reload(); } };
+        window.setTheme = (t) => { document.body.className = "flex h-screen w-full " + (t === 'default' ? '' : t + '-theme'); localStorage.setItem('scholarforge-theme', t); closeSettingsModal(); }
         setTheme(localStorage.getItem('scholarforge-theme') || 'default');
         
         document.addEventListener('DOMContentLoaded', fetchFolders);

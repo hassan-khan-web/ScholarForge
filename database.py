@@ -1,23 +1,33 @@
 import os
 from datetime import datetime, timezone
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, text
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, event, text
 from sqlalchemy.orm import sessionmaker, relationship, declarative_base
+from sqlalchemy.engine import Engine
 
 # 1. SETUP
-# Get URL from environment or fallback to default (Docker service name is 'db')
+DB_FOLDER = "/app/data"
+if not os.path.exists(DB_FOLDER):
+    os.makedirs(DB_FOLDER, exist_ok=True)
+
 SQLALCHEMY_DATABASE_URL = os.environ.get(
     "DATABASE_URL", 
-    "postgresql://scholar:forgepass@db:5432/scholarforge"
+    f"sqlite:///{DB_FOLDER}/scholarforge.db"
 )
 
-# Postgres engine does not need "check_same_thread"
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+if "sqlite" in SQLALCHEMY_DATABASE_URL:
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+    @event.listens_for(Engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.close()
+else:
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# 2. MODELS (Unchanged)
-
+# 2. MODELS
 class ReportDB(Base):
     __tablename__ = "reports"
     id = Column(Integer, primary_key=True, index=True)
@@ -38,7 +48,6 @@ class ChatSession(Base):
     folder_id = Column(Integer, ForeignKey("project_folders.id")) 
     title = Column(String)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    
     folder = relationship("ProjectFolder", back_populates="sessions")
     messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
 
@@ -61,17 +70,17 @@ class Hook(Base):
 def init_db():
     try:
         Base.metadata.create_all(bind=engine)
-        print(">>> Database initialized (PostgreSQL).")
     except Exception as e:
-        print(f">>> Database Init Error: {e}")
+        print(f"DB Init Error: {e}")
 
-# 4. CRUD OPERATIONS (Unchanged)
+# 4. CRUD OPERATIONS
 
+# --- FOLDERS ---
 def create_folder(name: str):
     db = SessionLocal()
     try:
         existing = db.query(ProjectFolder).filter(ProjectFolder.name == name).first()
-        if existing: raise Exception("Folder already exists")
+        if existing: raise Exception("Folder exists")
         folder = ProjectFolder(name=name)
         db.add(folder)
         db.commit()
@@ -80,6 +89,30 @@ def create_folder(name: str):
     except Exception as e:
         db.rollback()
         raise e
+    finally:
+        db.close()
+
+def rename_folder(folder_id: int, new_name: str):
+    db = SessionLocal()
+    try:
+        folder = db.query(ProjectFolder).filter(ProjectFolder.id == folder_id).first()
+        if folder:
+            folder.name = new_name
+            db.commit()
+            return True
+        return False
+    finally:
+        db.close()
+
+def delete_folder(folder_id: int):
+    db = SessionLocal()
+    try:
+        folder = db.query(ProjectFolder).filter(ProjectFolder.id == folder_id).first()
+        if folder:
+            db.delete(folder)
+            db.commit()
+            return True
+        return False
     finally:
         db.close()
 
@@ -99,6 +132,7 @@ def get_folders_with_sessions():
     finally:
         db.close()
 
+# --- SESSIONS ---
 def create_chat_session(folder_id: int, title: str):
     db = SessionLocal()
     try:
@@ -107,6 +141,30 @@ def create_chat_session(folder_id: int, title: str):
         db.commit()
         db.refresh(session)
         return session
+    finally:
+        db.close()
+
+def rename_chat_session(session_id: int, new_title: str):
+    db = SessionLocal()
+    try:
+        session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+        if session:
+            session.title = new_title
+            db.commit()
+            return True
+        return False
+    finally:
+        db.close()
+
+def delete_chat_session(session_id: int):
+    db = SessionLocal()
+    try:
+        session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+        if session:
+            db.delete(session)
+            db.commit()
+            return True
+        return False
     finally:
         db.close()
 
@@ -126,14 +184,13 @@ def save_chat_message(session_id: int, role: str, content: str):
     finally:
         db.close()
 
+# --- REPORTS ---
 def save_report(topic: str, content: str):
     db = SessionLocal()
     try:
         new_report = ReportDB(topic=topic, content=content)
         db.add(new_report)
         db.commit()
-    except Exception as e:
-        print(f"DB Error saving report: {e}")
     finally:
         db.close()
 
@@ -160,6 +217,15 @@ def delete_report(report_id: int):
             db.commit()
             return True
         return False
+    finally:
+        db.close()
+
+def delete_all_reports():
+    db = SessionLocal()
+    try:
+        db.query(ReportDB).delete()
+        db.commit()
+        return True
     finally:
         db.close()
 

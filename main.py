@@ -32,28 +32,26 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-@app.post("/api/system/reset-db")
-def reset_database():
-    """
-    Nuclear option for PostgreSQL: Drops all tables and recreates them.
-    """
-    try:
-        # Close connections
-        database.engine.dispose()
-        
-        # Drop all tables using metadata
-        database.Base.metadata.drop_all(bind=database.engine)
-        
-        # Re-create
-        database.init_db()
-        
-        return {"status": "success", "message": "Database reset (Tables dropped and recreated)."}
-    except Exception as e:
-        print(f"Reset Error: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
 @app.on_event("startup")
 def startup():
+    # --- 1. SECRET MANAGEMENT (FAIL FAST CHECK) ---
+    required_secrets = ["API_KEY", "OPENROUTER_API_KEY"]
+    missing_secrets = [key for key in required_secrets if not os.environ.get(key)]
+    
+    if missing_secrets:
+        error_msg = (
+            "\n"
+            "############################################################\n"
+            "   CRITICAL ERROR: MISSING ENVIRONMENT VARIABLES\n"
+            f"   Missing Keys: {', '.join(missing_secrets)}\n"
+            "   The application cannot start without these keys.\n"
+            "   Please add them to your .env file and restart.\n"
+            "############################################################\n"
+        )
+        print(error_msg)
+        raise RuntimeError(error_msg)
+
+    # --- 2. DATABASE INIT ---
     database.init_db()
 
 # --- PYDANTIC MODELS ---
@@ -69,6 +67,9 @@ class ChatRequest(BaseModel):
 
 class CreateFolderRequest(BaseModel):
     name: str
+
+class RenameRequest(BaseModel):
+    new_name: str
 
 class CreateSessionRequest(BaseModel):
     folder_id: int
@@ -91,14 +92,11 @@ async def chat_page(request: Request):
 @app.post("/api/system/reset-db")
 def reset_database():
     try:
+        # Nuclear option for Postgres: Drop all tables via SQLAlchemy metadata
         database.engine.dispose()
-        db_path = f"{database.DB_FOLDER}/scholarforge.db"
-        if os.path.exists(db_path):
-            os.remove(db_path)
-        if os.path.exists(f"{db_path}-wal"): os.remove(f"{db_path}-wal")
-        if os.path.exists(f"{db_path}-shm"): os.remove(f"{db_path}-shm")
+        database.Base.metadata.drop_all(bind=database.engine)
         database.init_db()
-        return {"status": "success", "message": "Database reset successfully."}
+        return {"status": "success", "message": "Database reset (Tables dropped and recreated)."}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -110,15 +108,23 @@ def get_folders():
 
 @app.post("/api/folders")
 def create_new_folder(data: CreateFolderRequest):
-    # Added Debug Print
-    print(f"DEBUG: Attempting to create folder: {data.name}")
     try:
         folder = database.create_folder(data.name)
-        print(f"DEBUG: Folder created ID: {folder.id}")
         return {"status": "success", "folder": {"id": folder.id, "name": folder.name, "sessions": []}}
     except Exception as e:
-        print(f"DEBUG: Error creating folder: {e}")
         return JSONResponse(status_code=400, content={"error": str(e)})
+
+@app.put("/api/folders/{folder_id}")
+def rename_folder_api(folder_id: int, data: RenameRequest):
+    if database.rename_folder(folder_id, data.new_name):
+        return {"status": "success"}
+    return JSONResponse(status_code=404, content={"error": "Not found"})
+
+@app.delete("/api/folders/{folder_id}")
+def delete_folder_api(folder_id: int):
+    if database.delete_folder(folder_id):
+        return {"status": "success"}
+    return JSONResponse(status_code=404, content={"error": "Not found"})
 
 @app.post("/api/sessions")
 def create_new_session(data: CreateSessionRequest):
@@ -127,6 +133,18 @@ def create_new_session(data: CreateSessionRequest):
         return {"status": "success", "session": {"id": session.id, "title": session.title}}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.put("/api/sessions/{session_id}")
+def rename_session_api(session_id: int, data: RenameRequest):
+    if database.rename_chat_session(session_id, data.new_name):
+        return {"status": "success"}
+    return JSONResponse(status_code=404, content={"error": "Not found"})
+
+@app.delete("/api/sessions/{session_id}")
+def delete_session_api(session_id: int):
+    if database.delete_chat_session(session_id):
+        return {"status": "success"}
+    return JSONResponse(status_code=404, content={"error": "Not found"})
 
 @app.get("/api/sessions/{session_id}/messages")
 def get_session_history(session_id: int):
@@ -172,6 +190,13 @@ def delete_report_endpoint(id: int):
     if success:
         return {"status": "success", "message": "Report deleted"}
     return JSONResponse(status_code=404, content={"error": "Report not found"})
+
+@app.delete("/api/reports/all")
+def delete_all_reports_endpoint():
+    success = database.delete_all_reports()
+    if success:
+        return {"status": "success"}
+    return JSONResponse(status_code=500, content={"error": "Failed"})
 
 @app.post("/start-report")
 async def start_report(data: ReportRequest):
