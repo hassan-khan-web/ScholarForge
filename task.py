@@ -11,20 +11,21 @@ celery_app = Celery(
     backend=REDIS_URL
 )
 
+# UPDATED SIGNATURE: Accept pdf_bytes_list (list)
 @celery_app.task(bind=True)
-def generate_report_task(self, query: str, format_content: str, page_count: int):
+def generate_report_task(self, query: str, format_content: str, page_count: int, pdf_bytes_list: list = None):
     """
-    Sequential Deep Research Task.
-    Takes longer, but produces higher quality output with fewer errors.
+    Sequential Deep Research Task with optional User PDF(s).
     """
     try:
         self.update_state(state='PROGRESS', meta={'message': 'Initializing Deep Research...'})
         
-        # Run the engine (Sequential Mode)
+        # Run the engine
         search_content, report_content, chart_path = AI_engine.run_ai_engine_with_return(
             query, 
             format_content, 
             page_count,
+            pdf_bytes_list, # Pass list
             task=self
         )
 

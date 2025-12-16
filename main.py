@@ -2,9 +2,10 @@ import os
 import shutil
 import urllib.parse
 import tempfile
+from typing import List # <--- NEW IMPORT
 from dotenv import load_dotenv
 load_dotenv()
-from fastapi import FastAPI, Request, Form, BackgroundTasks, HTTPException
+from fastapi import FastAPI, Request, Form, BackgroundTasks, HTTPException, UploadFile, File
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
@@ -34,33 +35,16 @@ templates = Jinja2Templates(directory="templates")
 
 @app.on_event("startup")
 def startup():
-    # --- 1. SECRET MANAGEMENT (FAIL FAST CHECK) ---
+    # 1. Secret Check
     required_secrets = ["API_KEY", "OPENROUTER_API_KEY"]
-    missing_secrets = [key for key in required_secrets if not os.environ.get(key)]
-    
-    if missing_secrets:
-        error_msg = (
-            "\n"
-            "############################################################\n"
-            "   CRITICAL ERROR: MISSING ENVIRONMENT VARIABLES\n"
-            f"   Missing Keys: {', '.join(missing_secrets)}\n"
-            "   The application cannot start without these keys.\n"
-            "   Please add them to your .env file and restart.\n"
-            "############################################################\n"
-        )
-        print(error_msg)
-        raise RuntimeError(error_msg)
-
-    # --- 2. DATABASE INIT ---
+    missing = [k for k in required_secrets if not os.environ.get(k)]
+    if missing:
+        print(f"CRITICAL: Missing keys: {missing}")
+        raise RuntimeError(f"Missing keys: {missing}")
+    # 2. Database
     database.init_db()
 
 # --- PYDANTIC MODELS ---
-class ReportRequest(BaseModel):
-    query: str
-    format_key: str
-    format_content: str = None
-    page_count: int = 15
-
 class ChatRequest(BaseModel):
     message: str
     session_id: int 
@@ -88,228 +72,162 @@ async def index(request: Request):
 async def chat_page(request: Request):
     return templates.TemplateResponse('ai_assistant.html', {"request": request})
 
-# --- SYSTEM ROUTES ---
+# --- SYSTEM ---
 @app.post("/api/system/reset-db")
 def reset_database():
     try:
-        # Nuclear option for Postgres: Drop all tables via SQLAlchemy metadata
         database.engine.dispose()
         database.Base.metadata.drop_all(bind=database.engine)
         database.init_db()
-        return {"status": "success", "message": "Database reset (Tables dropped and recreated)."}
+        return {"status": "success"}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# --- FOLDER & CHAT API ---
-
+# --- FOLDER/CHAT ---
 @app.get("/api/folders")
-def get_folders():
-    return database.get_folders_with_sessions()
+def get_folders(): return database.get_folders_with_sessions()
 
 @app.post("/api/folders")
 def create_new_folder(data: CreateFolderRequest):
     try:
         folder = database.create_folder(data.name)
         return {"status": "success", "folder": {"id": folder.id, "name": folder.name, "sessions": []}}
-    except Exception as e:
-        return JSONResponse(status_code=400, content={"error": str(e)})
+    except Exception as e: return JSONResponse(status_code=400, content={"error": str(e)})
 
 @app.put("/api/folders/{folder_id}")
-def rename_folder_api(folder_id: int, data: RenameRequest):
-    if database.rename_folder(folder_id, data.new_name):
-        return {"status": "success"}
+def rename_folder(folder_id: int, data: RenameRequest):
+    if database.rename_folder(folder_id, data.new_name): return {"status": "success"}
     return JSONResponse(status_code=404, content={"error": "Not found"})
 
 @app.delete("/api/folders/{folder_id}")
-def delete_folder_api(folder_id: int):
-    if database.delete_folder(folder_id):
-        return {"status": "success"}
+def delete_folder(folder_id: int):
+    if database.delete_folder(folder_id): return {"status": "success"}
     return JSONResponse(status_code=404, content={"error": "Not found"})
 
 @app.post("/api/sessions")
-def create_new_session(data: CreateSessionRequest):
+def create_session(data: CreateSessionRequest):
     try:
         session = database.create_chat_session(data.folder_id, data.title)
         return {"status": "success", "session": {"id": session.id, "title": session.title}}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+    except Exception as e: return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.put("/api/sessions/{session_id}")
-def rename_session_api(session_id: int, data: RenameRequest):
-    if database.rename_chat_session(session_id, data.new_name):
-        return {"status": "success"}
+def rename_session(session_id: int, data: RenameRequest):
+    if database.rename_chat_session(session_id, data.new_name): return {"status": "success"}
     return JSONResponse(status_code=404, content={"error": "Not found"})
 
 @app.delete("/api/sessions/{session_id}")
-def delete_session_api(session_id: int):
-    if database.delete_chat_session(session_id):
-        return {"status": "success"}
+def delete_session(session_id: int):
+    if database.delete_chat_session(session_id): return {"status": "success"}
     return JSONResponse(status_code=404, content={"error": "Not found"})
 
 @app.get("/api/sessions/{session_id}/messages")
-def get_session_history(session_id: int):
+def get_history(session_id: int):
     msgs = database.get_session_messages(session_id)
     return [{"role": m.role, "content": m.content} for m in msgs]
 
 @app.post("/chat")
-async def handle_chat(data: ChatRequest):
-    db_messages = database.get_session_messages(data.session_id)
-    history_context = [{"role": m.role, "content": m.content} for m in db_messages]
-    
-    ai_response = await chat_engine.get_chat_response_async(data.message, history_context)
-    
+async def chat(data: ChatRequest):
+    msgs = database.get_session_messages(data.session_id)
+    ctx = [{"role": m.role, "content": m.content} for m in msgs]
+    resp = await chat_engine.get_chat_response_async(data.message, ctx)
     database.save_chat_message(data.session_id, "user", data.message)
-    database.save_chat_message(data.session_id, "assistant", ai_response)
-    
-    return {'response': ai_response}
+    database.save_chat_message(data.session_id, "assistant", resp)
+    return {'response': resp}
 
-# --- REPORT API ---
-
+# --- REPORTS ---
 @app.get("/api/history")
-def get_history():
+def history():
     reports = database.get_all_reports()
-    data = []
-    for r in reports:
-        data.append({
-            "id": r.id, 
-            "topic": r.topic, 
-            "date": r.created_at.strftime("%b %d, %H:%M")
-        })
-    return data
+    return [{"id": r.id, "topic": r.topic, "date": r.created_at.strftime("%b %d, %H:%M")} for r in reports]
 
 @app.get("/api/report/{id}")
-def get_report(id: int):
-    report = database.get_report_content(id)
-    if report:
-        return {"topic": report.topic, "content": report.content}
-    return {"error": "Not found"}
+def get_rep(id: int):
+    r = database.get_report_content(id)
+    return {"topic": r.topic, "content": r.content} if r else {"error": "Not found"}
 
 @app.delete("/api/report/{id}")
-def delete_report_endpoint(id: int):
-    success = database.delete_report(id)
-    if success:
-        return {"status": "success", "message": "Report deleted"}
-    return JSONResponse(status_code=404, content={"error": "Report not found"})
+def del_rep(id: int):
+    if database.delete_report(id): return {"status": "success"}
+    return JSONResponse(status_code=404, content={"error": "Not found"})
 
 @app.delete("/api/reports/all")
-def delete_all_reports_endpoint():
-    success = database.delete_all_reports()
-    if success:
-        return {"status": "success"}
+def del_all_reps():
+    if database.delete_all_reports(): return {"status": "success"}
     return JSONResponse(status_code=500, content={"error": "Failed"})
 
+# --- START REPORT (UPDATED FOR MULTIPLE FILES) ---
 @app.post("/start-report")
-async def start_report(data: ReportRequest):
+async def start_report(
+    query: str = Form(...),
+    format_key: str = Form(...),
+    format_content: str = Form(None),
+    page_count: int = Form(15),
+    pdf_files: List[UploadFile] = File(None) # <--- UPDATED: Accepts List
+):
     try:
-        if not data.query:
-            return JSONResponse({'error': 'No query provided'}, status_code=400)
-        
-        user_format = data.format_key if data.format_key in report_formats.FORMAT_TEMPLATES else "literature_review"
-        if data.format_key == "custom":
-            if not data.format_content or data.format_content.strip() == "":
-                return JSONResponse({'error': 'Custom format selected but no content provided.'}, status_code=400)
-            user_format = "custom" 
+        user_fmt = format_key if format_key in report_formats.FORMAT_TEMPLATES else "literature_review"
+        if format_key == "custom":
+            if not format_content: return JSONResponse({'error': 'Custom format needed'}, status_code=400)
+            user_fmt = "custom" 
 
-        task = generate_report_task.delay(data.query, user_format, data.page_count)
-        return {"task_id": task.id}
+        # Handle Multiple Files
+        pdf_data_list = []
+        if pdf_files:
+            for file in pdf_files:
+                if file.filename: # check if file was actually uploaded
+                    content = await file.read()
+                    pdf_data_list.append(content)
         
+        # Pass list of bytes to task
+        task = generate_report_task.delay(query, user_fmt, page_count, pdf_data_list)
+        return {"task_id": task.id}
     except Exception as e:
-        return JSONResponse({'error': f'Failed to start task: {str(e)}'}, status_code=500)
+        return JSONResponse({'error': f'Failed: {str(e)}'}, status_code=500)
 
 @app.get("/report-status/{task_id}")
 async def report_status(task_id: str):
     task = AsyncResult(task_id, app=celery_app)
+    if task.state == 'SUCCESS':
+        res = task.result
+        if isinstance(res, dict) and res.get('status') == 'FAILURE': return {'status': 'FAILURE', 'error': res.get('error')}
+        return {'status': 'SUCCESS', 'report_content': res.get('report_content'), 'chart_path': res.get('chart_path')}
+    elif task.state == 'FAILURE': return {'status': 'FAILURE', 'error': str(task.info)}
+    return {'status': task.state, 'message': task.info.get('message', 'Running...') if isinstance(task.info, dict) else 'Running...'}
 
-    if task.state == 'PENDING':
-        return {'status': 'PENDING', 'message': 'Task is in queue...'}
-    elif task.state == 'PROGRESS':
-        message = task.info.get('message', 'Task is running...')
-        return {'status': 'PROGRESS', 'message': message}
-    elif task.state == 'SUCCESS':
-        result = task.result
-        if isinstance(result, dict) and result.get('status') == 'FAILURE':
-            return {'status': 'FAILURE', 'error': result.get('error')}
-        return {
-            'status': 'SUCCESS',
-            'report_content': result.get('report_content'),
-            'search_content': result.get('search_content'),
-            'chart_path': result.get('chart_path')
-        }
-    elif task.state == 'FAILURE':
-        return {'status': 'FAILURE', 'error': str(task.info)}
-    else:
-        return {'status': task.state}
-
-# --- FILE OPS ---
-
-def cleanup_file(path: str):
-    try:
-        if os.path.exists(path): os.remove(path)
-    except Exception as e: print(f"Error cleaning up file {path}: {e}")
+# --- DOWNLOAD ---
+def cleanup(path):
+    try: os.remove(path) 
+    except: pass
 
 @app.post("/download")
 async def download(
-    background_tasks: BackgroundTasks, 
+    bg: BackgroundTasks, 
     report_content: str = Form(...),
     topic: str = Form(...),
     format: str = Form(...),
     chart_path: str = Form(None)
 ):
-    return send_converted_file(report_content, topic, format, chart_path, background_tasks)
-
-@app.get("/get-report-formats")
-async def get_report_formats():
-    return report_formats.FORMAT_TEMPLATES
-
-def send_converted_file(report_content, topic, format_type, chart_path, background_tasks):
-    if not report_content or not topic:
-        raise HTTPException(status_code=400, detail="Missing report data.")
-
     safe_topic = urllib.parse.quote_plus(topic.replace(' ', '_'))
+    with tempfile.NamedTemporaryFile(suffix=f".{format}", delete=False) as f: path = f.name
     
-    try:
-        with tempfile.NamedTemporaryFile(suffix=f".{format_type}", delete=False) as f:
-            temp_filepath = f.name
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating temp file: {e}")
+    if format == 'pdf': res = AI_engine.convert_to_pdf(report_content, topic, path, chart_path)
+    elif format == 'docx': res = AI_engine.convert_to_docx(report_content, topic, path, chart_path)
+    elif format == 'txt': res = AI_engine.convert_to_txt(report_content, path)
+    elif format == 'md': res = AI_engine.convert_to_md(report_content, path)
+    elif format == 'json': res = AI_engine.convert_to_json(report_content, topic, path)
+    else: os.remove(path); raise HTTPException(400, "Invalid format")
 
-    result = "Error"
-    media_type = "text/plain"
-    filename = f"{safe_topic}_Report.{format_type}"
-
-    if format_type == 'pdf':
-        result = AI_engine.convert_to_pdf(report_content, topic, temp_filepath, chart_path)
-        media_type = 'application/pdf'
-    elif format_type == 'docx':
-        result = AI_engine.convert_to_docx(report_content, topic, temp_filepath, chart_path)
-        media_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    elif format_type == 'txt':
-        result = AI_engine.convert_to_txt(report_content, temp_filepath)
-        media_type = 'text/plain'
-    elif format_type == 'md':
-        result = AI_engine.convert_to_md(report_content, temp_filepath)
-        media_type = 'text/markdown'
-    elif format_type == 'json':
-        result = AI_engine.convert_to_json(report_content, topic, temp_filepath)
-        media_type = 'application/json'
-    else:
-        if os.path.exists(temp_filepath): os.remove(temp_filepath)
-        raise HTTPException(status_code=400, detail="Invalid format.")
-
-    if result.startswith("Success"):
-        background_tasks.add_task(cleanup_file, temp_filepath)
-        return FileResponse(path=temp_filepath, filename=filename, media_type=media_type)
-    else:
-        if os.path.exists(temp_filepath): os.remove(temp_filepath)
-        raise HTTPException(status_code=500, detail=f"File generation failed: {result}")
+    if res == "Success":
+        bg.add_task(cleanup, path)
+        return FileResponse(path, filename=f"{safe_topic}_Report.{format}")
+    os.remove(path)
+    raise HTTPException(500, f"Failed: {res}")
 
 @app.post("/add-hook")
 async def add_hook(data: HookRequest):
-    try:
-        database.save_hook(data.content)
-        return {'status': 'success', 'message': 'Hook saved!'}
-    except Exception as e:
-        return {'status': 'error', 'message': str(e)}
+    try: database.save_hook(data.content); return {'status': 'success'}
+    except Exception as e: return {'status': 'error', 'message': str(e)}
 
 if __name__ == '__main__':
     import uvicorn
