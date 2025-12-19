@@ -5,20 +5,22 @@ services:
   redis:
     image: redis:alpine
     container_name: scholarforge_redis
-    ports:
-      - "6379:6379"
+    network_mode: "host"
+    # ports:
+    #   - "6379:6379"
 
   # 2. POSTGRESQL (Database) - NEW
   db:
     image: postgres:15-alpine
     container_name: scholarforge_db
     restart: always
+    network_mode: "host"
     environment:
       - POSTGRES_USER=scholar
       - POSTGRES_PASSWORD=forgepass
       - POSTGRES_DB=scholarforge
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -27,18 +29,19 @@ services:
     build: .
     container_name: scholarforge_web
     command: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
+    network_mode: "host"
     volumes:
       - .:/app
       - ./data:/app/data
-    ports:
-      - "5000:5000"
+    # ports:
+    #   - "5000:5000"
     env_file:
       - .env
     # Connection String passed here to override .env defaults if needed
     environment:
-      - DATABASE_URL=postgresql://scholar:forgepass@db:5432/scholarforge
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://scholar:forgepass@localhost:5432/scholarforge
+      - CELERY_BROKER_URL=redis://localhost:6379/0
+      - CELERY_RESULT_BACKEND=redis://localhost:6379/0
     depends_on:
       - redis
       - db
@@ -47,6 +50,7 @@ services:
   worker:
     build: .
     container_name: scholarforge_worker
+    network_mode: "host"
     
       # OLD COMMAND (Static - requires restart):
     # command: celery -A task.celery_app worker --loglevel=info
@@ -60,9 +64,9 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql://scholar:forgepass@db:5432/scholarforge
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://scholar:forgepass@localhost:5432/scholarforge
+      - CELERY_BROKER_URL=redis://localhost:6379/0
+      - CELERY_RESULT_BACKEND=redis://localhost:6379/0
     depends_on:
       - redis
       - db

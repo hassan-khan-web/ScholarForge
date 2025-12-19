@@ -1,5 +1,5 @@
 # --- STAGE 1: BUILDER ---
-FROM python:3.10-slim as builder
+FROM python:3.10-slim AS builder
 
 WORKDIR /app
 
@@ -29,7 +29,7 @@ RUN pip install --no-cache-dir -r requires.txt
 
 
 # --- STAGE 2: RUNNER (Production) ---
-FROM python:3.10-slim as runner
+FROM python:3.10-slim AS runner
 
 WORKDIR /app
 
