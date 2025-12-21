@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 import json
 import re
 import matplotlib
-# Set backend before importing pyplot to prevent GUI errors on server
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,10 +15,8 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 import fitz 
-
 from report_formats import get_template_instructions
 
-# --- CONFIGURATION ---
 SMART_MODEL = "x-ai/grok-4.1-fast:free"
 BACKUP_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 
