@@ -160,75 +160,65 @@ def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> s
 
 # --- RECURSIVE AGENT LOGIC ---
 
-def recursive_gap_analysis(section_title: str, existing_summary: str, topic: str) -> str:
-    """Feature: Recursive Research. Checks if we need more info."""
-    print(f"   > Analyzing gap for: {section_title}")
-    prompt = (
-        f"We are writing a report on '{topic}'.\n"
-        f"Current Section: '{section_title}'\n"
-        f"Available Data Summary: {existing_summary[:3000]}\n\n"
-        "DECISION: Do we have specific enough data to write a detailed 500-word section on this specific sub-topic?\n"
-        "If YES, output 'PASS'.\n"
-        "If NO, output a Google Search Query to find the missing specific info."
-    )
-    decision = call_llm(SMART_MODEL, "You are a Research Director.", prompt, temp=0.1)
-    
-    if "PASS" in decision or len(decision) > 100:
-        return "" # No new search needed
-    
-    # Clean the query
-    new_query = decision.strip().replace('"', '')
-    print(f"   >>> RECURSIVE SEARCH TRIGGERED: {new_query}")
-    return get_search_results(new_query, max_results=2)
+# --- CONSOLIDATED PLANNING ---
 
-def generate_summary(search_content: str, topic: str, user_pdf_text: str = "") -> str:
-    context = search_content
-    if user_pdf_text:
-        context = user_pdf_text + "\n\n" + search_content
-        
-    return call_llm(
-        SMART_MODEL,
-        "You are a Senior Research Analyst.",
-        f"Topic: {topic}\n\nData:\n{context[:25000]}\n\nTask: Synthesize a master summary of key facts, numbers, and sources."
-    )
-
-def generate_outline(topic: str, summary: str, format_type: str, target_pages: int) -> list:
+def plan_report_consolidated(query: str, search_content: str, user_pdf_text: str, format_type: str, target_pages: int) -> dict:
+    """Consolidates Summary, Chart JSON, and Outline into ONE API call."""
     format_data = get_template_instructions(format_type, target_pages)
+    context = (user_pdf_text + "\n\n" + search_content) if user_pdf_text else search_content
+    
     prompt = (
-        f"Topic: {topic}\nTarget: {format_data['target_sections']} sections.\n"
-        f"Logic: {format_data['template_text']}\nContext: {summary[:3000]}\n"
-        "Output: A JSON list of strings ONLY. Example: [\"1. Intro\", \"2. Body\"]"
+        f"Topic: {query}\n"
+        f"Target Sections: {format_data['target_sections']}\n"
+        f"Format Style: {format_data['template_text']}\n"
+        f"Research Data:\n{context[:25000]}\n\n"
+        "--- TASK ---\n"
+        "Generate a structured report plan in JSON format with exactly three keys:\n"
+        "1. 'summary': A 500-word master factual summary of all data.\n"
+        "2. 'chart_data': { 'title': '...', 'x_label': '...', 'y_label': '...', 'data': [{'label': 'A', 'value': 10}] }\n"
+        "3. 'outline': A list of strings for section titles.\n\n"
+        "Output raw JSON only."
     )
-    content = call_llm(SMART_MODEL, "Return JSON only.", prompt, temp=0.2)
-    match = re.search(r'\[.*\]', content.replace('\n', ' '), re.DOTALL)
-    if match: return json.loads(match.group(0))
-    return ["Introduction", "Analysis", "Conclusion"]
-
-def write_section(section_title: str, topic: str, summary: str, full_report_context: str, word_limit: int) -> str:
-    # 1. Recursive Step: Check if we need more data
-    new_data = recursive_gap_analysis(section_title, summary, topic)
     
-    combined_data = summary
-    if new_data:
-        combined_data = new_data + "\n\n" + summary # Prioritize new data
-        
-    # 2. Writing Step with Citation Enforcement
+    response_text = call_llm(SMART_MODEL, "You are a Research Director. Output JSON only.", prompt, temp=0.2)
+    
+    try:
+        # Clean and parse JSON
+        match = re.search(r'\{.*\}', response_text.replace('\n', ' '), re.DOTALL)
+        if match:
+            data = json.loads(match.group(0))
+            return {
+                "summary": data.get("summary", "Summary generation failed."),
+                "chart_data": data.get("chart_data", {}),
+                "outline": data.get("outline", ["Introduction", "Analysis", "Conclusion"])
+            }
+    except Exception as e:
+        print(f"JSON Planning Error: {e}")
+    
+    # Fallback if JSON fails
+    return {
+        "summary": "Data synthesis in progress...",
+        "chart_data": {},
+        "outline": ["Introduction", "Analysis", "Conclusion"]
+    }
+
+def write_sections_bundle(section_titles: list, topic: str, summary: str, word_limit_per_section: int) -> str:
+    """Writes multiple sections in ONE API call to save money/usage."""
+    titles_str = ", ".join(section_titles)
     base_prompt = (
-        f"Write section '{section_title}' for topic '{topic}'.\n"
-        f"Data Source:\n{combined_data[:15000]}\n\n"
-        f"Length: {word_limit} words.\n"
-        "RULES:\n"
-        "1. Use Markdown.\n"
-        "2. CITATION REQUIREMENT: You MUST cite sources using [1], [2] notation corresponding to the SOURCE list provided.\n"
-        "3. If using User Uploaded Documents, cite as [Doc 1], [Doc 2]."
+        f"Write the following sections for topic '{topic}': {titles_str}\n\n"
+        f"Research Summary:\n{summary[:15000]}\n\n"
+        f"INSTRUCTIONS:\n"
+        f"1. Write approximately {word_limit_per_section} words for EACH section listed.\n"
+        f"2. Use Markdown. Start each section with '## Section Title'.\n"
+        f"3. CITATION REQUIREMENT: Cite sources using [1], [2] or [Doc 1].\n"
+        "4. DO NOT repeat content across sections."
     )
     
-    keywords_for_table = ['comparison', 'market', 'financial', 'growth', 'impact']
-    if any(k in section_title.lower() for k in keywords_for_table):
-        base_prompt += "\n\nIMPORTANT: Include a Markdown table comparing key metrics."
+    content = call_llm(SMART_MODEL, "You are a Report Writer. Focus on technical depth and citations.", base_prompt, temp=0.4)
+    return clean_ai_output(content)
 
-    content = call_llm(SMART_MODEL, "You are a Report Writer. Cite sources explicitly.", base_prompt, temp=0.4)
-    return clean_section_output(content, section_title)
+# write_section is now legacy, replaced by write_sections_bundle
 
 # --- CHARTING ---
 def generate_chart_from_data(summary: str, topic: str) -> str:
@@ -269,36 +259,75 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
         print(message) 
         if task: task.update_state(state='PROGRESS', meta={'message': message})
 
-    _update_status("Step 1/7: Processing Inputs...")
+    _update_status("Step 1/5: Processing & Initial Search...")
     
-    # 1. Process User PDFs (MULTIPLE)
+    # 1. Process User PDFs
     user_pdf_text = ""
     if pdf_bytes_list:
         user_pdf_text = extract_text_from_multiple_pdfs(pdf_bytes_list)
-        _update_status(f"   > Analyzed {len(pdf_bytes_list)} uploaded documents.")
-
-    _update_status("Step 2/7: Global Search (Deep Reading)...")
+    
     search_content = get_search_results(query)
     
-    _update_status("Step 3/7: Synthesizing Data...")
-    summary = generate_summary(search_content, query, user_pdf_text)
+    _update_status("Step 2/5: Planning & Synthesis (Consolidated Call 1/X)...")
+    # THE CONSOLIDATED PLANNING CALL
+    plan = plan_report_consolidated(query, search_content, user_pdf_text, user_format, page_count)
+    summary = plan['summary']
+    outline = plan['outline']
     
-    _update_status("Step 4/7: Generating Visuals...")
-    chart_path = generate_chart_from_data(summary, query)
-    
-    _update_status("Step 5/7: Planning Structure...")
-    outline = generate_outline(query, summary, user_format, page_count)
+    _update_status("Step 3/5: Generating Visuals...")
+    chart_path = None
+    if plan['chart_data']:
+        try:
+            chart_dir = "/app/static/charts"
+            if not os.path.exists(chart_dir): os.makedirs(chart_dir, exist_ok=True)
+            clean_name = re.sub(r'\W+', '', query)[:15] 
+            filename = f"chart_{clean_name}_{os.urandom(4).hex()}.png"
+            filepath = os.path.join(chart_dir, filename)
 
-    total_words = page_count * WORDS_PER_PAGE 
-    words_per_section = max(300, int(total_words / max(1, len(outline))))
+            df = pd.DataFrame(plan['chart_data']['data'])
+            fig, ax = plt.subplots(figsize=(10, 6))
+            plt.style.use('ggplot')
+            ax.bar(df['label'], df['value'], color='#4f46e5', alpha=0.8)
+            ax.set_title(plan['chart_data'].get('title', 'Analysis'), fontsize=14, pad=20)
+            ax.set_xlabel(plan['chart_data'].get('x_label', ''), fontsize=12)
+            ax.set_ylabel(plan['chart_data'].get('y_label', ''), fontsize=12)
+            plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+            fig.tight_layout()
+            fig.savefig(filepath, dpi=100)
+            plt.close(fig)
+            chart_path = filepath
+        except: pass
+
+    _update_status("Step 4/5: Deep Writing (Bundled Calls)...")
     
+    # DETERMINE CALL COUNTS BASED ON USER SPECIFICATIONS
+    # 7 pages -> 4 total calls (1 plan + 3 write)
+    # 15 pages -> 8 total calls (1 plan + 7 write)
+    # 25 pages -> 12 total calls (1 plan + 11 write)
+    if page_count <= 12: max_writing_calls = 3 # 7 page case
+    elif page_count <= 20: max_writing_calls = 7 # 15 page case
+    else: max_writing_calls = 11 # 25 page case
+    
+    # Split outline into bundles precisely to hit the target call count
+    num_sections = len(outline)
+    bundles = []
+    sections_left = outline[:]
+    calls_left = max_writing_calls
+    
+    while sections_left and calls_left > 0:
+        # Ceiling division to distribute fairly
+        take = max(1, -(-len(sections_left) // calls_left))
+        bundles.append(sections_left[:take])
+        sections_left = sections_left[take:]
+        calls_left -= 1
+
     full_report = f"# {query.upper()}\n\n"
-    for i, section in enumerate(outline):
-        _update_status(f"Step 6/7: Researching & Writing {i+1}/{len(outline)}...")
-        section_content = write_section(section, query, summary, full_report, words_per_section)
-        full_report += f"\n\n## {section}\n{section_content}\n"
+    for i, bundle in enumerate(bundles):
+        _update_status(f"   > Writing Bundle {i+1}/{len(bundles)}...")
+        bundle_content = write_sections_bundle(bundle, query, summary, 500)
+        full_report += f"\n{bundle_content}\n"
     
-    _update_status("Step 7/7: Finalizing...")
+    _update_status("Step 5/5: Finalizing...")
     full_report = clean_ai_output(full_report)
     
     return search_content + "\n" + user_pdf_text, full_report, chart_path

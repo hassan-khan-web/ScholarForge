@@ -62,10 +62,14 @@ def get_template_instructions(format_type: str, page_count: int) -> dict:
         tier = "medium"
         target_sections = 7
         complexity_instruction = "Standard report depth. Include background, main analysis, and distinct sub-themes."
-    else:
+    elif page_count <= 20:
         tier = "long"
         target_sections = 10 
         complexity_instruction = "Comprehensive deep-dive. Add extra sections for Context, Economic Impact, Future Outlook."
+    else:
+        tier = "very_long"
+        target_sections = 15
+        complexity_instruction = "Extremely detailed research report. Deep analysis of all technical, economic, and strategic dimensions."
 
     selected_template = FORMAT_TEMPLATES.get(format_type, LIT_REVIEW_BASE)
     dynamic_middle_count = max(2, target_sections - 3)
