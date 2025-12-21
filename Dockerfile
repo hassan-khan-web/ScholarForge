@@ -8,7 +8,6 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Install System Dependencies required for building Python packages
-# (gcc, build-essential, libpq-dev for psycopg2, etc.)
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
@@ -20,10 +19,6 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Dependencies
-# We split this into two steps to leverage Docker layer caching
-COPY requires-core.txt .
-RUN pip install --no-cache-dir -r requires-core.txt
-
 COPY requires.txt .
 RUN pip install --no-cache-dir -r requires.txt
 
@@ -34,7 +29,6 @@ FROM python:3.10-slim AS runner
 WORKDIR /app
 
 # Install runtime-only system dependencies
-# (libpq5 is needed for postgres interaction at runtime)
 RUN apt-get update && apt-get install -y \
     libpq5 \
     curl \
@@ -52,7 +46,6 @@ ENV PYTHONUNBUFFERED=1
 RUN useradd -m -u 1000 scholar
 
 # Create necessary directories and set permissions
-# We need /app/data for the SQLite DB (if used) and /app/static for charts
 RUN mkdir -p /app/data /app/static/charts && \
     chown -R scholar:scholar /app
 
@@ -60,11 +53,10 @@ RUN mkdir -p /app/data /app/static/charts && \
 USER scholar
 
 # Copy application code
-# (Note: We do this last so code changes don't invalidate dependency layers)
 COPY --chown=scholar:scholar . .
 
 # Expose the port
 EXPOSE 5000
 
-# The command is handled by docker-compose, but we set a sane default
+# Default command
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]

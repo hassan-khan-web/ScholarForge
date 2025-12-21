@@ -1,6 +1,6 @@
 import os
 import json
-import httpx # NEW LIBRARY
+import httpx 
 
 LLAMA_MODEL_STRING = "nvidia/nemotron-nano-12b-v2-vl:free" 
 

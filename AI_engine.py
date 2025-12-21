@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 import json
 import re
 import matplotlib
-matplotlib.use('Agg') 
+# Set backend before importing pyplot to prevent GUI errors on server
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 from reportlab.lib.pagesizes import A4
@@ -301,9 +302,6 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
     _update_status("Step 4/5: Deep Writing (Bundled Calls)...")
     
     # DETERMINE CALL COUNTS BASED ON USER SPECIFICATIONS
-    # 7 pages -> 4 total calls (1 plan + 3 write)
-    # 15 pages -> 8 total calls (1 plan + 7 write)
-    # 25 pages -> 12 total calls (1 plan + 11 write)
     if page_count <= 12: max_writing_calls = 3 # 7 page case
     elif page_count <= 20: max_writing_calls = 7 # 15 page case
     else: max_writing_calls = 11 # 25 page case
@@ -332,17 +330,20 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
     
     return search_content + "\n" + user_pdf_text, full_report, chart_path
 
-# --- CONVERTERS (Unchanged) ---
+# --- CONVERTERS ---
 def convert_to_txt(content, path):
     with open(path, "w", encoding="utf-8") as f: f.write(content)
     return "Success"
+
 def convert_to_md(content, path):
     with open(path, "w", encoding="utf-8") as f: f.write(content)
     return "Success"
+
 def convert_to_json(content, topic, path):
     data = {"topic": topic, "content": content, "generated_by": "ScholarForge"}
     with open(path, "w", encoding="utf-8") as f: json.dump(data, f, indent=4)
     return "Success"
+
 def add_formatted_text(paragraph, text):
     parts = re.split(r'(\*\*[^*]+\*\*)', text)
     for part in parts:
@@ -351,6 +352,7 @@ def add_formatted_text(paragraph, text):
             run.bold = True
             run.font.color.rgb = RGBColor(0, 0, 0)
         else: paragraph.add_run(part)
+
 def _add_markdown_table_to_docx(doc, table_block):
     lines = [l.strip() for l in table_block.strip().split('\n') if l.strip()]
     if len(lines) < 3: return
@@ -368,6 +370,7 @@ def _add_markdown_table_to_docx(doc, table_block):
                 cell = table.cell(r_idx, c_idx)
                 cell.text = cell_data
                 if r_idx == 0: cell.paragraphs[0].runs[0].bold = True
+
 def convert_to_docx(content, topic, path, chart_path=None):
     doc = Document()
     doc.add_heading(topic, 0)
@@ -391,9 +394,11 @@ def convert_to_docx(content, topic, path, chart_path=None):
         else: p = doc.add_paragraph(); p.paragraph_format.space_after = Pt(6); add_formatted_text(p, stripped)
     if in_table and table_buffer: _add_markdown_table_to_docx(doc, "\n".join(table_buffer))
     doc.save(path); return "Success"
+
 def format_pdf_text(text):
     text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+
 def convert_to_pdf(content, topic, path, chart_path=None):
     doc = SimpleDocTemplate(path, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
     styles = getSampleStyleSheet()

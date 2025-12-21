@@ -1,5 +1,3 @@
-# report_formats.py
-
 LIT_REVIEW_BASE = """
 # 1. Introduction (Scope & Rationale)
 # 2. Main Thematic Analysis
@@ -54,28 +52,43 @@ FORMAT_TEMPLATES = {
 }
 
 def get_template_instructions(format_type: str, page_count: int) -> dict:
-    if page_count <= 5:
+    # UPDATED LOGIC:
+    # We aim for roughly 1 section per page to prevent "huge paragraphs".
+    # This forces the AI to break down the topic into smaller, more specific sub-headers.
+    
+    if page_count <= 4:
         tier = "short"
         target_sections = 4
         complexity_instruction = "Keep the structure concise. Focus only on the most critical high-level points."
-    elif page_count <= 12:
-        tier = "medium"
-        target_sections = 7
-        complexity_instruction = "Standard report depth. Include background, main analysis, and distinct sub-themes."
+    
+    elif page_count <= 8:
+        tier = "standard"
+        target_sections = 8 
+        complexity_instruction = "Standard report depth. Break down the main topic into distinct sub-themes for clarity."
+    
+    elif page_count <= 14:
+        tier = "deep"
+        target_sections = 12
+        complexity_instruction = "Deep-dive analysis. Include sections for Background, Economic Impact, Technical Nuance, and Future Outlook."
+    
     elif page_count <= 20:
-        tier = "long"
-        target_sections = 10 
-        complexity_instruction = "Comprehensive deep-dive. Add extra sections for Context, Economic Impact, Future Outlook."
+        tier = "comprehensive"
+        target_sections = 16
+        complexity_instruction = "Comprehensive coverage. dedicating specific sections to Case Studies, Data Analysis, and Strategic Implications."
+    
     else:
-        tier = "very_long"
-        target_sections = 15
-        complexity_instruction = "Extremely detailed research report. Deep analysis of all technical, economic, and strategic dimensions."
+        tier = "monograph"
+        target_sections = 20
+        complexity_instruction = "Extremely detailed research monograph. Exhaustive analysis of all dimensions, including historical context and global impact."
 
     selected_template = FORMAT_TEMPLATES.get(format_type, LIT_REVIEW_BASE)
+    
+    # Calculate how many "dynamic" sections go in the middle
+    # We subtract 3 because usually 3 sections are fixed (Intro, [Middle...], Conclusion, Refs)
     dynamic_middle_count = max(2, target_sections - 3)
 
     final_template = selected_template.format(
-        section_count=str(dynamic_middle_count) + " to " + str(dynamic_middle_count + 2),
+        section_count=str(dynamic_middle_count),
         complexity_note=complexity_instruction,
         last_n=str(target_sections - 1),
         last=str(target_sections)

@@ -2,7 +2,7 @@ import os
 import shutil
 import urllib.parse
 import tempfile
-from typing import List # <--- NEW IMPORT
+from typing import List 
 from dotenv import load_dotenv
 load_dotenv()
 from fastapi import FastAPI, Request, Form, BackgroundTasks, HTTPException, UploadFile, File
@@ -156,14 +156,14 @@ def del_all_reps():
     if database.delete_all_reports(): return {"status": "success"}
     return JSONResponse(status_code=500, content={"error": "Failed"})
 
-# --- START REPORT (UPDATED FOR MULTIPLE FILES) ---
+# --- START REPORT ---
 @app.post("/start-report")
 async def start_report(
     query: str = Form(...),
     format_key: str = Form(...),
     format_content: str = Form(None),
     page_count: int = Form(15),
-    pdf_files: List[UploadFile] = File(None) # <--- UPDATED: Accepts List
+    pdf_files: List[UploadFile] = File(None) 
 ):
     try:
         user_fmt = format_key if format_key in report_formats.FORMAT_TEMPLATES else "literature_review"
