@@ -1,8 +1,3 @@
-# report_formats.py
-
-# --- INSTRUCTIONS FOR AI ---
-# We inject these into the prompts to force "Engaging" headers and specific structures.
-
 COMMON_INSTRUCTION = """
 CRITICAL HEADER RULE: DO NOT use generic headers like 'Introduction', 'Background', 'Analysis', or 'Conclusion'. 
 Instead, use engaging, journalistic, or action-oriented titles. 
@@ -128,8 +123,6 @@ def get_template_instructions(format_type: str, page_count: int) -> dict:
 
     selected_template = FORMAT_TEMPLATES.get(format_type, LIT_REVIEW_BASE)
     
-    # Logic to fill the middle part of the outline
-    # We subtract fixed sections (usually Intro, Conclusion) to find the dynamic middle
     fixed_sections_estimate = 2 
     dynamic_middle_count = max(1, target_sections - fixed_sections_estimate)
 
