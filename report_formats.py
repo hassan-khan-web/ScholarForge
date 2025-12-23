@@ -1,44 +1,68 @@
+# report_formats.py
+
+# --- INSTRUCTIONS FOR AI ---
+# We inject these into the prompts to force "Engaging" headers and specific structures.
+
+COMMON_INSTRUCTION = """
+CRITICAL HEADER RULE: DO NOT use generic headers like 'Introduction', 'Background', 'Analysis', or 'Conclusion'. 
+Instead, use engaging, journalistic, or action-oriented titles. 
+   - BAD: "1. Introduction"
+   - GOOD: "1. The Dawn of a New Era: Why Now?"
+   - BAD: "Conclusion"
+   - GOOD: "Final Verdict: The Path Forward"
+
+FORMATTING RULES:
+1. Use ### Sub-headers to break down the main topic into distinct sub-themes.
+2. You MUST include at least one Markdown Table comparing key data points or pros/cons.
+3. Keep paragraphs punchy (max 5-6 sentences).
+"""
+
 LIT_REVIEW_BASE = """
-# 1. Introduction (Scope & Rationale)
-# 2. Main Thematic Analysis
-[INSTRUCTION: Generate {section_count} distinct thematic sections based on the research. 
-{complexity_note}]
-# {last_n}. Conclusion & Future Research
+# 1. [Engaging Title for Scope & Rationale]
+# 2. [Engaging Title for Main Thematic Analysis]
+[INSTRUCTION: Generate {section_count} distinct thematic sections. 
+{complexity_note}
+{common_ins}]
+# {last_n}. [Engaging Title for Future Outlook]
 # {last}. References
 """
 
 CASE_STUDY_BASE = """
 # 1. Executive Summary
-# 2. Introduction & Problem Statement
-# 3. Context/Background
-[INSTRUCTION: Analyze the case phases. Generate {section_count} sections covering the Strategy, Execution, and Outcome. 
-{complexity_note}]
-# {last_n}. Key Lessons Learned
+# 2. [Engaging Title for Problem Statement]
+# 3. [Engaging Title for Context]
+[INSTRUCTION: Analyze the case phases. Generate {section_count} sections covering Strategy, Execution, and Outcome. 
+{complexity_note}
+{common_ins}]
+# {last_n}. [Engaging Title for Lessons Learned]
 # {last}. Conclusion
 """
 
 WHITE_PAPER_BASE = """
 # 1. Executive Summary
-# 2. Market Context
-[INSTRUCTION: Compare solutions. Generate {section_count} sections analyzing the technical and business ROI of the proposed solution. 
-{complexity_note}]
-# {last_n}. Implementation Framework
+# 2. [Engaging Title for Market Context]
+[INSTRUCTION: Compare solutions. Generate {section_count} sections analyzing ROI and Technical Nuance. 
+{complexity_note}
+{common_ins}]
+# {last_n}. [Engaging Title for Implementation]
 # {last}. Call to Action
 """
 
 TECH_MANUAL_BASE = """
 # 1. System Overview
 # 2. Quick Start Guide
-[INSTRUCTION: Technical Breakdown. Generate {section_count} sections covering Core Features, Advanced Configuration, and API usage. 
-{complexity_note}]
+[INSTRUCTION: Technical Breakdown. Generate {section_count} sections covering Core Features and API usage. 
+{complexity_note}
+{common_ins}]
 # {last_n}. Troubleshooting
 # {last}. Glossary/Appendix
 """
 
 ARTICLE_BASE = """
 # 1. The Lead (Headline)
-[INSTRUCTION: Narrative Flow. Generate {section_count} sections that tell the story chronologically or thematically. Use punchy headers.
-{complexity_note}]
+[INSTRUCTION: Narrative Flow. Generate {section_count} sections that tell the story. Use punchy, magazine-style headers.
+{complexity_note}
+{common_ins}]
 # {last}. The Kicker (Conclusion)
 """
 
@@ -52,44 +76,67 @@ FORMAT_TEMPLATES = {
 }
 
 def get_template_instructions(format_type: str, page_count: int) -> dict:
-    # UPDATED LOGIC:
-    # We aim for roughly 1 section per page to prevent "huge paragraphs".
-    # This forces the AI to break down the topic into smaller, more specific sub-headers.
+    """
+    Returns the specific tier configuration based on page count.
+    Tiers:
+    - Short: 6 Pages, 3 Sections
+    - Standard: 10 Pages, 4 Sections (+10% density)
+    - Deep: 15 Pages, 7 Sections
+    - Comprehensive: 20 Pages, 10 Sections
+    - Monograph: 23+ Pages, 15 Sections
+    """
     
-    if page_count <= 4:
+    if page_count <= 6:
         tier = "short"
-        target_sections = 4
-        complexity_instruction = "Keep the structure concise. Focus only on the most critical high-level points."
+        target_sections = 3
+        complexity_instruction = (
+            "Structure: Concise and punchy. \n"
+            "Content: Focus strictly on the 3 most critical aspects. No fluff."
+        )
     
-    elif page_count <= 8:
+    elif page_count <= 10:
         tier = "standard"
-        target_sections = 8 
-        complexity_instruction = "Standard report depth. Break down the main topic into distinct sub-themes for clarity."
+        target_sections = 4
+        complexity_instruction = (
+            "Structure: Balanced depth. \n"
+            "Content: Increase detail by 10%. Add specific real-world examples to every section."
+        )
     
-    elif page_count <= 14:
+    elif page_count <= 15:
         tier = "deep"
-        target_sections = 12
-        complexity_instruction = "Deep-dive analysis. Include sections for Background, Economic Impact, Technical Nuance, and Future Outlook."
+        target_sections = 7
+        complexity_instruction = (
+            "Structure: Deep-Dive Analysis. \n"
+            "Content: Rigorous detail. Include 'Technical Architecture' and 'Economic Impact' sections."
+        )
     
-    elif page_count <= 20:
+    elif page_count <= 22:
         tier = "comprehensive"
-        target_sections = 16
-        complexity_instruction = "Comprehensive coverage. dedicating specific sections to Case Studies, Data Analysis, and Strategic Implications."
+        target_sections = 10
+        complexity_instruction = (
+            "Structure: Comprehensive Coverage. \n"
+            "Content: Exhaustive. Dedicate sections to 'Risk Analysis', 'Global Competitors', and 'Long-term Forecasts'."
+        )
     
     else:
         tier = "monograph"
-        target_sections = 20
-        complexity_instruction = "Extremely detailed research monograph. Exhaustive analysis of all dimensions, including historical context and global impact."
+        target_sections = 15
+        complexity_instruction = (
+            "Structure: Research Monograph. \n"
+            "Content: Maximum density. Analyze historical context, sociological impact, and granular technical specifications."
+        )
 
     selected_template = FORMAT_TEMPLATES.get(format_type, LIT_REVIEW_BASE)
     
-    # Calculate how many "dynamic" sections go in the middle
-    # We subtract 3 because usually 3 sections are fixed (Intro, [Middle...], Conclusion, Refs)
-    dynamic_middle_count = max(2, target_sections - 3)
+    # Logic to fill the middle part of the outline
+    # We subtract fixed sections (usually Intro, Conclusion) to find the dynamic middle
+    fixed_sections_estimate = 2 
+    dynamic_middle_count = max(1, target_sections - fixed_sections_estimate)
 
     final_template = selected_template.format(
         section_count=str(dynamic_middle_count),
         complexity_note=complexity_instruction,
+        common_ins=COMMON_INSTRUCTION,
         last_n=str(target_sections - 1),
         last=str(target_sections)
     )
