@@ -239,6 +239,65 @@ def delete_hook(hook_id: int):
     if database.delete_hook(hook_id): return {"status": "success"}
     return JSONResponse(status_code=404, content={"error": "Not found"})
 
+@app.put("/api/report/{id}/content")
+async def update_report_content(id: int, request: Request):
+    try:
+        data = await request.json()
+        content = data.get('content', '')
+        report = database.get_report_content(id)
+        if report:
+            # Update the report content
+            db = database.SessionLocal()
+            try:
+                db_report = db.query(database.ReportDB).filter(database.ReportDB.id == id).first()
+                if db_report:
+                    db_report.content = content
+                    db.commit()
+                    return {"status": "success"}
+            finally:
+                db.close()
+        return JSONResponse(status_code=404, content={"error": "Report not found"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+class MergeHookRequest(BaseModel):
+    report_content: str
+    hook_content: str
+
+@app.post("/api/merge-hook")
+async def merge_hook(data: MergeHookRequest):
+    try:
+        # Use AI to intelligently merge hook content into report
+        system_prompt = """You are an AI assistant that helps merge research points (hooks) into academic reports.
+Your task is to intelligently insert the provided hook content into the appropriate section of the report.
+Maintain the report's structure and formatting. Add the hook content where it fits best contextually.
+If the hook relates to existing content, integrate it smoothly. If it's new information, add it in a relevant section.
+Return ONLY the complete merged report content, maintaining all original formatting."""
+        
+        user_prompt = f"""Report Content:
+{data.report_content}
+
+---
+
+Hook Content to Merge:
+{data.hook_content}
+
+---
+
+Please merge the hook content into the report intelligently, maintaining proper structure and flow."""
+        
+        # Use the chat engine to get AI response
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        merged_content = await chat_engine.get_chat_response_async(user_prompt, [{"role": "system", "content": system_prompt}])
+        
+        return {"merged_content": merged_content}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=5000, reload=True)

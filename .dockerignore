@@ -1,8 +1,6 @@
-# Git
 .git
 .gitignore
 
-# Python / Virtual Envs
 __pycache__
 *.pyc
 *.pyo
@@ -13,21 +11,16 @@ venv/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Environment Variables & Secrets
 .env
 .env.local
 .env.*
 
-# IDEs
 .vscode/
 .idea/
 
-# OS specific
 .DS_Store
 Thumbs.db
 
-# Application Data & Generated Content
-# We ignore these so local testing data doesn't overwrite container volumes
 data/
 static/charts/
 celerybeat-schedule

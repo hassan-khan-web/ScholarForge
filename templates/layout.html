@@ -490,7 +490,13 @@
     <aside id="hook-panel"
         style="position: fixed; top: 0; bottom: 0; right: 0; width: 20rem; background: var(--bg-sidebar); border-left: 1px solid var(--border-color); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 40; display: flex; flex-direction: column; box-shadow: -10px 0 25px -5px rgba(0,0,0,0.1);">
         <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
-            <span class="font-bold text-[var(--text-main)]">Hooked Points</span>
+            <div class="flex items-center gap-3">
+                <span class="font-bold text-[var(--text-main)]">Hooked Points</span>
+                <button onclick="openMergePanel()"
+                    class="px-3 py-1 bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs rounded-lg font-medium transition-colors">
+                    Merge Hook
+                </button>
+            </div>
             <div class="flex items-center gap-2 relative">
                 <button onclick="event.stopPropagation(); toggleDropdown('hook-main-menu')"
                     class="text-[var(--text-muted)] hover:text-[var(--text-main)] font-bold px-2">⋮</button>
@@ -510,13 +516,94 @@
         {% block content %}{% endblock %}
     </div>
 
+
+    <!-- Merge Hook Panel -->
+    <div id="merge-panel"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center"
+        onclick="if(event.target === this) closeMergePanel()">
+        <div
+            class="w-full max-w-6xl h-[85vh] bg-[var(--bg-main)] border border-[var(--border-color)] rounded-xl shadow-2xl flex flex-col mx-4">
+            <!-- Header -->
+            <div
+                class="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-panel)]">
+                <h2 class="text-lg font-bold text-[var(--text-main)]">Merge Hooks into Report</h2>
+                <button onclick="closeMergePanel()"
+                    class="text-[var(--text-muted)] hover:text-[var(--text-main)] text-xl">&times;</button>
+            </div>
+
+            <!-- Three Section Layout -->
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Left: Report History (20%) -->
+                <div class="w-[20%] border-r border-[var(--border-color)] flex flex-col bg-[var(--bg-sidebar)]">
+                    <div class="p-3 border-b border-[var(--border-color)]">
+                        <h3 class="text-sm font-bold text-[var(--text-main)]">Reports</h3>
+                    </div>
+                    <div id="merge-reports-list" class="flex-1 overflow-y-auto custom-scrollbar p-2"></div>
+                </div>
+
+                <!-- Middle: Report Display (40%) -->
+                <div class="w-[40%] border-r border-[var(--border-color)] flex flex-col">
+                    <div class="p-3 border-b border-[var(--border-color)] flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-[var(--text-main)]">Report Content</h3>
+                        <button onclick="saveEditedReport()"
+                            class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg font-medium transition-colors">
+                            Save
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-hidden p-4">
+                        <textarea id="merge-report-content"
+                            class="w-full h-full bg-[var(--bg-sidebar)] border border-[var(--border-color)] text-[var(--text-main)] rounded-lg p-4 text-sm focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-blue-500/20 font-mono resize-none"
+                            placeholder="Select a report from the list..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Right: Hook Content (40%) -->
+                <div class="w-[40%] flex flex-col">
+                    <div class="p-3 border-b border-[var(--border-color)] flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-[var(--text-main)]">Hooks</h3>
+                        <button onclick="smartPushHooks()"
+                            class="px-3 py-1.5 bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs rounded-lg font-medium transition-colors flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Smart Push
+                        </button>
+                    </div>
+                    <div id="merge-hooks-list" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification"
+        class="fixed bottom-0 left-0 right-0 z-[100] transform translate-y-full transition-transform duration-300">
+        <div class="mx-auto max-w-md mb-4">
+            <div class="bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span id="toast-message" class="text-sm font-medium">Success!</span>
+                </div>
+                <button onclick="hideToast()" class="text-white hover:text-gray-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="folder-modal" class="custom-modal-overlay">
         <div class="glass-panel rounded-xl p-6 w-full max-w-sm">
             <h3 class="text-lg font-bold text-[var(--text-main)] mb-1">New Project Folder</h3>
             <p class="text-xs text-[var(--text-muted)] mb-5">Group your research chats.</p>
             <input type="text" id="fm-input"
                 class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-[var(--text-main)] text-sm focus:outline-none focus:border-[var(--accent-primary)] mb-6"
-                placeholder="Folder Name">
+                placeholder="Folder Name" onkeypress="if(event.key === 'Enter') submitFolderCreation()">
             <div class="flex justify-end gap-2">
                 <button onclick="closeFolderModal()" class="px-4 py-2 text-xs font-medium btn-cancel">Cancel</button>
                 <button onclick="submitFolderCreation()" id="btn-create-folder"
@@ -596,6 +683,21 @@
             confirmMsg.innerText = text;
             confirmTitle.innerText = title;
             confirmModal.style.display = 'flex';
+
+            // Add keyboard listener for Enter key
+            const keyHandler = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('btn-do-confirm').click();
+                    document.removeEventListener('keydown', keyHandler);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    document.getElementById('btn-cancel-confirm').click();
+                    document.removeEventListener('keydown', keyHandler);
+                }
+            };
+            document.addEventListener('keydown', keyHandler);
+
             return new Promise((resolve) => { confirmResolve = resolve; });
         }
 
@@ -866,6 +968,189 @@
         };
 
         document.addEventListener('DOMContentLoaded', fetchFolders);
+
+        // --- MERGE PANEL ---
+        let selectedReportId = null;
+        let selectedHooks = [];
+
+        window.openMergePanel = async function () {
+            document.getElementById('merge-panel').classList.remove('hidden');
+            await loadMergeReports();
+            await loadMergeHooks();
+        };
+
+        window.closeMergePanel = function () {
+            document.getElementById('merge-panel').classList.add('hidden');
+            selectedReportId = null;
+            selectedHooks = [];
+        };
+
+        async function loadMergeReports() {
+            const res = await fetch('/api/history');
+            const reports = await res.json();
+            const list = document.getElementById('merge-reports-list');
+            list.innerHTML = '';
+
+            reports.forEach(report => {
+                const div = document.createElement('div');
+                div.className = 'p-2 mb-1 rounded cursor-pointer hover:bg-[var(--hover-bg)] border border-transparent';
+                div.innerHTML = `
+                    <div class="text-xs font-medium text-[var(--text-main)] truncate">${report.topic}</div>
+                    <div class="text-[10px] text-[var(--text-muted)]">${report.date}</div>
+                `;
+                div.onclick = () => selectReport(report.id, div);
+                list.appendChild(div);
+            });
+        }
+
+        async function selectReport(reportId, element) {
+            selectedReportId = reportId;
+
+            // Update UI
+            document.querySelectorAll('#merge-reports-list > div').forEach(el => {
+                el.classList.remove('border-[var(--accent-primary)]', 'bg-[var(--active-bg)]');
+                el.classList.add('border-transparent');
+            });
+            element.classList.add('border-[var(--accent-primary)]', 'bg-[var(--active-bg)]');
+            element.classList.remove('border-transparent');
+
+            // Load report content
+            const res = await fetch(`/api/report/${reportId}`);
+            const data = await res.json();
+            document.getElementById('merge-report-content').value = data.content || '';
+        }
+
+        async function loadMergeHooks() {
+            const res = await fetch('/api/hooks');
+            const hooks = await res.json();
+            const list = document.getElementById('merge-hooks-list');
+            list.innerHTML = '';
+
+            hooks.forEach(hook => {
+                const div = document.createElement('div');
+                div.className = 'p-3 bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-lg cursor-pointer hover:border-[var(--accent-primary)] transition-colors';
+                div.innerHTML = `
+                    <div class="text-xs text-[var(--text-main)] break-words leading-relaxed">${hook.content}</div>
+                    <div class="text-[10px] text-[var(--text-muted)] mt-2">${hook.date}</div>
+                `;
+                div.onclick = () => toggleHookSelection(hook.id, hook.content, div);
+                list.appendChild(div);
+            });
+        }
+
+        function toggleHookSelection(hookId, content, element) {
+            const idx = selectedHooks.findIndex(h => h.id === hookId);
+            if (idx > -1) {
+                selectedHooks.splice(idx, 1);
+                element.classList.remove('bg-[var(--accent-primary)]', 'text-white');
+                element.classList.add('bg-[var(--bg-panel)]');
+            } else {
+                selectedHooks.push({ id: hookId, content: content });
+                element.classList.add('bg-[var(--accent-primary)]', 'text-white');
+                element.classList.remove('bg-[var(--bg-panel)]');
+            }
+        }
+
+        window.saveEditedReport = async function () {
+            if (!selectedReportId) {
+                showToast('Please select a report first', 'error');
+                return;
+            }
+
+            const content = document.getElementById('merge-report-content').value;
+            const res = await fetch(`/api/report/${selectedReportId}/content`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            });
+
+            if (res.ok) {
+                showToast('Report saved successfully!');
+            } else {
+                showToast('Failed to save report', 'error');
+            }
+        };
+
+        window.smartPushHooks = async function () {
+            if (!selectedReportId) {
+                showToast('Please select a report first', 'error');
+                return;
+            }
+
+            if (selectedHooks.length === 0) {
+                showToast('Please select at least one hook', 'error');
+                return;
+            }
+
+            const reportContent = document.getElementById('merge-report-content').value;
+            const hookContents = selectedHooks.map(h => h.content).join('\n\n');
+
+            // Show loading
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Merging...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/merge-hook', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        report_content: reportContent,
+                        hook_content: hookContents
+                    })
+                });
+
+                const data = await res.json();
+                if (data.merged_content) {
+                    document.getElementById('merge-report-content').value = data.merged_content;
+                    showToast('Hooks merged successfully into report!');
+                    selectedHooks = [];
+                    await loadMergeHooks();
+                } else {
+                    showToast('Failed to merge hooks: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        };
+
+        // Toast notification functions
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast-notification');
+            const toastMessage = document.getElementById('toast-message');
+            const toastContainer = toast.querySelector('div > div');
+
+            toastMessage.textContent = message;
+
+            // Update colors based on type
+            if (type === 'error') {
+                toastContainer.classList.remove('bg-green-600');
+                toastContainer.classList.add('bg-red-600');
+            } else {
+                toastContainer.classList.remove('bg-red-600');
+                toastContainer.classList.add('bg-green-600');
+            }
+
+            // Show toast
+            toast.classList.remove('translate-y-full');
+            toast.classList.add('translate-y-0');
+
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                hideToast();
+            }, 3000);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('toast-notification');
+            toast.classList.remove('translate-y-0');
+            toast.classList.add('translate-y-full');
+        }
+
     </script>
     {% block scripts %}{% endblock %}
 </body>
