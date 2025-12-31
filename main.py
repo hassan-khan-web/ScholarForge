@@ -229,6 +229,16 @@ async def add_hook(data: HookRequest):
     try: database.save_hook(data.content); return {'status': 'success'}
     except Exception as e: return {'status': 'error', 'message': str(e)}
 
+@app.get("/api/hooks")
+def get_hooks():
+    hooks = database.get_all_hooks()
+    return [{"id": h.id, "content": h.content, "date": h.created_at.strftime("%b %d, %H:%M")} for h in hooks]
+
+@app.delete("/api/hooks/{hook_id}")
+def delete_hook(hook_id: int):
+    if database.delete_hook(hook_id): return {"status": "success"}
+    return JSONResponse(status_code=404, content={"error": "Not found"})
+
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=5000, reload=True)

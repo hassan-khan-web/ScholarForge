@@ -3,34 +3,54 @@
 {% block content %}
 <div class="flex-1 flex flex-col h-full relative w-full">
 
+    <!-- Hook Button (Fixed Top-Right) -->
+    <button id="hook-button-fixed" onclick="handleHookButtonClick()"
+        class="fixed top-4 right-4 z-50 bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-lg border border-[var(--accent-primary)] transition-all transform hover:scale-105 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+        </svg>
+        <span>Hook</span>
+    </button>
+
     <!-- STATE 1: NO CHAT SELECTED (Welcome Screen) -->
-    <div id="welcome-state" class="absolute inset-0 z-10 flex flex-col justify-center items-center bg-[var(--bg-main)] transition-opacity duration-300">
-        <div class="p-8 rounded-2xl bg-[var(--bg-panel)] border border-[var(--border-color)] text-center max-w-sm shadow-2xl">
+    <div id="welcome-state"
+        class="absolute inset-0 z-10 flex flex-col justify-center items-center bg-[var(--bg-main)] transition-opacity duration-300">
+        <div
+            class="p-8 rounded-2xl bg-[var(--bg-panel)] border border-[var(--border-color)] text-center max-w-sm shadow-2xl">
             <div class="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 01-2 2h14a2 2 0 01-2 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                <svg class="w-8 h-8 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 01-2 2h14a2 2 0 01-2 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                    </path>
+                </svg>
             </div>
             <h2 class="text-xl font-bold text-[var(--text-main)] mb-2">Research Assistant</h2>
             <p class="text-sm text-[var(--text-muted)] mb-6">Please create a folder to store chat research history.</p>
-            <button onclick="window.openFolderModal()" class="w-full py-2.5 bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20">
+            <button onclick="window.openFolderModal()"
+                class="w-full py-2.5 bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-blue-500/20">
                 Create New Folder
             </button>
         </div>
     </div>
 
     <div id="chat-interface" class="flex-1 flex flex-col h-full hidden opacity-0 transition-opacity duration-300">
-        
-        <div class="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-panel)]">
+
+        <div
+            class="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-panel)]">
             <div class="flex items-center gap-3">
                 <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]"></span>
-                <span id="active-session-title" class="text-[var(--text-main)] text-sm font-medium tracking-wide">Loading...</span>
+                <span id="active-session-title"
+                    class="text-[var(--text-main)] text-sm font-medium tracking-wide">Loading...</span>
             </div>
-            <button onclick="attemptNewChat()" class="text-xs text-[var(--text-muted)] border border-[var(--border-color)] hover:text-[var(--text-main)] hover:bg-[var(--hover-bg)] px-3 py-1.5 rounded-lg transition-colors">
+            <button onclick="attemptNewChat()"
+                class="text-xs text-[var(--text-muted)] border border-[var(--border-color)] hover:text-[var(--text-main)] hover:bg-[var(--hover-bg)] px-3 py-1.5 rounded-lg transition-colors">
                 + New Chat
             </button>
         </div>
 
         <!-- Messages Area -->
-        <div id="chat-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+        <div id="chat-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
             <!-- Messages injected here via JS -->
         </div>
 
@@ -38,28 +58,28 @@
         <div class="p-6 bg-[var(--bg-main)] border-t border-[var(--border-color)]">
             <div class="max-w-4xl mx-auto relative">
                 <form id="chat-form" class="relative group">
-                    <input type="text" id="chat-input" 
+                    <input type="text" id="chat-input"
                         class="w-full bg-[var(--bg-sidebar)] border border-[var(--border-color)] text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl py-4 pl-5 pr-14 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-blue-500/20 text-sm shadow-inner transition-all"
                         placeholder="Ask a follow-up question..." autocomplete="off">
-                    
-                    <button type="submit" id="send-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg transition-all shadow-md">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>
+
+                    <button type="submit" id="send-btn"
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg transition-all shadow-md">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                        </svg>
                     </button>
                 </form>
             </div>
         </div>
     </div>
-
-    <!-- Hook Button (Contextual) -->
-    <button id="hook-button" class="hidden absolute z-50 bg-[var(--bg-panel)] text-[var(--accent-primary)] text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg border border-[var(--border-color)] hover:bg-[var(--accent-primary)] hover:text-white transition-all transform hover:scale-105">
-        Save Snippet
-    </button>
 </div>
 
 <script>
     let currentFolderId = null;
     let currentSessionId = null;
     let typingInterval = null;
+    let selectedText = '';
 
     const welcomeState = document.getElementById('welcome-state');
     const chatInterface = document.getElementById('chat-interface');
@@ -67,7 +87,6 @@
     const sessionTitle = document.getElementById('active-session-title');
     const chatInput = document.getElementById('chat-input');
     const sendBtn = document.getElementById('send-btn');
-    const hookButton = document.getElementById('hook-button');
 
     // 1. Listen for Sidebar Session Clicks (Dispatched from layout.html)
     window.addEventListener('scholarforge:load-session', (e) => {
@@ -85,7 +104,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const sid = urlParams.get('session_id');
-        if(sid) {
+        if (sid) {
             fetchMessages(sid);
             welcomeState.classList.add('hidden');
             chatInterface.classList.remove('hidden');
@@ -102,7 +121,7 @@
         // UI Switch
         welcomeState.style.opacity = '0';
         setTimeout(() => welcomeState.classList.add('hidden'), 300);
-        
+
         chatInterface.classList.remove('hidden');
         setTimeout(() => chatInterface.classList.remove('opacity-0'), 10);
 
@@ -112,35 +131,35 @@
     async function fetchMessages(sessionId) {
         currentSessionId = sessionId;
         chatContainer.innerHTML = '<div class="flex justify-center mt-10"><div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div></div>';
-        
+
         try {
             const res = await fetch(`/api/sessions/${sessionId}/messages`);
             const msgs = await res.json();
-            
+
             chatContainer.innerHTML = '';
             // Basic title setting. 
-            sessionTitle.innerText = "Research Session"; 
+            sessionTitle.innerText = "Research Session";
 
-            if(msgs.length === 0) {
+            if (msgs.length === 0) {
                 chatContainer.innerHTML = '<div class="text-center text-xs text-[var(--text-muted)] mt-10">Start the conversation...</div>';
             } else {
                 msgs.forEach(m => renderMessage(m.role === 'user' ? 'user' : 'bot', m.content));
             }
-        } catch(e) {
+        } catch (e) {
             chatContainer.innerHTML = '<div class="text-center text-red-400 text-xs mt-10">Error connecting to database.</div>';
         }
     }
 
     // --- NEW CHAT LOGIC ---
-    window.attemptNewChat = function() {
-        if(!currentFolderId) {
+    window.attemptNewChat = function () {
+        if (!currentFolderId) {
             alert("Please select a folder from the sidebar first.");
             return;
         }
-        
+
         const msg = "If your research topic does not align with the subjects already covered in this folder, please create a new folder.\n\nDo you want to create a new chat in THIS folder?";
-        if(confirm(msg)) {
-            const title = `Chat ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        if (confirm(msg)) {
+            const title = `Chat ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
             createNewChatSession(currentFolderId, title);
         }
     }
@@ -149,23 +168,23 @@
         try {
             const res = await fetch('/api/sessions', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ folder_id: folderId, title: title })
             });
             const data = await res.json();
-            if(data.status === 'success') {
-                window.location.href = `/chat?session_id=${data.session.id}`; 
+            if (data.status === 'success') {
+                window.location.href = `/chat?session_id=${data.session.id}`;
             }
-        } catch(e) { alert("Error creating session"); }
+        } catch (e) { alert("Error creating session"); }
     }
 
     // --- CHAT SUBMISSION ---
     document.getElementById('chat-form').onsubmit = async (e) => {
         e.preventDefault();
         const text = chatInput.value.trim();
-        if(!text) return;
-        
-        if(!currentSessionId) {
+        if (!text) return;
+
+        if (!currentSessionId) {
             alert("Please create a folder to store chat research history");
             return;
         }
@@ -179,36 +198,36 @@
         try {
             const res = await fetch('/chat', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: text, session_id: currentSessionId })
             });
             const data = await res.json();
-            
-            if(data.error) typewriter(botBubble, "Error: " + data.error);
+
+            if (data.error) typewriter(botBubble, "Error: " + data.error);
             else typewriter(botBubble, data.response);
-        } catch(e) { typewriter(botBubble, "Network Error."); }
+        } catch (e) { typewriter(botBubble, "Network Error."); }
     };
 
     function renderMessage(role, text) {
         const div = document.createElement('div');
-        div.className = `flex w-full ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-        
-        if(role === 'user') {
-            div.innerHTML = `<div class="bg-[var(--accent-primary)] text-white px-5 py-3 rounded-2xl rounded-tr-sm text-sm max-w-[80%] shadow-lg leading-relaxed">${text}</div>`;
+        div.className = `flex w-full ${role === 'user' ? 'justify-end' : 'justify-start'} mb-4`;
+
+        if (role === 'user') {
+            div.innerHTML = `<div class="bg-[var(--accent-primary)] text-white px-5 py-3.5 rounded-2xl rounded-tr-md text-sm max-w-[75%] shadow-md leading-relaxed">${text}</div>`;
         } else {
             div.innerHTML = `
-                <div class="flex gap-4 max-w-[85%]">
-                    <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-1">
-                        <svg class="w-5 h-5 text-[var(--accent-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <div class="flex gap-3 max-w-[90%]">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-[var(--accent-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7"/></svg>
                     </div>
-                    <div class="text-[var(--text-main)] text-sm leading-7 pt-1 bot-content">
-                        ${text ? marked.parse(text) : '<div class="flex space-x-1 pt-2"><div class="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"></div><div class="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce delay-75"></div><div class="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce delay-150"></div></div>'}
+                    <div class="text-[var(--text-main)] text-sm leading-relaxed pt-0.5 bot-content flex-1">
+                        ${text ? marked.parse(text) : '<div class="flex space-x-1.5 py-2"><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div></div>'}
                     </div>
                 </div>
             `;
             styleBotContent(div);
         }
-        
+
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
         return role === 'bot' ? div.querySelector('.bot-content') : null;
@@ -222,52 +241,74 @@
     }
 
     function styleBotContent(container) {
-        container.querySelectorAll('a').forEach(a => a.className = 'text-blue-400 hover:text-blue-300 underline underline-offset-2');
-        container.querySelectorAll('ul').forEach(u => u.className = 'list-disc pl-4 my-2 text-[var(--text-main)]');
-        container.querySelectorAll('ol').forEach(o => o.className = 'list-decimal pl-4 my-2 text-[var(--text-main)]');
-        container.querySelectorAll('p').forEach(p => p.className = 'mb-3 last:mb-0');
-        container.querySelectorAll('pre').forEach(p => p.className = 'bg-[var(--bg-sidebar)] p-3 rounded-lg border border-[var(--border-color)] text-xs font-mono my-3 overflow-x-auto text-[var(--text-main)]');
-        container.querySelectorAll('h1, h2, h3').forEach(h => h.className = 'font-bold text-[var(--text-main)] mt-4 mb-2');
+        container.querySelectorAll('a').forEach(a => a.className = 'text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors');
+        container.querySelectorAll('ul').forEach(u => u.className = 'list-disc pl-5 my-3 space-y-1 text-[var(--text-main)]');
+        container.querySelectorAll('ol').forEach(o => o.className = 'list-decimal pl-5 my-3 space-y-1 text-[var(--text-main)]');
+        container.querySelectorAll('li').forEach(li => li.className = 'leading-relaxed');
+        container.querySelectorAll('p').forEach(p => p.className = 'mb-3 last:mb-0 leading-relaxed');
+        container.querySelectorAll('pre').forEach(p => p.className = 'bg-[var(--bg-sidebar)] p-4 rounded-lg border border-[var(--border-color)] text-xs font-mono my-3 overflow-x-auto text-[var(--text-main)]');
+        container.querySelectorAll('code').forEach(c => { if (!c.parentElement.tagName === 'PRE') c.className = 'bg-[var(--bg-sidebar)] px-1.5 py-0.5 rounded text-xs font-mono border border-[var(--border-color)]'; });
+        container.querySelectorAll('h1, h2, h3').forEach(h => h.className = 'font-bold text-[var(--text-main)] mt-5 mb-3 text-base');
+        container.querySelectorAll('blockquote').forEach(bq => bq.className = 'border-l-4 border-[var(--accent-primary)] pl-4 my-3 italic text-[var(--text-muted)]');
     }
 
+
     // --- HOOK FEATURE ---
-    let selectedText = '';
+    // Track text selection
     document.addEventListener('mouseup', (event) => {
-        if (!event.target.closest('#chat-container')) { hookButton.classList.add('hidden'); return; }
+        if (!event.target.closest('#chat-container')) return;
         const selection = window.getSelection();
         const text = selection.toString().trim();
         if (text.length > 0) {
             selectedText = text;
-            const containerRect = document.querySelector('.relative.w-full').getBoundingClientRect();
-            const top = event.clientY - containerRect.top - 40; 
-            const left = event.clientX - containerRect.left;
-            hookButton.style.top = `${top}px`;
-            hookButton.style.left = `${left}px`;
-            hookButton.classList.remove('hidden');
-        } else { hookButton.classList.add('hidden'); }
+        }
     });
 
-    hookButton.onclick = async () => {
+    // Keyboard shortcut: Ctrl+H
+    document.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'h') {
+            event.preventDefault();
+            if (selectedText) {
+                saveHook(selectedText);
+            }
+        }
+    });
+
+    // Hook button click handler
+    window.handleHookButtonClick = async () => {
+        if (selectedText) {
+            // If text is selected, save it
+            await saveHook(selectedText);
+        } else {
+            // If no text selected, open hook panel
+            window.toggleHookPanel();
+        }
+    };
+
+    async function saveHook(content) {
         try {
-            const res = await fetch("{{ url_for('add_hook') }}", { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: selectedText })
+            const res = await fetch("{{ url_for('add_hook') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
             });
             const data = await res.json();
-            if(data.status === 'success') {
-                const old = hookButton.innerText;
-                hookButton.innerText = 'Saved!';
-                hookButton.classList.replace('bg-[var(--bg-panel)]', 'bg-green-600');
-                hookButton.classList.replace('text-[var(--accent-primary)]', 'text-white');
+            if (data.status === 'success') {
+                // Show success feedback
+                const btn = document.getElementById('hook-button-fixed');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>Saved!</span>';
+                btn.classList.add('bg-green-600');
                 setTimeout(() => {
-                    hookButton.classList.add('hidden');
-                    hookButton.innerText = old;
-                    hookButton.classList.replace('bg-green-600', 'bg-[var(--bg-panel)]');
-                    hookButton.classList.replace('text-white', 'text-[var(--accent-primary)]');
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('bg-green-600');
                     window.getSelection().removeAllRanges();
-                }, 1000);
+                    selectedText = '';
+                }, 1500);
             }
-        } catch (err) {}
-    };
+        } catch (err) {
+            console.error('Failed to save hook:', err);
+        }
+    }
 </script>
 {% endblock %}

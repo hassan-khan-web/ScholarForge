@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,8 @@
         /* CSS Variables */
         :root {
             --sidebar-width: 16rem;
-            --sidebar-collapsed-width: 4rem; /* 64px */
+            --sidebar-collapsed-width: 4rem;
+            /* 64px */
             --bg-main: #1a1b26;
             --bg-sidebar: #13141f;
             --bg-panel: #1f2335;
@@ -26,150 +28,408 @@
 
         /* Light Theme */
         body.light-theme {
-            --bg-main: #f3f4f6; --bg-sidebar: #ffffff; --bg-panel: #ffffff; --text-main: #1f2937; --text-muted: #6b7280; --accent-primary: #2563eb; --border-color: #e5e7eb; --hover-bg: #f9fafb; --active-bg: #eff6ff;
+            --bg-main: #f3f4f6;
+            --bg-sidebar: #ffffff;
+            --bg-panel: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --accent-primary: #2563eb;
+            --border-color: #e5e7eb;
+            --hover-bg: #f9fafb;
+            --active-bg: #eff6ff;
         }
+
         /* Dark Theme */
         body.dark-theme {
-            --bg-main: #000000; --bg-sidebar: #0a0a0a; --bg-panel: #121212; --text-main: #e5e5e5; --text-muted: #a3a3a3; --accent-primary: #3b82f6; --border-color: #262626; --hover-bg: #1f1f1f; --active-bg: #262626;
+            --bg-main: #000000;
+            --bg-sidebar: #0a0a0a;
+            --bg-panel: #121212;
+            --text-main: #e5e5e5;
+            --text-muted: #a3a3a3;
+            --accent-primary: #3b82f6;
+            --border-color: #262626;
+            --hover-bg: #1f1f1f;
+            --active-bg: #262626;
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); overflow: hidden; }
-        .btn-danger { background-color: #ef4444; color: white; transition: opacity 0.2s; }
-        .btn-danger:hover { opacity: 0.9; }
-        .btn-cancel { color: var(--text-muted); transition: color 0.2s; }
-        .btn-cancel:hover { color: var(--text-main); }
-        
-        /* SIDEBAR ANIMATIONS */
-        #sidebar { 
-            width: var(--sidebar-width); 
-            background: var(--bg-sidebar); 
-            border-right: 1px solid var(--border-color); 
-            transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-            z-index: 50; display: flex; flex-direction: column; flex-shrink: 0;
-            overflow: hidden; 
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            overflow: hidden;
         }
-        #sidebar.collapsed { width: var(--sidebar-collapsed-width); }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn-danger:hover {
+            opacity: 0.9;
+        }
+
+        .btn-cancel {
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .btn-cancel:hover {
+            color: var(--text-main);
+        }
+
+        /* SIDEBAR ANIMATIONS */
+        #sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        #sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
 
         /* RIGID ICONS & FADING TEXT */
-        .nav-item { 
-            display: flex; align-items: center; 
-            padding-left: 1.25rem; 
-            height: 44px; 
-            margin-bottom: 4px; 
-            color: var(--text-muted); cursor: pointer; font-size: 0.85rem; font-weight: 500;
-            white-space: nowrap; 
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding-left: 1.25rem;
+            height: 44px;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
             position: relative;
         }
-        .nav-item:hover { background: var(--hover-bg); color: var(--text-main); border-right: 2px solid var(--accent-primary); }
-        .nav-item.active { background: var(--active-bg); color: var(--accent-primary); border-right: 3px solid var(--accent-primary); }
-        
-        .nav-item svg { 
-            min-width: 22px; width: 22px; height: 22px; 
-            margin-right: 14px; 
-            flex-shrink: 0; 
+
+        .nav-item:hover {
+            background: var(--hover-bg);
+            color: var(--text-main);
+            border-right: 2px solid var(--accent-primary);
         }
 
-        .nav-text, .logo-text, .create-folder-btn-text {
+        .nav-item.active {
+            background: var(--active-bg);
+            color: var(--accent-primary);
+            border-right: 3px solid var(--accent-primary);
+        }
+
+        .nav-item svg {
+            min-width: 22px;
+            width: 22px;
+            height: 22px;
+            margin-right: 14px;
+            flex-shrink: 0;
+        }
+
+        .nav-text,
+        .logo-text,
+        .create-folder-btn-text {
             opacity: 1;
             transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
             transform: translateX(0);
         }
 
-        #sidebar.collapsed .nav-text, 
-        #sidebar.collapsed .logo-text, 
+        #sidebar.collapsed .nav-text,
+        #sidebar.collapsed .logo-text,
         #sidebar.collapsed .create-folder-btn-text {
             opacity: 0;
             pointer-events: none;
-            transform: translateX(-10px); 
+            transform: translateX(-10px);
         }
 
-        #sidebar.collapsed .sidebar-divider, 
-        #sidebar.collapsed #folder-tree-container, 
-        #sidebar.collapsed .section-label { 
-            opacity: 0; 
+        #sidebar.collapsed .sidebar-divider,
+        #sidebar.collapsed #folder-tree-container,
+        #sidebar.collapsed .section-label {
+            opacity: 0;
             pointer-events: none;
             transition: opacity 0.2s;
         }
 
         .sidebar-header {
-            padding-left: 1.25rem; 
-            display: flex; align-items: center; justify-content: space-between;
-            height: 4rem; 
+            padding-left: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 4rem;
         }
-        #sidebar.collapsed .sidebar-header { padding-left: 0; justify-content: center; }
-        #sidebar.collapsed .logo-text { display: none; } 
 
-        .icon-btn { 
-            width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; color: var(--text-muted); transition: background-color 0.2s; 
+        #sidebar.collapsed .sidebar-header {
+            padding-left: 0;
+            justify-content: center;
         }
-        .icon-btn:hover { background-color: var(--hover-bg); color: var(--text-main); }
+
+        #sidebar.collapsed .logo-text {
+            display: none;
+        }
+
+        .icon-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            color: var(--text-muted);
+            transition: background-color 0.2s;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--hover-bg);
+            color: var(--text-main);
+        }
 
         /* HISTORY PANEL */
         #history-panel {
-            position: fixed; top: 0; bottom: 0; left: var(--sidebar-width); width: 20rem; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); 
-            transform: translateX(-100%); 
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: var(--sidebar-width);
+            width: 20rem;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            transform: translateX(-100%);
             transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            z-index: 40; display: flex; flex-direction: column; box-shadow: 10px 0 25px -5px rgba(0,0,0,0.1);
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 25px -5px rgba(0, 0, 0, 0.1);
         }
-        #history-panel.open { transform: translateX(0); }
-        #sidebar.collapsed ~ #history-panel { left: var(--sidebar-collapsed-width); }
+
+        #history-panel.open {
+            transform: translateX(0);
+        }
+
+        #sidebar.collapsed~#history-panel {
+            left: var(--sidebar-collapsed-width);
+        }
 
         /* DROPDOWNS */
-        .dropdown-menu { position: absolute; right: 0; top: 100%; margin-top: 4px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 6px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); z-index: 100; min-width: 140px; display: none; }
-        .dropdown-menu.show { display: block; }
-        .dropdown-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; font-size: 12px; color: var(--text-main); cursor: pointer; }
-        .dropdown-item:hover { background: var(--hover-bg); color: var(--accent-primary); }
-        
-        #global-download-menu { display: none; position: fixed; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 6px; min-width: 120px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); z-index: 2147483647; }
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 4px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            min-width: 140px;
+            display: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: var(--hover-bg);
+            color: var(--accent-primary);
+        }
+
+        #global-download-menu {
+            display: none;
+            position: fixed;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            min-width: 120px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 2147483647;
+        }
 
         /* FOLDER TREE */
-        .folder-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 8px 1.25rem; cursor: pointer; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; position: relative; }
-        .folder-row:hover { color: var(--text-main); background: var(--hover-bg); }
-        .folder-arrow { margin-right: 8px; width: 10px; display: inline-block; transition: transform 0.2s; }
-        .folder-row.open .folder-arrow { transform: rotate(90deg); }
-        .action-group { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
-        .folder-row:hover .action-group { opacity: 1; }
-        .tree-btn { padding: 2px 4px; border-radius: 4px; color: var(--text-muted); font-size: 14px; }
-        .tree-btn:hover { background: var(--active-bg); color: var(--accent-primary); }
+        .folder-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px 8px 1.25rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            position: relative;
+        }
 
-        .session-list { display: none; margin-left: 19px; border-left: 1px solid var(--border-color); }
-        .session-list.open { display: block; }
-        .session-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; position: relative; }
-        .session-item:hover { color: var(--accent-primary); background: var(--hover-bg); }
-        .session-item:hover .action-group { opacity: 1; }
-        .session-item.active { color: var(--accent-primary); background: var(--active-bg); border-left: 2px solid var(--accent-primary); }
-        .three-dot-btn { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
-        .three-dot-btn:hover { background: var(--border-color); }
+        .folder-row:hover {
+            color: var(--text-main);
+            background: var(--hover-bg);
+        }
+
+        .folder-arrow {
+            margin-right: 8px;
+            width: 10px;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .folder-row.open .folder-arrow {
+            transform: rotate(90deg);
+        }
+
+        .action-group {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .folder-row:hover .action-group {
+            opacity: 1;
+        }
+
+        .tree-btn {
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .tree-btn:hover {
+            background: var(--active-bg);
+            color: var(--accent-primary);
+        }
+
+        .session-list {
+            display: none;
+            margin-left: 19px;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .session-list.open {
+            display: block;
+        }
+
+        .session-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .session-item:hover {
+            color: var(--accent-primary);
+            background: var(--hover-bg);
+        }
+
+        .session-item:hover .action-group {
+            opacity: 1;
+        }
+
+        .session-item.active {
+            color: var(--accent-primary);
+            background: var(--active-bg);
+            border-left: 2px solid var(--accent-primary);
+        }
+
+        .three-dot-btn {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .three-dot-btn:hover {
+            background: var(--border-color);
+        }
 
         /* MODALS */
-        .custom-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; }
-        .glass-panel { background: var(--bg-panel); border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
-        .select-check { display: none; margin-right: 8px; accent-color: var(--accent-primary); }
-        .select-mode .select-check { display: inline-block; }
+        .custom-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glass-panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        .select-check {
+            display: none;
+            margin-right: 8px;
+            accent-color: var(--accent-primary);
+        }
+
+        .select-mode .select-check {
+            display: inline-block;
+        }
     </style>
 </head>
+
 <body class="flex h-screen w-full" onclick="closeAllDropdowns()">
 
     <nav id="sidebar" class="collapsed">
         <div class="sidebar-header border-b border-[var(--border-color)] shrink-0">
-            <span class="logo-text font-bold text-xl tracking-tight whitespace-nowrap" style="color: var(--accent-primary);">ScholarForge</span>
+            <span class="logo-text font-bold text-xl tracking-tight whitespace-nowrap"
+                style="color: var(--accent-primary);">ScholarForge</span>
             <button id="sidebar-toggle" class="icon-btn">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
             </button>
         </div>
 
         <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col py-4">
-            <a href="{{ url_for('index') }}" class="nav-item {% if request.path == '/' %}active{% endif %}" title="Report Generator">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <a href="{{ url_for('index') }}" class="nav-item {% if request.path == '/' %}active{% endif %}"
+                title="Report Generator">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                    </path>
+                </svg>
                 <span class="nav-text">Report Generator</span>
             </a>
-            
+
             <div onclick="toggleHistory()" class="nav-item" title="History">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
                 <span class="nav-text">Generated History</span>
             </div>
 
@@ -181,7 +441,10 @@
 
             <div id="folder-section-wrapper" class="flex flex-col">
                 <button onclick="openFolderModal()" class="nav-item !text-[var(--accent-primary)] justify-start">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                    </svg>
                     <span class="nav-text font-semibold create-folder-btn-text">Create Folder</span>
                 </button>
                 <div id="folder-tree-container" class="flex flex-col gap-0.5 mt-2">
@@ -192,7 +455,13 @@
 
         <div class="mt-auto p-3 border-t border-[var(--border-color)] flex justify-center settings-container">
             <button onclick="openSettingsModal()" class="icon-btn" title="Settings">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
             </button>
         </div>
     </nav>
@@ -201,18 +470,40 @@
         <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
             <span class="font-bold text-[var(--text-main)]">Generated Reports</span>
             <div class="flex items-center gap-2 relative">
-                <button onclick="event.stopPropagation(); toggleDropdown('history-main-menu')" class="text-[var(--text-muted)] hover:text-[var(--text-main)] font-bold px-2">⋮</button>
+                <button onclick="event.stopPropagation(); toggleDropdown('history-main-menu')"
+                    class="text-[var(--text-muted)] hover:text-[var(--text-main)] font-bold px-2">⋮</button>
                 <div id="history-main-menu" class="dropdown-menu">
                     <div class="dropdown-item" onclick="toggleSelectMode()">Select Items</div>
                     <div class="dropdown-item" onclick="selectAllReports()">Select All</div>
                     <div class="dropdown-item text-red-400" onclick="deleteSelectedReports()">Delete All</div>
                 </div>
-                
+
                 <div class="w-px h-4 bg-[var(--border-color)]"></div>
-                <button onclick="toggleHistory()" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
+                <button onclick="toggleHistory()"
+                    class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
             </div>
         </div>
         <div id="history-list-content" class="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar"></div>
+    </aside>
+
+    <!-- Hook Panel -->
+    <aside id="hook-panel"
+        style="position: fixed; top: 0; bottom: 0; right: 0; width: 20rem; background: var(--bg-sidebar); border-left: 1px solid var(--border-color); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 40; display: flex; flex-direction: column; box-shadow: -10px 0 25px -5px rgba(0,0,0,0.1);">
+        <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
+            <span class="font-bold text-[var(--text-main)]">Hooked Points</span>
+            <div class="flex items-center gap-2 relative">
+                <button onclick="event.stopPropagation(); toggleDropdown('hook-main-menu')"
+                    class="text-[var(--text-muted)] hover:text-[var(--text-main)] font-bold px-2">⋮</button>
+                <div id="hook-main-menu" class="dropdown-menu">
+                    <div class="dropdown-item text-red-400" onclick="deleteAllHooks()">Delete All</div>
+                </div>
+
+                <div class="w-px h-4 bg-[var(--border-color)]"></div>
+                <button onclick="toggleHookPanel()"
+                    class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
+            </div>
+        </div>
+        <div id="hook-list-content" class="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar"></div>
     </aside>
 
     <div class="flex-1 flex flex-col relative overflow-hidden h-full z-0 bg-[var(--bg-main)]">
@@ -223,10 +514,13 @@
         <div class="glass-panel rounded-xl p-6 w-full max-w-sm">
             <h3 class="text-lg font-bold text-[var(--text-main)] mb-1">New Project Folder</h3>
             <p class="text-xs text-[var(--text-muted)] mb-5">Group your research chats.</p>
-            <input type="text" id="fm-input" class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-[var(--text-main)] text-sm focus:outline-none focus:border-[var(--accent-primary)] mb-6" placeholder="Folder Name">
+            <input type="text" id="fm-input"
+                class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-[var(--text-main)] text-sm focus:outline-none focus:border-[var(--accent-primary)] mb-6"
+                placeholder="Folder Name">
             <div class="flex justify-end gap-2">
                 <button onclick="closeFolderModal()" class="px-4 py-2 text-xs font-medium btn-cancel">Cancel</button>
-                <button onclick="submitFolderCreation()" id="btn-create-folder" class="px-4 py-2 text-xs font-medium bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg">Create</button>
+                <button onclick="submitFolderCreation()" id="btn-create-folder"
+                    class="px-4 py-2 text-xs font-medium bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg">Create</button>
             </div>
         </div>
     </div>
@@ -235,30 +529,38 @@
         <div class="glass-panel rounded-xl p-6 w-full max-w-md">
             <div class="flex justify-between items-center mb-6 border-b border-[var(--border-color)] pb-3">
                 <h3 class="text-lg font-bold text-[var(--text-main)]">Settings</h3>
-                <button onclick="closeSettingsModal()" class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
+                <button onclick="closeSettingsModal()"
+                    class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
             </div>
-            
+
             <div class="space-y-6">
                 <div class="grid grid-cols-[120px_1fr] gap-4 items-center">
                     <label class="text-xs font-bold text-[var(--text-muted)] uppercase">Theme</label>
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="setTheme('default')" class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Tokyo</button>
-                        <button onclick="setTheme('light')" class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Light</button>
-                        <button onclick="setTheme('dark')" class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Dark</button>
+                        <button onclick="setTheme('default')"
+                            class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Tokyo</button>
+                        <button onclick="setTheme('light')"
+                            class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Light</button>
+                        <button onclick="setTheme('dark')"
+                            class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Dark</button>
                     </div>
                 </div>
                 <div class="grid grid-cols-[120px_1fr] gap-4 items-start border-t border-[var(--border-color)] pt-4">
-                     <label class="text-xs font-bold text-red-400 uppercase mt-1">Danger</label>
-                     <div class="flex flex-col gap-2 w-full">
-                         <p class="text-[10px] text-[var(--text-muted)]">Database corrupted? Reset it here.</p>
-                         <button onclick="resetDatabase()" class="w-full btn-danger rounded-lg p-2 text-xs text-center font-bold">Reset Database</button>
-                     </div>
+                    <label class="text-xs font-bold text-red-400 uppercase mt-1">Danger</label>
+                    <div class="flex flex-col gap-2 w-full">
+                        <p class="text-[10px] text-[var(--text-muted)]">Database corrupted? Reset it here.</p>
+                        <button onclick="resetDatabase()"
+                            class="w-full btn-danger rounded-lg p-2 text-xs text-center font-bold">Reset
+                            Database</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="global-download-menu" class="fixed hidden bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-md shadow-2xl z-[9999] min-w-[120px]" onmouseleave="hideGlobalMenu()">
+    <div id="global-download-menu"
+        class="fixed hidden bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-md shadow-2xl z-[9999] min-w-[120px]"
+        onmouseleave="hideGlobalMenu()">
         <div class="dropdown-item" onclick="triggerGlobalDownload('pdf')">PDF</div>
         <div class="dropdown-item" onclick="triggerGlobalDownload('docx')">DOCX</div>
         <div class="dropdown-item" onclick="triggerGlobalDownload('txt')">TXT</div>
@@ -290,7 +592,7 @@
         const confirmTitle = document.getElementById('confirm-title');
         const confirmMsg = document.getElementById('confirm-msg');
 
-        function showConfirm(text, title="Are you sure?") {
+        function showConfirm(text, title = "Are you sure?") {
             confirmMsg.innerText = text;
             confirmTitle.innerText = title;
             confirmModal.style.display = 'flex';
@@ -299,11 +601,11 @@
 
         document.getElementById('btn-cancel-confirm').onclick = () => {
             confirmModal.style.display = 'none';
-            if(confirmResolve) confirmResolve(false);
+            if (confirmResolve) confirmResolve(false);
         };
         document.getElementById('btn-do-confirm').onclick = () => {
             confirmModal.style.display = 'none';
-            if(confirmResolve) confirmResolve(true);
+            if (confirmResolve) confirmResolve(true);
         };
 
         // --- UI TOGGLES ---
@@ -314,7 +616,7 @@
         window.toggleDropdown = (id) => {
             closeAllDropdowns();
             const el = document.getElementById(id);
-            if(el) el.classList.toggle('show');
+            if (el) el.classList.toggle('show');
         };
         window.closeAllDropdowns = () => {
             document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('show'));
@@ -328,25 +630,25 @@
             const rect = event.currentTarget.getBoundingClientRect();
             const menu = document.getElementById('global-download-menu');
             menu.style.display = 'block';
-            menu.style.top = `${rect.top}px`; 
-            menu.style.left = `${rect.right - 4}px`; 
+            menu.style.top = `${rect.top}px`;
+            menu.style.left = `${rect.right - 4}px`;
         };
         window.hideGlobalMenu = () => { document.getElementById('global-download-menu').style.display = 'none'; };
-        window.triggerGlobalDownload = (format) => { if(currentDownloadId) downloadFromHistory(currentDownloadId, format); hideGlobalMenu(); };
+        window.triggerGlobalDownload = (format) => { if (currentDownloadId) downloadFromHistory(currentDownloadId, format); hideGlobalMenu(); };
 
         // --- FOLDER & CHAT LOGIC ---
         async function fetchFolders() {
             try {
                 const res = await fetch('/api/folders');
                 renderFolderTree(await res.json());
-            } catch(e) { console.error(e); }
+            } catch (e) { console.error(e); }
         }
 
         function renderFolderTree(folders) {
             const container = document.getElementById('folder-tree-container');
             container.innerHTML = '';
-            if(!folders.length) { container.innerHTML = '<div class="text-xs text-[var(--text-muted)] pl-5 italic">No folders</div>'; return; }
-            
+            if (!folders.length) { container.innerHTML = '<div class="text-xs text-[var(--text-muted)] pl-5 italic">No folders</div>'; return; }
+
             folders.forEach(f => {
                 const div = document.createElement('div');
                 div.innerHTML = `
@@ -365,7 +667,7 @@
                 `;
                 const list = div.querySelector('.session-list');
                 const row = div.querySelector('.folder-row');
-                
+
                 f.sessions.forEach(s => {
                     const item = document.createElement('div');
                     item.className = 'session-item';
@@ -379,10 +681,10 @@
                             </div>
                         </div>
                     `;
-                    if(location.search.includes(s.id)) { item.classList.add('active'); row.classList.add('open'); list.classList.add('open'); }
+                    if (location.search.includes(s.id)) { item.classList.add('active'); row.classList.add('open'); list.classList.add('open'); }
                     item.onclick = (e) => {
                         e.stopPropagation();
-                        if(location.pathname.includes('/chat')) window.dispatchEvent(new CustomEvent('scholarforge:load-session', {detail: {folderId: f.id, sessionId: s.id}}));
+                        if (location.pathname.includes('/chat')) window.dispatchEvent(new CustomEvent('scholarforge:load-session', { detail: { folderId: f.id, sessionId: s.id } }));
                         else location.href = '/chat?session_id=' + s.id;
                     };
                     list.appendChild(item);
@@ -394,42 +696,42 @@
         // --- ACTIONS ---
         window.renameFolder = async (id, oldName) => {
             const newName = prompt("Rename Folder:", oldName); // Browser Prompt ok for rename (text input needed)
-            if(newName && newName !== oldName) { await fetch(`/api/folders/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({new_name: newName}) }); fetchFolders(); }
+            if (newName && newName !== oldName) { await fetch(`/api/folders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }); fetchFolders(); }
         };
         window.renameSession = async (id, oldName) => {
             const newName = prompt("Rename Chat:", oldName);
-            if(newName && newName !== oldName) { await fetch(`/api/sessions/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({new_name: newName}) }); fetchFolders(); }
+            if (newName && newName !== oldName) { await fetch(`/api/sessions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }); fetchFolders(); }
         };
-        
+
         // UPDATED: Use showConfirm
-        window.deleteFolder = async (id) => { 
-            if(await showConfirm("Delete this folder and all chats?", "Delete Folder")) { 
-                await fetch(`/api/folders/${id}`, {method: 'DELETE'}); fetchFolders(); 
-            } 
+        window.deleteFolder = async (id) => {
+            if (await showConfirm("Delete this folder and all chats?", "Delete Folder")) {
+                await fetch(`/api/folders/${id}`, { method: 'DELETE' }); fetchFolders();
+            }
         };
-        window.deleteSession = async (id) => { 
-            if(await showConfirm("Delete this chat session?", "Delete Chat")) { 
-                await fetch(`/api/sessions/${id}`, {method: 'DELETE'}); fetchFolders(); 
-            } 
+        window.deleteSession = async (id) => {
+            if (await showConfirm("Delete this chat session?", "Delete Chat")) {
+                await fetch(`/api/sessions/${id}`, { method: 'DELETE' }); fetchFolders();
+            }
         };
-        
+
         window.createSessionInFolder = async (folderId) => {
-            const res = await fetch('/api/sessions', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ folder_id: folderId, title: `Chat ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` }) });
+            const res = await fetch('/api/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder_id: folderId, title: `Chat ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` }) });
             const data = await res.json();
-            if(data.status === 'success') window.location.href = `/chat?session_id=${data.session.id}`;
+            if (data.status === 'success') window.location.href = `/chat?session_id=${data.session.id}`;
         };
 
         // --- HISTORY ---
         let isSelectMode = false;
         window.toggleSelectMode = () => { isSelectMode = !isSelectMode; document.getElementById('history-list-content').classList.toggle('select-mode', isSelectMode); };
-        window.selectAllReports = () => { if(!isSelectMode) toggleSelectMode(); document.querySelectorAll('.select-check').forEach(cb => cb.checked = true); };
+        window.selectAllReports = () => { if (!isSelectMode) toggleSelectMode(); document.querySelectorAll('.select-check').forEach(cb => cb.checked = true); };
 
         async function fetchHistoryReports() {
             const res = await fetch("/api/history");
             const data = await res.json();
             const list = document.getElementById('history-list-content');
             list.innerHTML = data.length ? '' : '<div class="text-sm text-[var(--text-muted)] text-center mt-10">No reports.</div>';
-            
+
             data.forEach(item => {
                 const d = document.createElement('div');
                 d.className = "p-3 mb-2 rounded bg-[var(--hover-bg)] border border-[var(--border-color)] flex justify-between items-center group relative";
@@ -456,26 +758,26 @@
         // UPDATED: Use showConfirm
         window.deleteSelectedReports = async () => {
             const checks = document.querySelectorAll('.select-check:checked');
-            if (checks.length === 0) { 
-                if(await showConfirm("Delete ALL generated reports history?", "Delete All")) await fetch('/api/reports/all', {method: 'DELETE'}); 
-            } else { 
-                if(await showConfirm(`Delete ${checks.length} selected items?`, "Delete Selection")) {
-                    for(const c of checks) await fetch(`/api/report/${c.value}`, {method: 'DELETE'}); 
+            if (checks.length === 0) {
+                if (await showConfirm("Delete ALL generated reports history?", "Delete All")) await fetch('/api/reports/all', { method: 'DELETE' });
+            } else {
+                if (await showConfirm(`Delete ${checks.length} selected items?`, "Delete Selection")) {
+                    for (const c of checks) await fetch(`/api/report/${c.value}`, { method: 'DELETE' });
                 }
             }
-            fetchHistoryReports(); if(isSelectMode) toggleSelectMode();
+            fetchHistoryReports(); if (isSelectMode) toggleSelectMode();
         };
-        
-        window.deleteReport = async (id) => { 
-            if(await showConfirm("Permanently delete this report?", "Delete Report")) { 
-                await fetch(`/api/report/${id}`, {method: 'DELETE'}); fetchHistoryReports(); 
-            } 
+
+        window.deleteReport = async (id) => {
+            if (await showConfirm("Permanently delete this report?", "Delete Report")) {
+                await fetch(`/api/report/${id}`, { method: 'DELETE' }); fetchHistoryReports();
+            }
         };
 
         window.downloadFromHistory = async (id, format) => {
             const res = await fetch(`/api/report/${id}`);
             const data = await res.json();
-            if(data.content) {
+            if (data.content) {
                 document.getElementById('hlp-content').value = data.content;
                 document.getElementById('hlp-topic').value = data.topic;
                 document.getElementById('hlp-format').value = format;
@@ -484,7 +786,7 @@
         };
 
         window.viewReportInstantly = (id) => {
-            if(window.location.pathname === '/' || window.location.pathname === '/index') {
+            if (window.location.pathname === '/' || window.location.pathname === '/index') {
                 document.getElementById('history-panel').classList.remove('open');
                 window.dispatchEvent(new CustomEvent('scholarforge:view-report', { detail: { reportId: id } }));
             } else { window.location.href = `/?view_report=${id}`; }
@@ -497,26 +799,75 @@
         window.closeSettingsModal = () => { document.getElementById('settings-modal').style.display = 'none'; };
         window.submitFolderCreation = async () => {
             const inp = document.getElementById('fm-input');
-            if(!inp.value.trim()) return;
+            if (!inp.value.trim()) return;
             try {
-                const res = await fetch('/api/folders', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: inp.value }) });
+                const res = await fetch('/api/folders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: inp.value }) });
                 const data = await res.json();
-                if(res.ok) { closeFolderModal(); fetchFolders(); window.createSessionInFolder(data.folder.id); } 
-            } catch(e) {}
+                if (res.ok) { closeFolderModal(); fetchFolders(); window.createSessionInFolder(data.folder.id); }
+            } catch (e) { }
         };
-        
+
         // UPDATED: Use showConfirm
-        window.resetDatabase = async () => { 
-            if(await showConfirm("This will wipe ALL chats and reports. Continue?", "DANGER: Reset Database")) { 
-                await fetch('/api/system/reset-db', {method: 'POST'}); location.reload(); 
-            } 
+        window.resetDatabase = async () => {
+            if (await showConfirm("This will wipe ALL chats and reports. Continue?", "DANGER: Reset Database")) {
+                await fetch('/api/system/reset-db', { method: 'POST' }); location.reload();
+            }
         };
-        
+
         window.setTheme = (t) => { document.body.className = "flex h-screen w-full " + (t === 'default' ? '' : t + '-theme'); localStorage.setItem('scholarforge-theme', t); closeSettingsModal(); }
         setTheme(localStorage.getItem('scholarforge-theme') || 'default');
-        
+
+        // --- HOOK PANEL ---
+        window.toggleHookPanel = () => {
+            const panel = document.getElementById('hook-panel');
+            const isOpen = panel.style.transform === 'translateX(0px)';
+            panel.style.transform = isOpen ? 'translateX(100%)' : 'translateX(0px)';
+            if (!isOpen) fetchHooks();
+        };
+
+        async function fetchHooks() {
+            const res = await fetch("/api/hooks");
+            const data = await res.json();
+            const list = document.getElementById('hook-list-content');
+            list.innerHTML = data.length ? '' : '<div class="text-sm text-[var(--text-muted)] text-center mt-10">No hooked points yet.</div>';
+
+            data.forEach(item => {
+                const d = document.createElement('div');
+                d.className = "p-3 mb-2 rounded bg-[var(--hover-bg)] border border-[var(--border-color)] group relative";
+                d.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs text-[var(--text-main)] break-words leading-relaxed">${item.content}</div>
+                            <div class="text-[10px] text-[var(--text-muted)] mt-2">${item.date}</div>
+                        </div>
+                        <button onclick="deleteHook(${item.id})" class="text-red-400 hover:text-red-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                    </div>
+                `;
+                list.appendChild(d);
+            });
+        }
+
+        window.deleteHook = async (id) => {
+            if (await showConfirm("Delete this hooked point?", "Delete Hook")) {
+                await fetch(`/api/hooks/${id}`, { method: 'DELETE' });
+                fetchHooks();
+            }
+        };
+
+        window.deleteAllHooks = async () => {
+            if (await showConfirm("Delete ALL hooked points?", "Delete All Hooks")) {
+                const res = await fetch('/api/hooks');
+                const hooks = await res.json();
+                for (const hook of hooks) {
+                    await fetch(`/api/hooks/${hook.id}`, { method: 'DELETE' });
+                }
+                fetchHooks();
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', fetchFolders);
     </script>
     {% block scripts %}{% endblock %}
 </body>
+
 </html>

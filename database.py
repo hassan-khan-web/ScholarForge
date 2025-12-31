@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, relationship, declarative_base
 from sqlalchemy.engine import Engine
 
 # 1. SETUP
-DB_FOLDER = "/app/data"
+DB_FOLDER = os.path.join(os.path.dirname(__file__), "data")
 if not os.path.exists(DB_FOLDER):
     os.makedirs(DB_FOLDER, exist_ok=True)
 
@@ -235,5 +235,24 @@ def save_hook(content: str):
         new_hook = Hook(content=content)
         db.add(new_hook)
         db.commit()
+    finally:
+        db.close()
+
+def get_all_hooks():
+    db = SessionLocal()
+    try:
+        return db.query(Hook).order_by(Hook.created_at.desc()).all()
+    finally:
+        db.close()
+
+def delete_hook(hook_id: int):
+    db = SessionLocal()
+    try:
+        hook = db.query(Hook).filter(Hook.id == hook_id).first()
+        if hook:
+            db.delete(hook)
+            db.commit()
+            return True
+        return False
     finally:
         db.close()

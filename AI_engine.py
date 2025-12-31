@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import json
 import re
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 import pandas as pd
 from reportlab.lib.pagesizes import A4
@@ -15,14 +15,16 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 import fitz 
+
 from report_formats import get_template_instructions
 
+# --- CONFIGURATION ---
 SMART_MODEL = "x-ai/grok-4.1-fast:free"
 BACKUP_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 
 SEARCH_RESULTS_COUNT = 10
 MAX_RESULTS_TO_SCRAPE = 4
-WORDS_PER_PAGE = 400
+WORDS_PER_PAGE = 450 # Increased base word count slightly for better density
 
 # --- HELPER FUNCTIONS ---
 def clean_ai_output(text: str) -> str:
@@ -38,9 +40,12 @@ def clean_section_output(text: str, section_title: str) -> str:
     lines = text.split('\n')
     while lines and not lines[0].strip(): lines.pop(0)
     if not lines: return ""
+    
+    # Remove the redundant title if the AI repeated it
     first_line = lines[0].strip().lower()
     clean_title = section_title.lower().replace('#', '').strip()
     clean_first = first_line.replace('#', '').strip()
+    
     if clean_title in clean_first or clean_first in clean_title:
         return "\n".join(lines[1:]).strip()
     return text.strip()
@@ -50,13 +55,13 @@ def call_llm(target_model: str, system_prompt: str, user_prompt: str, temp: floa
     current_model = target_model
     if attempt == 2:
         current_model = BACKUP_MODEL
-        print(f"   >>> Model Switch: {current_model}")
+        print(f"    >>> Model Switch: {current_model}")
     elif attempt > 2:
         return "Error: AI models unavailable."
 
     try:
         api_key = os.environ.get("OPENROUTER_API_KEY")
-        timeout = 90.0 
+        timeout = 120.0 # Increased timeout for longer sections
         
         system_prompt += " Output raw Markdown only. No code blocks."
 
@@ -76,16 +81,16 @@ def call_llm(target_model: str, system_prompt: str, user_prompt: str, temp: floa
                         {"role": "user", "content": user_prompt}
                     ],
                     "temperature": temp,
-                    "max_tokens": 4000
+                    "max_tokens": 5000 # Increased for Monographs
                 }
             )
             if response.status_code != 200:
-                print(f"   [!] AI Error ({current_model}): {response.status_code}")
+                print(f"    [!] AI Error ({current_model}): {response.status_code}")
                 return call_llm(target_model, system_prompt, user_prompt, temp, attempt + 1)
                 
             return clean_ai_output(response.json()['choices'][0]['message']['content'])
     except Exception as e:
-        print(f"   [!] Exception ({current_model}): {e}")
+        print(f"    [!] Exception ({current_model}): {e}")
         return call_llm(target_model, system_prompt, user_prompt, temp, attempt + 1)
 
 # --- SCRAPING & PDF ---
@@ -98,12 +103,12 @@ def extract_text_from_multiple_pdfs(file_bytes_list: list) -> str:
         for idx, file_bytes in enumerate(file_bytes_list):
             with fitz.open(stream=file_bytes, filetype="pdf") as doc:
                 doc_text = ""
-                # Limit to first 15 pages per doc to prevent overload
+                # Limit to first 25 pages per doc to allow for Monograph depth
                 for i, page in enumerate(doc):
-                    if i > 15: break
+                    if i > 25: break
                     doc_text += page.get_text()
                 
-                combined_text += f"\n[Document {idx+1} Content]:\n{doc_text[:10000]}\n" # Cap each doc
+                combined_text += f"\n[Document {idx+1} Content]:\n{doc_text[:15000]}\n" 
         
         combined_text += "\n------------------------------\n"
         return combined_text
@@ -123,7 +128,7 @@ def _get_article_text(url: str) -> str:
             
         soup = BeautifulSoup(response.text, 'lxml')
         for tag in soup(['script', 'style', 'nav', 'footer', 'aside']): tag.decompose()
-        return soup.get_text(separator='\n', strip=True)[:3000]
+        return soup.get_text(separator='\n', strip=True)[:5000] # Increased scrape limit
     except: return ""
 
 def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> str:
@@ -158,65 +163,89 @@ def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> s
 
 # --- RECURSIVE AGENT LOGIC ---
 
-# --- CONSOLIDATED PLANNING ---
+def recursive_gap_analysis(section_title: str, existing_summary: str, topic: str) -> str:
+    """Feature: Recursive Research. Checks if we need more info."""
+    print(f"    > Analyzing gap for: {section_title}")
+    prompt = (
+        f"We are writing a report on '{topic}'.\n"
+        f"Current Section: '{section_title}'\n"
+        f"Available Data Summary: {existing_summary[:3000]}\n\n"
+        "DECISION: Do we have specific enough data to write a detailed 600-word section with stats and tables on this specific sub-topic?\n"
+        "If YES, output 'PASS'.\n"
+        "If NO, output a Google Search Query to find the missing specific info."
+    )
+    decision = call_llm(SMART_MODEL, "You are a Research Director.", prompt, temp=0.1)
+    
+    if "PASS" in decision or len(decision) > 100:
+        return "" # No new search needed
+    
+    # Clean the query
+    new_query = decision.strip().replace('"', '')
+    print(f"    >>> RECURSIVE SEARCH TRIGGERED: {new_query}")
+    return get_search_results(new_query, max_results=2)
 
-def plan_report_consolidated(query: str, search_content: str, user_pdf_text: str, format_type: str, target_pages: int) -> dict:
-    """Consolidates Summary, Chart JSON, and Outline into ONE API call."""
+def generate_summary(search_content: str, topic: str, user_pdf_text: str = "") -> str:
+    context = search_content
+    if user_pdf_text:
+        context = user_pdf_text + "\n\n" + search_content
+        
+    return call_llm(
+        SMART_MODEL,
+        "You are a Senior Research Analyst.",
+        f"Topic: {topic}\n\nData:\n{context[:35000]}\n\nTask: Synthesize a master summary of key facts, numbers, and sources. Group them by themes."
+    )
+
+def generate_outline(topic: str, summary: str, format_type: str, target_pages: int) -> list:
     format_data = get_template_instructions(format_type, target_pages)
-    context = (user_pdf_text + "\n\n" + search_content) if user_pdf_text else search_content
+    
+    # Enforce strict section count based on tier
+    target_count = format_data['target_sections']
     
     prompt = (
-        f"Topic: {query}\n"
-        f"Target Sections: {format_data['target_sections']}\n"
-        f"Format Style: {format_data['template_text']}\n"
-        f"Research Data:\n{context[:25000]}\n\n"
-        "--- TASK ---\n"
-        "Generate a structured report plan in JSON format with exactly three keys:\n"
-        "1. 'summary': A 500-word master factual summary of all data.\n"
-        "2. 'chart_data': { 'title': '...', 'x_label': '...', 'y_label': '...', 'data': [{'label': 'A', 'value': 10}] }\n"
-        "3. 'outline': A list of strings for section titles.\n\n"
-        "Output raw JSON only."
+        f"Topic: {topic}\n"
+        f"Tier Target: {target_count} sections exactly.\n"
+        f"Logic: {format_data['template_text']}\n"
+        f"Context: {summary[:3000]}\n\n"
+        "TASK: Generate the JSON outline.\n"
+        "RULES:\n"
+        "1. Titles MUST be engaging (e.g. 'The Quantum Leap' instead of 'Introduction').\n"
+        "2. Return exactly the number of sections requested.\n"
+        "Output: A JSON list of strings ONLY. Example: [\"1. The Awakening\", \"2. Market Forces\"]"
     )
+    content = call_llm(SMART_MODEL, "Return JSON only.", prompt, temp=0.3)
+    match = re.search(r'\[.*\]', content.replace('\n', ' '), re.DOTALL)
     
-    response_text = call_llm(SMART_MODEL, "You are a Research Director. Output JSON only.", prompt, temp=0.2)
-    
-    try:
-        # Clean and parse JSON
-        match = re.search(r'\{.*\}', response_text.replace('\n', ' '), re.DOTALL)
-        if match:
-            data = json.loads(match.group(0))
-            return {
-                "summary": data.get("summary", "Summary generation failed."),
-                "chart_data": data.get("chart_data", {}),
-                "outline": data.get("outline", ["Introduction", "Analysis", "Conclusion"])
-            }
-    except Exception as e:
-        print(f"JSON Planning Error: {e}")
-    
-    # Fallback if JSON fails
-    return {
-        "summary": "Data synthesis in progress...",
-        "chart_data": {},
-        "outline": ["Introduction", "Analysis", "Conclusion"]
-    }
+    if match: 
+        outline = json.loads(match.group(0))
+        # Fallback to ensure we hit the target if the LLM under/over delivered
+        return outline[:target_count] if len(outline) > target_count else outline
+        
+    return ["1. Executive Overview", "2. Core Analysis", "3. Strategic Implications", "4. Conclusion"]
 
-def write_sections_bundle(section_titles: list, topic: str, summary: str, word_limit_per_section: int) -> str:
-    """Writes multiple sections in ONE API call to save money/usage."""
-    titles_str = ", ".join(section_titles)
+def write_section(section_title: str, topic: str, summary: str, full_report_context: str, word_limit: int) -> str:
+    # 1. Recursive Step: Check if we need more data
+    new_data = recursive_gap_analysis(section_title, summary, topic)
+    
+    combined_data = summary
+    if new_data:
+        combined_data = new_data + "\n\n" + summary # Prioritize new data
+        
+    # 2. Writing Step with Formatting Enforcement
     base_prompt = (
-        f"Write the following sections for topic '{topic}': {titles_str}\n\n"
-        f"Research Summary:\n{summary[:15000]}\n\n"
-        f"INSTRUCTIONS:\n"
-        f"1. Write approximately {word_limit_per_section} words for EACH section listed.\n"
-        f"2. Use Markdown. Start each section with '## Section Title'.\n"
-        f"3. CITATION REQUIREMENT: Cite sources using [1], [2] or [Doc 1].\n"
-        "4. DO NOT repeat content across sections."
+        f"Write the section '{section_title}' for the report '{topic}'.\n"
+        f"Data Source:\n{combined_data[:20000]}\n\n"
+        f"Length Target: {word_limit} words.\n\n"
+        "FORMATTING RULES (STRICT):\n"
+        "1. HEADER: Use the section title as # H1.\n"
+        "2. SUB-HEADERS: Use ### H3 for sub-themes. Do NOT use generic names.\n"
+        "3. TABLES: You MUST include at least one Markdown table comparing data, pros/cons, or timelines.\n"
+        "4. CITATIONS: Use [1], [2] notation corresponding to sources.\n"
+        "5. TONE: Professional, dense, and analytical. Avoid fluff.\n"
+        "6. CONTENT: If this is 'Standard' or higher, include a 'Real World Application' subsection."
     )
     
-    content = call_llm(SMART_MODEL, "You are a Report Writer. Focus on technical depth and citations.", base_prompt, temp=0.4)
-    return clean_ai_output(content)
-
-# write_section is now legacy, replaced by write_sections_bundle
+    content = call_llm(SMART_MODEL, "You are a Report Writer. Use Markdown Tables and Charts.", base_prompt, temp=0.4)
+    return clean_section_output(content, section_title)
 
 # --- CHARTING ---
 def generate_chart_from_data(summary: str, topic: str) -> str:
@@ -257,90 +286,52 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
         print(message) 
         if task: task.update_state(state='PROGRESS', meta={'message': message})
 
-    _update_status("Step 1/5: Processing & Initial Search...")
+    _update_status("Step 1/7: Processing Inputs...")
     
-    # 1. Process User PDFs
+    # 1. Process User PDFs (MULTIPLE)
     user_pdf_text = ""
     if pdf_bytes_list:
         user_pdf_text = extract_text_from_multiple_pdfs(pdf_bytes_list)
-    
+        _update_status(f"    > Analyzed {len(pdf_bytes_list)} uploaded documents.")
+
+    _update_status("Step 2/7: Global Search (Deep Reading)...")
     search_content = get_search_results(query)
     
-    _update_status("Step 2/5: Planning & Synthesis (Consolidated Call 1/X)...")
-    # THE CONSOLIDATED PLANNING CALL
-    plan = plan_report_consolidated(query, search_content, user_pdf_text, user_format, page_count)
-    summary = plan['summary']
-    outline = plan['outline']
+    _update_status("Step 3/7: Synthesizing Data...")
+    summary = generate_summary(search_content, query, user_pdf_text)
     
-    _update_status("Step 3/5: Generating Visuals...")
-    chart_path = None
-    if plan['chart_data']:
-        try:
-            chart_dir = "/app/static/charts"
-            if not os.path.exists(chart_dir): os.makedirs(chart_dir, exist_ok=True)
-            clean_name = re.sub(r'\W+', '', query)[:15] 
-            filename = f"chart_{clean_name}_{os.urandom(4).hex()}.png"
-            filepath = os.path.join(chart_dir, filename)
+    _update_status("Step 4/7: Generating Visuals...")
+    chart_path = generate_chart_from_data(summary, query)
+    
+    _update_status("Step 5/7: Planning Structure...")
+    outline = generate_outline(query, summary, user_format, page_count)
 
-            df = pd.DataFrame(plan['chart_data']['data'])
-            fig, ax = plt.subplots(figsize=(10, 6))
-            plt.style.use('ggplot')
-            ax.bar(df['label'], df['value'], color='#4f46e5', alpha=0.8)
-            ax.set_title(plan['chart_data'].get('title', 'Analysis'), fontsize=14, pad=20)
-            ax.set_xlabel(plan['chart_data'].get('x_label', ''), fontsize=12)
-            ax.set_ylabel(plan['chart_data'].get('y_label', ''), fontsize=12)
-            plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
-            fig.tight_layout()
-            fig.savefig(filepath, dpi=100)
-            plt.close(fig)
-            chart_path = filepath
-        except: pass
-
-    _update_status("Step 4/5: Deep Writing (Bundled Calls)...")
+    # Calculate word count based on the tier density rule (+10% scaling is handled by simply having more sections/pages)
+    total_words = page_count * WORDS_PER_PAGE 
+    words_per_section = max(400, int(total_words / max(1, len(outline))))
     
-    # DETERMINE CALL COUNTS BASED ON USER SPECIFICATIONS
-    if page_count <= 12: max_writing_calls = 3 # 7 page case
-    elif page_count <= 20: max_writing_calls = 7 # 15 page case
-    else: max_writing_calls = 11 # 25 page case
-    
-    # Split outline into bundles precisely to hit the target call count
-    num_sections = len(outline)
-    bundles = []
-    sections_left = outline[:]
-    calls_left = max_writing_calls
-    
-    while sections_left and calls_left > 0:
-        # Ceiling division to distribute fairly
-        take = max(1, -(-len(sections_left) // calls_left))
-        bundles.append(sections_left[:take])
-        sections_left = sections_left[take:]
-        calls_left -= 1
-
     full_report = f"# {query.upper()}\n\n"
-    for i, bundle in enumerate(bundles):
-        _update_status(f"   > Writing Bundle {i+1}/{len(bundles)}...")
-        bundle_content = write_sections_bundle(bundle, query, summary, 500)
-        full_report += f"\n{bundle_content}\n"
+    for i, section in enumerate(outline):
+        _update_status(f"Step 6/7: Writing Section {i+1}/{len(outline)}: {section}...")
+        section_content = write_section(section, query, summary, full_report, words_per_section)
+        full_report += f"\n\n## {section}\n{section_content}\n"
     
-    _update_status("Step 5/5: Finalizing...")
+    _update_status("Step 7/7: Finalizing...")
     full_report = clean_ai_output(full_report)
     
     return search_content + "\n" + user_pdf_text, full_report, chart_path
 
-# --- CONVERTERS ---
+# --- CONVERTERS (Unchanged) ---
 def convert_to_txt(content, path):
     with open(path, "w", encoding="utf-8") as f: f.write(content)
     return "Success"
-
 def convert_to_md(content, path):
     with open(path, "w", encoding="utf-8") as f: f.write(content)
     return "Success"
-
 def convert_to_json(content, topic, path):
     data = {"topic": topic, "content": content, "generated_by": "ScholarForge"}
     with open(path, "w", encoding="utf-8") as f: json.dump(data, f, indent=4)
     return "Success"
-
 def add_formatted_text(paragraph, text):
     parts = re.split(r'(\*\*[^*]+\*\*)', text)
     for part in parts:
@@ -349,7 +340,6 @@ def add_formatted_text(paragraph, text):
             run.bold = True
             run.font.color.rgb = RGBColor(0, 0, 0)
         else: paragraph.add_run(part)
-
 def _add_markdown_table_to_docx(doc, table_block):
     lines = [l.strip() for l in table_block.strip().split('\n') if l.strip()]
     if len(lines) < 3: return
@@ -367,7 +357,6 @@ def _add_markdown_table_to_docx(doc, table_block):
                 cell = table.cell(r_idx, c_idx)
                 cell.text = cell_data
                 if r_idx == 0: cell.paragraphs[0].runs[0].bold = True
-
 def convert_to_docx(content, topic, path, chart_path=None):
     doc = Document()
     doc.add_heading(topic, 0)
