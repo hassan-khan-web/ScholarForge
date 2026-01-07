@@ -18,15 +18,13 @@ import fitz
 
 from report_formats import get_template_instructions
 
-# --- CONFIGURATION ---
 SMART_MODEL = "x-ai/grok-4.1-fast:free"
 BACKUP_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 
 SEARCH_RESULTS_COUNT = 10
 MAX_RESULTS_TO_SCRAPE = 4
-WORDS_PER_PAGE = 450 # Increased base word count slightly for better density
+WORDS_PER_PAGE = 450
 
-# --- HELPER FUNCTIONS ---
 def clean_ai_output(text: str) -> str:
     if not text: return ""
     text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
@@ -41,7 +39,6 @@ def clean_section_output(text: str, section_title: str) -> str:
     while lines and not lines[0].strip(): lines.pop(0)
     if not lines: return ""
     
-    # Remove the redundant title if the AI repeated it
     first_line = lines[0].strip().lower()
     clean_title = section_title.lower().replace('#', '').strip()
     clean_first = first_line.replace('#', '').strip()
@@ -50,7 +47,6 @@ def clean_section_output(text: str, section_title: str) -> str:
         return "\n".join(lines[1:]).strip()
     return text.strip()
 
-# --- LLM CALLER ---
 def call_llm(target_model: str, system_prompt: str, user_prompt: str, temp: float = 0.4, attempt: int = 1) -> str:
     current_model = target_model
     if attempt == 2:
@@ -61,7 +57,7 @@ def call_llm(target_model: str, system_prompt: str, user_prompt: str, temp: floa
 
     try:
         api_key = os.environ.get("OPENROUTER_API_KEY")
-        timeout = 120.0 # Increased timeout for longer sections
+        timeout = 120.0
         
         system_prompt += " Output raw Markdown only. No code blocks."
 
@@ -81,7 +77,7 @@ def call_llm(target_model: str, system_prompt: str, user_prompt: str, temp: floa
                         {"role": "user", "content": user_prompt}
                     ],
                     "temperature": temp,
-                    "max_tokens": 5000 # Increased for Monographs
+                    "max_tokens": 5000 
                 }
             )
             if response.status_code != 200:
@@ -93,7 +89,6 @@ def call_llm(target_model: str, system_prompt: str, user_prompt: str, temp: floa
         print(f"    [!] Exception ({current_model}): {e}")
         return call_llm(target_model, system_prompt, user_prompt, temp, attempt + 1)
 
-# --- SCRAPING & PDF ---
 
 def extract_text_from_multiple_pdfs(file_bytes_list: list) -> str:
     """Feature: Extract text from MULTIPLE uploaded PDFs"""
@@ -103,7 +98,6 @@ def extract_text_from_multiple_pdfs(file_bytes_list: list) -> str:
         for idx, file_bytes in enumerate(file_bytes_list):
             with fitz.open(stream=file_bytes, filetype="pdf") as doc:
                 doc_text = ""
-                # Limit to first 25 pages per doc to allow for Monograph depth
                 for i, page in enumerate(doc):
                     if i > 25: break
                     doc_text += page.get_text()
@@ -149,19 +143,16 @@ def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> s
                 title = result.get('title', 'Unknown Title')
                 snippet = result.get("snippet", "")
                 
-                # Fetch deep content
                 full_content = ""
                 if url:
                     raw = _get_article_text(url)
                     if raw: full_content = f"\nEXTRACT: {raw}"
                 
-                # Index the source [1], [2]...
                 formatted_output += f"SOURCE [{i+1}]\nTitle: {title}\nURL: {url}\nSummary: {snippet}{full_content}\n\n"
                 
         return formatted_output
     except Exception as e: return f"Search Error: {e}"
 
-# --- RECURSIVE AGENT LOGIC ---
 
 def recursive_gap_analysis(section_title: str, existing_summary: str, topic: str) -> str:
     """Feature: Recursive Research. Checks if we need more info."""
@@ -177,9 +168,8 @@ def recursive_gap_analysis(section_title: str, existing_summary: str, topic: str
     decision = call_llm(SMART_MODEL, "You are a Research Director.", prompt, temp=0.1)
     
     if "PASS" in decision or len(decision) > 100:
-        return "" # No new search needed
+        return "" 
     
-    # Clean the query
     new_query = decision.strip().replace('"', '')
     print(f"    >>> RECURSIVE SEARCH TRIGGERED: {new_query}")
     return get_search_results(new_query, max_results=2)
@@ -198,7 +188,6 @@ def generate_summary(search_content: str, topic: str, user_pdf_text: str = "") -
 def generate_outline(topic: str, summary: str, format_type: str, target_pages: int) -> list:
     format_data = get_template_instructions(format_type, target_pages)
     
-    # Enforce strict section count based on tier
     target_count = format_data['target_sections']
     
     prompt = (
@@ -217,20 +206,17 @@ def generate_outline(topic: str, summary: str, format_type: str, target_pages: i
     
     if match: 
         outline = json.loads(match.group(0))
-        # Fallback to ensure we hit the target if the LLM under/over delivered
         return outline[:target_count] if len(outline) > target_count else outline
         
     return ["1. Executive Overview", "2. Core Analysis", "3. Strategic Implications", "4. Conclusion"]
 
 def write_section(section_title: str, topic: str, summary: str, full_report_context: str, word_limit: int) -> str:
-    # 1. Recursive Step: Check if we need more data
     new_data = recursive_gap_analysis(section_title, summary, topic)
     
     combined_data = summary
     if new_data:
-        combined_data = new_data + "\n\n" + summary # Prioritize new data
+        combined_data = new_data + "\n\n" + summary 
         
-    # 2. Writing Step with Formatting Enforcement
     base_prompt = (
         f"Write the section '{section_title}' for the report '{topic}'.\n"
         f"Data Source:\n{combined_data[:20000]}\n\n"
@@ -247,7 +233,6 @@ def write_section(section_title: str, topic: str, summary: str, full_report_cont
     content = call_llm(SMART_MODEL, "You are a Report Writer. Use Markdown Tables and Charts.", base_prompt, temp=0.4)
     return clean_section_output(content, section_title)
 
-# --- CHARTING ---
 def generate_chart_from_data(summary: str, topic: str) -> str:
     try:
         chart_dir = "/app/static/charts"
@@ -280,7 +265,6 @@ def generate_chart_from_data(summary: str, topic: str) -> str:
         return filepath
     except: return None
 
-# --- MAIN ORCHESTRATOR ---
 def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15, pdf_bytes_list: list = None, task=None) -> tuple[str, str, str]: 
     def _update_status(message: str):
         print(message) 
@@ -288,7 +272,6 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
 
     _update_status("Step 1/7: Processing Inputs...")
     
-    # 1. Process User PDFs (MULTIPLE)
     user_pdf_text = ""
     if pdf_bytes_list:
         user_pdf_text = extract_text_from_multiple_pdfs(pdf_bytes_list)
@@ -306,7 +289,6 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
     _update_status("Step 5/7: Planning Structure...")
     outline = generate_outline(query, summary, user_format, page_count)
 
-    # Calculate word count based on the tier density rule (+10% scaling is handled by simply having more sections/pages)
     total_words = page_count * WORDS_PER_PAGE 
     words_per_section = max(400, int(total_words / max(1, len(outline))))
     
@@ -321,7 +303,6 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
     
     return search_content + "\n" + user_pdf_text, full_report, chart_path
 
-# --- CONVERTERS (Unchanged) ---
 def convert_to_txt(content, path):
     with open(path, "w", encoding="utf-8") as f: f.write(content)
     return "Success"

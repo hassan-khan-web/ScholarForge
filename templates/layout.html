@@ -10,11 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* CSS Variables */
         :root {
             --sidebar-width: 16rem;
             --sidebar-collapsed-width: 4rem;
-            /* 64px */
             --bg-main: #1a1b26;
             --bg-sidebar: #13141f;
             --bg-panel: #1f2335;
@@ -26,7 +24,6 @@
             --active-bg: rgba(122, 162, 247, 0.1);
         }
 
-        /* Light Theme */
         body.light-theme {
             --bg-main: #f3f4f6;
             --bg-sidebar: #ffffff;
@@ -39,7 +36,6 @@
             --active-bg: #eff6ff;
         }
 
-        /* Dark Theme */
         body.dark-theme {
             --bg-main: #000000;
             --bg-sidebar: #0a0a0a;
@@ -78,7 +74,6 @@
             color: var(--text-main);
         }
 
-        /* SIDEBAR ANIMATIONS */
         #sidebar {
             width: var(--sidebar-width);
             background: var(--bg-sidebar);
@@ -95,7 +90,6 @@
             width: var(--sidebar-collapsed-width);
         }
 
-        /* RIGID ICONS & FADING TEXT */
         .nav-item {
             display: flex;
             align-items: center;
@@ -187,7 +181,6 @@
             color: var(--text-main);
         }
 
-        /* HISTORY PANEL */
         #history-panel {
             position: fixed;
             top: 0;
@@ -212,7 +205,6 @@
             left: var(--sidebar-collapsed-width);
         }
 
-        /* DROPDOWNS */
         .dropdown-menu {
             position: absolute;
             right: 0;
@@ -257,7 +249,6 @@
             z-index: 2147483647;
         }
 
-        /* FOLDER TREE */
         .folder-row {
             display: flex;
             align-items: center;
@@ -359,7 +350,6 @@
             background: var(--border-color);
         }
 
-        /* MODALS */
         .custom-modal-overlay {
             position: fixed;
             inset: 0;
@@ -486,7 +476,6 @@
         <div id="history-list-content" class="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar"></div>
     </aside>
 
-    <!-- Hook Panel -->
     <aside id="hook-panel"
         style="position: fixed; top: 0; bottom: 0; right: 0; width: 20rem; background: var(--bg-sidebar); border-left: 1px solid var(--border-color); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 40; display: flex; flex-direction: column; box-shadow: -10px 0 25px -5px rgba(0,0,0,0.1);">
         <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
@@ -517,13 +506,11 @@
     </div>
 
 
-    <!-- Merge Hook Panel -->
     <div id="merge-panel"
         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center"
         onclick="if(event.target === this) closeMergePanel()">
         <div
             class="w-full max-w-6xl h-[85vh] bg-[var(--bg-main)] border border-[var(--border-color)] rounded-xl shadow-2xl flex flex-col mx-4">
-            <!-- Header -->
             <div
                 class="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-panel)]">
                 <h2 class="text-lg font-bold text-[var(--text-main)]">Merge Hooks into Report</h2>
@@ -531,9 +518,7 @@
                     class="text-[var(--text-muted)] hover:text-[var(--text-main)] text-xl">&times;</button>
             </div>
 
-            <!-- Three Section Layout -->
             <div class="flex-1 flex overflow-hidden">
-                <!-- Left: Report History (20%) -->
                 <div class="w-[20%] border-r border-[var(--border-color)] flex flex-col bg-[var(--bg-sidebar)]">
                     <div class="p-3 border-b border-[var(--border-color)]">
                         <h3 class="text-sm font-bold text-[var(--text-main)]">Reports</h3>
@@ -541,7 +526,6 @@
                     <div id="merge-reports-list" class="flex-1 overflow-y-auto custom-scrollbar p-2"></div>
                 </div>
 
-                <!-- Middle: Report Display (40%) -->
                 <div class="w-[40%] border-r border-[var(--border-color)] flex flex-col">
                     <div class="p-3 border-b border-[var(--border-color)] flex items-center justify-between">
                         <h3 class="text-sm font-bold text-[var(--text-main)]">Report Content</h3>
@@ -557,7 +541,6 @@
                     </div>
                 </div>
 
-                <!-- Right: Hook Content (40%) -->
                 <div class="w-[40%] flex flex-col">
                     <div class="p-3 border-b border-[var(--border-color)] flex items-center justify-between">
                         <h3 class="text-sm font-bold text-[var(--text-main)]">Hooks</h3>
@@ -576,7 +559,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast-notification"
         class="fixed bottom-0 left-0 right-0 z-[100] transform translate-y-full transition-transform duration-300">
         <div class="mx-auto max-w-md mb-4">
@@ -673,7 +655,6 @@
     </form>
 
     <script>
-        // --- CUSTOM CONFIRM LOGIC ---
         let confirmResolve = null;
         const confirmModal = document.getElementById('confirm-modal');
         const confirmTitle = document.getElementById('confirm-title');
@@ -684,7 +665,6 @@
             confirmTitle.innerText = title;
             confirmModal.style.display = 'flex';
 
-            // Add keyboard listener for Enter key
             const keyHandler = (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -710,11 +690,9 @@
             if (confirmResolve) confirmResolve(true);
         };
 
-        // --- UI TOGGLES ---
         document.getElementById('sidebar-toggle').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
         window.toggleHistory = () => { document.getElementById('history-panel').classList.toggle('open'); fetchHistoryReports(); };
 
-        // --- DROPDOWN LOGIC ---
         window.toggleDropdown = (id) => {
             closeAllDropdowns();
             const el = document.getElementById(id);
@@ -725,7 +703,6 @@
             document.getElementById('global-download-menu').style.display = 'none';
         };
 
-        // --- GLOBAL MENU LOGIC ---
         let currentDownloadId = null;
         window.showGlobalMenu = (event, id) => {
             currentDownloadId = id;
@@ -738,7 +715,6 @@
         window.hideGlobalMenu = () => { document.getElementById('global-download-menu').style.display = 'none'; };
         window.triggerGlobalDownload = (format) => { if (currentDownloadId) downloadFromHistory(currentDownloadId, format); hideGlobalMenu(); };
 
-        // --- FOLDER & CHAT LOGIC ---
         async function fetchFolders() {
             try {
                 const res = await fetch('/api/folders');
@@ -795,7 +771,6 @@
             });
         }
 
-        // --- ACTIONS ---
         window.renameFolder = async (id, oldName) => {
             const newName = prompt("Rename Folder:", oldName); // Browser Prompt ok for rename (text input needed)
             if (newName && newName !== oldName) { await fetch(`/api/folders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }); fetchFolders(); }
@@ -805,7 +780,6 @@
             if (newName && newName !== oldName) { await fetch(`/api/sessions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: newName }) }); fetchFolders(); }
         };
 
-        // UPDATED: Use showConfirm
         window.deleteFolder = async (id) => {
             if (await showConfirm("Delete this folder and all chats?", "Delete Folder")) {
                 await fetch(`/api/folders/${id}`, { method: 'DELETE' }); fetchFolders();
@@ -823,7 +797,6 @@
             if (data.status === 'success') window.location.href = `/chat?session_id=${data.session.id}`;
         };
 
-        // --- HISTORY ---
         let isSelectMode = false;
         window.toggleSelectMode = () => { isSelectMode = !isSelectMode; document.getElementById('history-list-content').classList.toggle('select-mode', isSelectMode); };
         window.selectAllReports = () => { if (!isSelectMode) toggleSelectMode(); document.querySelectorAll('.select-check').forEach(cb => cb.checked = true); };
@@ -857,7 +830,6 @@
             });
         }
 
-        // UPDATED: Use showConfirm
         window.deleteSelectedReports = async () => {
             const checks = document.querySelectorAll('.select-check:checked');
             if (checks.length === 0) {
@@ -894,7 +866,6 @@
             } else { window.location.href = `/?view_report=${id}`; }
         }
 
-        // --- STANDARD STUFF ---
         window.openFolderModal = () => { document.getElementById('folder-modal').style.display = 'flex'; setTimeout(() => document.getElementById('fm-input').focus(), 50); };
         window.closeFolderModal = () => { document.getElementById('folder-modal').style.display = 'none'; };
         window.openSettingsModal = () => { document.getElementById('settings-modal').style.display = 'flex'; };
@@ -909,7 +880,6 @@
             } catch (e) { }
         };
 
-        // UPDATED: Use showConfirm
         window.resetDatabase = async () => {
             if (await showConfirm("This will wipe ALL chats and reports. Continue?", "DANGER: Reset Database")) {
                 await fetch('/api/system/reset-db', { method: 'POST' }); location.reload();
@@ -919,7 +889,6 @@
         window.setTheme = (t) => { document.body.className = "flex h-screen w-full " + (t === 'default' ? '' : t + '-theme'); localStorage.setItem('scholarforge-theme', t); closeSettingsModal(); }
         setTheme(localStorage.getItem('scholarforge-theme') || 'default');
 
-        // --- HOOK PANEL ---
         window.toggleHookPanel = () => {
             const panel = document.getElementById('hook-panel');
             const isOpen = panel.style.transform === 'translateX(0px)';
@@ -969,7 +938,6 @@
 
         document.addEventListener('DOMContentLoaded', fetchFolders);
 
-        // --- MERGE PANEL ---
         let selectedReportId = null;
         let selectedHooks = [];
 
@@ -1006,7 +974,6 @@
         async function selectReport(reportId, element) {
             selectedReportId = reportId;
 
-            // Update UI
             document.querySelectorAll('#merge-reports-list > div').forEach(el => {
                 el.classList.remove('border-[var(--accent-primary)]', 'bg-[var(--active-bg)]');
                 el.classList.add('border-transparent');
@@ -1014,7 +981,6 @@
             element.classList.add('border-[var(--accent-primary)]', 'bg-[var(--active-bg)]');
             element.classList.remove('border-transparent');
 
-            // Load report content
             const res = await fetch(`/api/report/${reportId}`);
             const data = await res.json();
             document.getElementById('merge-report-content').value = data.content || '';
@@ -1085,7 +1051,6 @@
             const reportContent = document.getElementById('merge-report-content').value;
             const hookContents = selectedHooks.map(h => h.content).join('\n\n');
 
-            // Show loading
             const btn = event.target.closest('button');
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Merging...';
@@ -1118,7 +1083,6 @@
             }
         };
 
-        // Toast notification functions
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast-notification');
             const toastMessage = document.getElementById('toast-message');
@@ -1126,7 +1090,6 @@
 
             toastMessage.textContent = message;
 
-            // Update colors based on type
             if (type === 'error') {
                 toastContainer.classList.remove('bg-green-600');
                 toastContainer.classList.add('bg-red-600');
@@ -1135,11 +1098,9 @@
                 toastContainer.classList.add('bg-green-600');
             }
 
-            // Show toast
             toast.classList.remove('translate-y-full');
             toast.classList.add('translate-y-0');
 
-            // Auto hide after 3 seconds
             setTimeout(() => {
                 hideToast();
             }, 3000);

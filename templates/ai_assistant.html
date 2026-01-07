@@ -48,14 +48,11 @@
             </button>
         </div>
 
-        <!-- Messages Area -->
         <div id="chat-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 relative">
             <div class="max-w-3xl mx-auto space-y-4" id="messages-container">
-                <!-- Messages injected here via JS -->
             </div>
         </div>
 
-        <!-- Input Area - Initially Centered, then Fixed at Bottom -->
         <div id="input-container"
             class="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-out">
             <div id="input-wrapper" class="w-full max-w-3xl px-6 pointer-events-auto">
@@ -82,7 +79,7 @@
     let currentSessionId = null;
     let typingInterval = null;
     let selectedText = '';
-    let hasMessages = false; // Track if messages exist
+    let hasMessages = false;
     let speechSynthesis = window.speechSynthesis;
     let currentUtterance = null;
 
@@ -95,12 +92,10 @@
     const sendBtn = document.getElementById('send-btn');
     const inputContainer = document.getElementById('input-container');
 
-    // 1. Listen for Sidebar Session Clicks (Dispatched from layout.html)
     window.addEventListener('scholarforge:load-session', (e) => {
         loadSession(e.detail.folderId, e.detail.sessionId);
     });
 
-    // 2. Init Check on Page Load
     document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const sid = urlParams.get('session_id');
@@ -118,7 +113,6 @@
         currentFolderId = folderId;
         currentSessionId = sessionId;
 
-        // UI Switch
         welcomeState.style.opacity = '0';
         setTimeout(() => welcomeState.classList.add('hidden'), 300);
 
@@ -152,21 +146,18 @@
         }
     }
 
-    // Move input to bottom
     function moveInputToBottom() {
         inputContainer.classList.remove('items-center');
         inputContainer.classList.add('items-end');
         inputContainer.style.paddingBottom = '1.5rem';
     }
 
-    // Reset input to center
     function resetInputPosition() {
         inputContainer.classList.remove('items-end');
         inputContainer.classList.add('items-center');
         inputContainer.style.paddingBottom = '0';
     }
 
-    // --- NEW CHAT LOGIC ---
     window.attemptNewChat = function () {
         if (!currentFolderId) {
             alert("Please select a folder from the sidebar first.");
@@ -194,7 +185,6 @@
         } catch (e) { alert("Error creating session"); }
     }
 
-    // --- CHAT SUBMISSION ---
     document.getElementById('chat-form').onsubmit = async (e) => {
         e.preventDefault();
         const text = chatInput.value.trim();
@@ -205,7 +195,6 @@
             return;
         }
 
-        // Move input to bottom on first message
         if (!hasMessages) {
             moveInputToBottom();
             hasMessages = true;
@@ -215,7 +204,7 @@
         chatInput.value = '';
         sendBtn.disabled = true;
 
-        const botBubble = renderMessage('bot', '', true); // loading indicator
+        const botBubble = renderMessage('bot', '', true);
 
         try {
             const res = await fetch('/chat', {
@@ -304,7 +293,7 @@
                 clearInterval(interval);
                 sendBtn.disabled = false;
             }
-        }, 30); // Fast typewriter effect - 30ms per word
+        }, 30);
     }
 
     function styleBotContent(container) {
@@ -371,7 +360,6 @@
         }
     }
 
-    // --- MESSAGE ACTIONS ---
     window.copyMessage = function (button) {
         const messageText = button.closest('.group').querySelector('.message-text').innerText;
         navigator.clipboard.writeText(messageText).then(() => {
@@ -438,7 +426,6 @@
     window.likeMessage = function (button) {
         const isLiked = button.classList.contains('liked');
 
-        // Remove dislike if present
         const dislikeBtn = button.parentElement.querySelector('.dislike-btn');
         dislikeBtn.classList.remove('disliked', 'text-red-500');
 
@@ -452,7 +439,6 @@
     window.dislikeMessage = function (button) {
         const isDisliked = button.classList.contains('disliked');
 
-        // Remove like if present
         const likeBtn = button.parentElement.querySelector('.like-btn');
         likeBtn.classList.remove('liked', 'text-green-500');
 

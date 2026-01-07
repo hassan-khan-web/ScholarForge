@@ -1,12 +1,10 @@
 services:
-  # 1. REDIS (Task Queue)
   redis:
     image: redis:alpine
     container_name: scholarforge_redis
     ports:
       - "6379:6379"
 
-  # 2. POSTGRESQL (Database) - NEW
   db:
     image: postgres:15-alpine
     container_name: scholarforge_db
@@ -20,7 +18,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # 3. WEB SERVER (FastAPI)
   web:
     build: .
     container_name: scholarforge_web
@@ -32,7 +29,6 @@ services:
       - "5000:5000"
     env_file:
       - .env
-    # Connection String passed here to override .env defaults if needed
     environment:
       - DATABASE_URL=postgresql://scholar:forgepass@db:5432/scholarforge
       - CELERY_BROKER_URL=redis://redis:6379/0
@@ -41,15 +37,10 @@ services:
       - redis
       - db
 
-  # 4. WORKER (Celery)
   worker:
     build: .
     container_name: scholarforge_worker
     
-      # OLD COMMAND (Static - requires restart):
-    # command: celery -A task.celery_app worker --loglevel=info
-    
-    # NEW COMMAND (Dynamic - watches for file changes):
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A task.celery_app worker --loglevel=info
 
     volumes:

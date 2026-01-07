@@ -13,7 +13,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 from celery.result import AsyncResult
 
-# Import modules
 from task import generate_report_task, celery_app
 import AI_engine 
 import chat_engine 
@@ -35,16 +34,13 @@ templates = Jinja2Templates(directory="templates")
 
 @app.on_event("startup")
 def startup():
-    # 1. Secret Check
     required_secrets = ["API_KEY", "OPENROUTER_API_KEY"]
     missing = [k for k in required_secrets if not os.environ.get(k)]
     if missing:
         print(f"CRITICAL: Missing keys: {missing}")
         raise RuntimeError(f"Missing keys: {missing}")
-    # 2. Database
     database.init_db()
 
-# --- PYDANTIC MODELS ---
 class ChatRequest(BaseModel):
     message: str
     session_id: int 
@@ -62,7 +58,6 @@ class CreateSessionRequest(BaseModel):
 class HookRequest(BaseModel):
     content: str
 
-# --- ROUTES ---
 
 @app.get("/")
 async def index(request: Request):
@@ -72,7 +67,6 @@ async def index(request: Request):
 async def chat_page(request: Request):
     return templates.TemplateResponse('ai_assistant.html', {"request": request})
 
-# --- SYSTEM ---
 @app.post("/api/system/reset-db")
 def reset_database():
     try:
@@ -83,7 +77,6 @@ def reset_database():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# --- FOLDER/CHAT ---
 @app.get("/api/folders")
 def get_folders(): return database.get_folders_with_sessions()
 
@@ -135,7 +128,6 @@ async def chat(data: ChatRequest):
     database.save_chat_message(data.session_id, "assistant", resp)
     return {'response': resp}
 
-# --- REPORTS ---
 @app.get("/api/history")
 def history():
     reports = database.get_all_reports()
@@ -156,7 +148,6 @@ def del_all_reps():
     if database.delete_all_reports(): return {"status": "success"}
     return JSONResponse(status_code=500, content={"error": "Failed"})
 
-# --- START REPORT ---
 @app.post("/start-report")
 async def start_report(
     query: str = Form(...),
@@ -171,15 +162,13 @@ async def start_report(
             if not format_content: return JSONResponse({'error': 'Custom format needed'}, status_code=400)
             user_fmt = "custom" 
 
-        # Handle Multiple Files
         pdf_data_list = []
         if pdf_files:
             for file in pdf_files:
-                if file.filename: # check if file was actually uploaded
+                if file.filename: 
                     content = await file.read()
                     pdf_data_list.append(content)
         
-        # Pass list of bytes to task
         task = generate_report_task.delay(query, user_fmt, page_count, pdf_data_list)
         return {"task_id": task.id}
     except Exception as e:
@@ -195,7 +184,6 @@ async def report_status(task_id: str):
     elif task.state == 'FAILURE': return {'status': 'FAILURE', 'error': str(task.info)}
     return {'status': task.state, 'message': task.info.get('message', 'Running...') if isinstance(task.info, dict) else 'Running...'}
 
-# --- DOWNLOAD ---
 def cleanup(path):
     try: os.remove(path) 
     except: pass
@@ -246,7 +234,6 @@ async def update_report_content(id: int, request: Request):
         content = data.get('content', '')
         report = database.get_report_content(id)
         if report:
-            # Update the report content
             db = database.SessionLocal()
             try:
                 db_report = db.query(database.ReportDB).filter(database.ReportDB.id == id).first()
@@ -267,7 +254,6 @@ class MergeHookRequest(BaseModel):
 @app.post("/api/merge-hook")
 async def merge_hook(data: MergeHookRequest):
     try:
-        # Use AI to intelligently merge hook content into report
         system_prompt = """You are an AI assistant that helps merge research points (hooks) into academic reports.
 Your task is to intelligently insert the provided hook content into the appropriate section of the report.
 Maintain the report's structure and formatting. Add the hook content where it fits best contextually.
@@ -286,7 +272,6 @@ Hook Content to Merge:
 
 Please merge the hook content into the report intelligently, maintaining proper structure and flow."""
         
-        # Use the chat engine to get AI response
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}

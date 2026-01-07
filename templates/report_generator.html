@@ -148,7 +148,6 @@
     function updateFileName(input) {
         const span = document.getElementById('file-name');
         if(input.files && input.files.length > 0) {
-            // Display Count for multiple files
             span.innerText = `${input.files.length} FILE${input.files.length > 1 ? 'S' : ''} SELECTED`;
             span.style.color = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary');
         } else {
@@ -167,7 +166,6 @@
         if(document.getElementById('custom-format-input').value) formData.append('format_content', document.getElementById('custom-format-input').value);
         formData.append('page_count', document.getElementById('page-select').value);
         
-        // Loop for multiple files
         const fileInput = document.getElementById('pdf-upload');
         for (const file of fileInput.files) {
             formData.append('pdf_files', file);

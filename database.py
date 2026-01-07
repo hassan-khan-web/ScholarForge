@@ -4,7 +4,6 @@ from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, F
 from sqlalchemy.orm import sessionmaker, relationship, declarative_base
 from sqlalchemy.engine import Engine
 
-# 1. SETUP
 DB_FOLDER = os.path.join(os.path.dirname(__file__), "data")
 if not os.path.exists(DB_FOLDER):
     os.makedirs(DB_FOLDER, exist_ok=True)
@@ -66,16 +65,13 @@ class Hook(Base):
     content = Column(Text)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-# 3. INIT
 def init_db():
     try:
         Base.metadata.create_all(bind=engine)
     except Exception as e:
         print(f"DB Init Error: {e}")
 
-# 4. CRUD OPERATIONS
 
-# --- FOLDERS ---
 def create_folder(name: str):
     db = SessionLocal()
     try:
@@ -132,7 +128,6 @@ def get_folders_with_sessions():
     finally:
         db.close()
 
-# --- SESSIONS ---
 def create_chat_session(folder_id: int, title: str):
     db = SessionLocal()
     try:
@@ -184,7 +179,6 @@ def save_chat_message(session_id: int, role: str, content: str):
     finally:
         db.close()
 
-# --- REPORTS ---
 def save_report(topic: str, content: str):
     db = SessionLocal()
     try:
