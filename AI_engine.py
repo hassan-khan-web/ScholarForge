@@ -18,8 +18,8 @@ import fitz
 
 from report_formats import get_template_instructions
 
-SMART_MODEL = "x-ai/grok-4.1-fast:free"
-BACKUP_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+SMART_MODEL = "qwen/qwen3-coder:free"
+BACKUP_MODEL = "mistralai/devstral-2512:free"
 
 SEARCH_RESULTS_COUNT = 10
 MAX_RESULTS_TO_SCRAPE = 4
@@ -174,6 +174,29 @@ def recursive_gap_analysis(section_title: str, existing_summary: str, topic: str
     print(f"    >>> RECURSIVE SEARCH TRIGGERED: {new_query}")
     return get_search_results(new_query, max_results=2)
 
+def assess_search_need(query: str, existing_context: str) -> str:
+    """Feature: Check if we actually need to search the web."""
+    print(f"    > Assessing search need for: {query}")
+    prompt = (
+        f"Query: '{query}'\n"
+        f"Existing Context Length: {len(existing_context)} chars\n"
+        f"Existing Context Preview: {existing_context[:1000]}\n\n"
+        "DECISION: To write a high-quality, detailed report on this, do we STRICTLY need external live web search data?\n"
+        "Criteria:\n"
+        "- If it is a well-known topic (history, science, standard concepts) or purely creative -> NO.\n"
+        "- If the provided Context answers it -> NO.\n"
+        "- If it requires REAL-TIME news, specific recent data (post-2023), or obscure info -> YES.\n\n"
+        "OUTPUT:\n"
+        "- If NO (we can skip search): Output 'SKIP_SEARCH'.\n"
+        "- If YES (we need search): Output a specific, optimized Google Search Query."
+    )
+    decision = call_llm(SMART_MODEL, "You are a Research Director.", prompt, temp=0.1)
+    
+    clean_decision = decision.strip().replace('"', '')
+    if 'SKIP_SEARCH' in clean_decision:
+        return 'SKIP_SEARCH'
+    return clean_decision
+
 def generate_summary(search_content: str, topic: str, user_pdf_text: str = "") -> str:
     context = search_content
     if user_pdf_text:
@@ -182,7 +205,7 @@ def generate_summary(search_content: str, topic: str, user_pdf_text: str = "") -
     return call_llm(
         SMART_MODEL,
         "You are a Senior Research Analyst.",
-        f"Topic: {topic}\n\nData:\n{context[:35000]}\n\nTask: Synthesize a master summary of key facts, numbers, and sources. Group them by themes."
+        f"Topic: {topic}\n\nData:\n{context[:35000]}\n\nTask: Synthesize a master summary of key facts, numbers, and sources. Group them by themes.\nIMPORTANT: If the Data seems empty or insufficient, rely on your extensive INTERNAL KNOWLEDGE to generate the summary."
     )
 
 def generate_outline(topic: str, summary: str, format_type: str, target_pages: int) -> list:
@@ -277,8 +300,17 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
         user_pdf_text = extract_text_from_multiple_pdfs(pdf_bytes_list)
         _update_status(f"    > Analyzed {len(pdf_bytes_list)} uploaded documents.")
 
-    _update_status("Step 2/7: Global Search (Deep Reading)...")
-    search_content = get_search_results(query)
+    _update_status("Step 2/7: Checking Information Needs...")
+    
+    search_decision = assess_search_need(query, user_pdf_text)
+    
+    search_content = ""
+    if search_decision == 'SKIP_SEARCH':
+        _update_status("    > Sufficient internal/provided info. Skipping Web Search.")
+        search_content = "[Internal Knowledge & User Documents Mode Active - Web Search Skipped]"
+    else:
+        _update_status(f"    > Web Search Required: {search_decision}")
+        search_content = get_search_results(search_decision)
     
     _update_status("Step 3/7: Synthesizing Data...")
     summary = generate_summary(search_content, query, user_pdf_text)
