@@ -67,6 +67,10 @@ async def index(request: Request):
 async def chat_page(request: Request):
     return templates.TemplateResponse('ai_assistant.html', {"request": request})
 
+@app.get("/search")
+async def search_page(request: Request):
+    return templates.TemplateResponse('search.html', {"request": request})
+
 @app.post("/api/system/reset-db")
 def reset_database():
     try:

@@ -1,5 +1,5 @@
 import os
-import serpapi
+from serpapi import GoogleSearch
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 import httpx
@@ -130,8 +130,17 @@ def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> s
     try:
         api_key = os.environ.get("SERPAPI_KEY") 
         if not api_key: return "Error: SERPAPI_KEY not set."
-        client = serpapi.Client(api_key=api_key)
-        results = client.search({"q": query, "location": "US", "hl": "en", "gl": "us", "num": 5, "engine": "google"})
+        params = {
+            "q": query,
+            "location": "US",
+            "hl": "en",
+            "gl": "us",
+            "num": 5,
+            "engine": "google",
+            "api_key": api_key
+        }
+        search = GoogleSearch(params)
+        results = search.get_dict()
         
         formatted_output = "--- VERIFIED SOURCES ---\n"
         

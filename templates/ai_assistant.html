@@ -4,7 +4,7 @@
 <div class="flex-1 flex flex-col h-full relative w-full">
 
     <button id="hook-button-fixed" onclick="handleHookButtonClick()"
-        class="fixed top-4 right-4 z-50 bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-lg border border-[var(--accent-primary)] transition-all transform hover:scale-105 flex items-center gap-2">
+        class="fixed top-16 right-4 z-50 bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-lg border border-[var(--accent-primary)] transition-all transform hover:scale-105 flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
@@ -190,6 +190,17 @@
         const text = chatInput.value.trim();
         if (!text) return;
 
+        // Do not accept trivial / non-important messages from user
+        if (isTrivialMessage(text)) {
+            // Show a short inline assistant message inside the chat indicating refusal
+            if (!hasMessages) { moveInputToBottom(); hasMessages = true; }
+            renderMessage('user', text, false);
+            chatInput.value = '';
+            const botBubble = renderMessage('bot', "Please refrain from sending non-important messages.", false);
+            styleBotContent(botBubble.parentElement.parentElement);
+            return;
+        }
+
         if (!currentSessionId) {
             alert("Please create a folder to store chat research history");
             return;
@@ -218,6 +229,17 @@
             else typewriter(botBubble, data.response);
         } catch (e) { typewriter(botBubble, "Network Error."); }
     };
+
+    function isTrivialMessage(text) {
+        const trivial = ["hi", "hello", "hey", "thanks", "thank you", "ok", "okay", "bye", "good", "lol", "kk", "okey"];
+        const cleaned = text.toLowerCase().replace(/[!?.]/g, '').trim();
+        if (cleaned.length <= 2) return true;
+        if (trivial.includes(cleaned)) return true;
+        // very short messages with <=2 words and <=4 chars each considered trivial
+        const words = cleaned.split(/\s+/);
+        if (words.length <= 2 && words.every(w => w.length <= 4)) return true;
+        return false;
+    }
 
     function renderMessage(role, text, isNew) {
         const div = document.createElement('div');

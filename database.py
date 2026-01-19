@@ -26,7 +26,6 @@ else:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# 2. MODELS
 class ReportDB(Base):
     __tablename__ = "reports"
     id = Column(Integer, primary_key=True, index=True)
@@ -122,7 +121,7 @@ def get_folders_with_sessions():
             result.append({
                 "id": f.id,
                 "name": f.name,
-                "sessions": [{"id": s.id, "title": s.title} for s in sessions]
+                "sessions": [{"id": s.id, "title": s.title, "created_at": s.created_at.strftime("%b %d, %H:%M") if s.created_at else None} for s in sessions]
             })
         return result
     finally:
