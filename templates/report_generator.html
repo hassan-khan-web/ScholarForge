@@ -5,30 +5,7 @@
     style="background-image: radial-gradient(var(--text-main) 1px, transparent 1px); background-size: 24px 24px;">
 </div>
 
-<style>
-    .input-theme {
-        background-color: var(--bg-sidebar);
-        color: var(--text-main);
-        border: 1px solid transparent;
-        transition: all 0.3s ease;
-    }
-
-    .input-theme:focus {
-        background-color: var(--bg-panel);
-        border-color: var(--accent-primary);
-        outline: none;
-    }
-
-    .input-theme option {
-        background-color: var(--bg-panel);
-        color: var(--text-main);
-    }
-
-    .input-theme::placeholder {
-        color: var(--text-muted);
-        opacity: 0.5;
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
 
 <div class="w-full h-full overflow-y-auto custom-scrollbar relative flex flex-col items-center justify-center p-6 z-10">
     <main id="input-section" class="w-full max-w-5xl transition-all duration-500 ease-in-out">
@@ -315,75 +292,10 @@
 </div>
 
 <script>
-    const typeText1 = "AI-Powered "; const typeText2 = "Research Report Generator"; const span1 = document.getElementById('type-accent'); const span2 = document.getElementById('type-main'); let typeIndex = 0;
-    function typeWriter() { if (typeIndex < typeText1.length) { span1.textContent += typeText1.charAt(typeIndex); typeIndex++; setTimeout(typeWriter, 50); } else if (typeIndex < typeText1.length + typeText2.length) { span2.textContent += typeText2.charAt(typeIndex - typeText1.length); typeIndex++; setTimeout(typeWriter, 50); } }
-
-    let currentQuery = ""; let currentReportContent = ""; let currentChartPath = ""; let intervalId;
-    const inputSection = document.getElementById('input-section'); const progressSection = document.getElementById('progress-section'); const resultsContainer = document.getElementById('results-container'); const reportOutput = document.getElementById('report-output'); const resultTopicDisplay = document.getElementById('result-topic-display'); const formatSelect = document.getElementById('format-select'); const customContainer = document.getElementById('custom-format-container'); const customInput = document.getElementById('custom-format-input'); const queryInput = document.getElementById('query'); const pageSelect = document.getElementById('page-select');
-
-    function updateFileName(input) {
-        const span = document.getElementById('file-name');
-        if (input.files && input.files.length > 0) {
-            span.innerText = `${input.files.length} FILE${input.files.length > 1 ? 'S' : ''} SELECTED`;
-            span.style.color = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary');
-        } else {
-            span.innerText = "UPLOAD PDFS";
-            span.style.color = "";
-        }
-    }
-
-    // Callback for format change from global selectCustomOption
-    window.handleFormatChange = function (value) {
-        if (value === 'custom') {
-            customContainer.classList.remove('hidden');
-            setTimeout(() => customInput.focus(), 100);
-        } else {
-            customContainer.classList.add('hidden');
-        }
-    };
-
-    // formatSelect.onchange removed
-
-    document.getElementById('report-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const formData = new FormData();
-        formData.append('query', document.getElementById('query').value);
-        formData.append('format_key', document.getElementById('format-select').value);
-        if (document.getElementById('custom-format-input').value) formData.append('format_content', document.getElementById('custom-format-input').value);
-        formData.append('page_count', document.getElementById('page-select').value);
-
-        const fileInput = document.getElementById('pdf-upload');
-        for (const file of fileInput.files) {
-            formData.append('pdf_files', file);
-        }
-
-        currentQuery = document.getElementById('query').value;
-        inputSection.classList.add('opacity-0', '-translate-x-full');
-        setTimeout(() => { inputSection.classList.add('hidden'); progressSection.classList.remove('hidden'); updateProgressVisuals(1, "Starting research..."); }, 500);
-
-        try {
-            const res = await fetch("{{ url_for('start_report') }}", { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data.task_id) { intervalId = setInterval(() => checkStatus(data.task_id), 3000); } else { alert("Failed: " + (data.error || "Unknown")); resetView(); }
-        } catch (err) { console.error(err); alert("Network error"); resetView(); }
-    };
-
-    function updateProgressVisuals(activeStep, text) { for (let i = 1; i <= 4; i++) { const el = document.getElementById(`step-${i}`); if (!el) continue; el.className = "progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform"; if (i < activeStep) { el.classList.add('opacity-0', '-translate-y-12', 'scale-95', 'z-0'); } else if (i === activeStep) { el.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'z-10'); const textEl = document.getElementById(`step-${i}-text`); if (textEl && text) textEl.innerText = text; } else { el.classList.add('opacity-0', 'translate-y-12', 'scale-95', 'z-0'); } } }
-
-    async function checkStatus(taskId) { try { const res = await fetch(`{{ url_for('report_status', task_id='TASK_ID') }}`.replace('TASK_ID', taskId)); const data = await res.json(); if (data.status === 'SUCCESS') { clearInterval(intervalId); updateProgressVisuals(4, "Done!"); setTimeout(() => { progressSection.classList.add('hidden'); resultsContainer.classList.remove('hidden'); setTimeout(() => resultsContainer.classList.remove('opacity-0'), 100); showResults(data.report_content, data.chart_path); }, 1000); } else if (data.status === 'FAILURE') { clearInterval(intervalId); alert("Error: " + data.error); resetView(); } else { let step = 1; if (data.message) { const msg = data.message.toLowerCase(); if (msg.includes("step 2") || msg.includes("synthesiz")) step = 2; else if (msg.includes("step 3") || msg.includes("writ") || msg.includes("visualiz")) step = 3; else if (msg.includes("step 4") || msg.includes("finaliz")) step = 4; } updateProgressVisuals(step, data.message); } } catch (e) { console.error("Polling error", e); } }
-
-    function showResults(content, chartPath) { currentReportContent = content; currentChartPath = chartPath; resultTopicDisplay.innerText = currentQuery; let html = ""; if (chartPath) { const browserPath = chartPath.replace('/app/static', '/static'); html += `<div class="mb-8 p-4 rounded-xl border flex justify-center" style="background-color: var(--bg-panel); border-color: var(--border-color);"><img src="${browserPath}" class="rounded-lg shadow-lg max-h-[400px]"></div>`; } html += marked.parse(content); reportOutput.innerHTML = html; styleReportOutput(); }
-
-    function styleReportOutput() { const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary'); const textMain = getComputedStyle(document.documentElement).getPropertyValue('--text-main'); const textMuted = getComputedStyle(document.documentElement).getPropertyValue('--text-muted'); const border = getComputedStyle(document.documentElement).getPropertyValue('--border-color'); reportOutput.querySelectorAll('h1').forEach(h => { h.className = 'text-3xl font-bold mt-8 mb-4 border-b pb-2'; h.style.color = accent; h.style.borderColor = border; }); reportOutput.querySelectorAll('h2').forEach(h => { h.className = 'text-2xl font-bold mt-6 mb-3'; h.style.color = textMain; }); reportOutput.querySelectorAll('h3').forEach(h => { h.className = 'text-xl font-semibold mt-4 mb-2'; h.style.color = textMain; }); reportOutput.querySelectorAll('p').forEach(p => { p.className = 'mb-4 leading-relaxed'; p.style.color = textMuted; }); reportOutput.querySelectorAll('ul, ol').forEach(list => { list.className = 'list-disc pl-6 mb-4 space-y-1'; list.style.color = textMuted; }); reportOutput.querySelectorAll('blockquote').forEach(b => { b.className = 'border-l-4 pl-4 py-1 italic my-4 rounded-r'; b.style.borderColor = accent; b.style.backgroundColor = 'var(--hover-bg)'; b.style.color = textMuted; }); reportOutput.querySelectorAll('table').forEach(t => t.className = 'w-full text-left border-collapse my-6'); reportOutput.querySelectorAll('th').forEach(t => { t.className = 'border-b p-2 font-semibold'; t.style.borderColor = border; t.style.color = accent; }); reportOutput.querySelectorAll('td').forEach(t => { t.className = 'border-b p-2 text-sm'; t.style.borderColor = border; }); }
-
-    function resetView() { resultsContainer.classList.add('hidden', 'opacity-0'); progressSection.classList.add('hidden'); inputSection.classList.remove('hidden', 'opacity-0', '-translate-x-full'); queryInput.value = ""; }
-
-    window.downloadFile = function (format) { document.getElementById('dl-content').value = currentReportContent; document.getElementById('dl-topic').value = currentQuery; document.getElementById('dl-format').value = format; if (currentChartPath) document.getElementById('dl-chart-path').value = currentChartPath; document.getElementById('download-form').submit(); };
-    window.copyToClipboard = function () { if (!currentReportContent) return; navigator.clipboard.writeText(currentReportContent).then(() => alert("Copied!")); };
-
-    async function fetchAndDisplayReport(id) { inputSection.classList.add('hidden'); progressSection.classList.remove('hidden'); updateProgressVisuals(4, "Loading..."); try { const res = await fetch(`/api/report/${id}`); const data = await res.json(); if (data.content) { currentQuery = data.topic; setTimeout(() => { progressSection.classList.add('hidden'); resultsContainer.classList.remove('hidden'); setTimeout(() => resultsContainer.classList.remove('opacity-0'), 100); showResults(data.content, null); }, 300); } else { alert("Report not found."); resetView(); } } catch (e) { console.error(e); alert("Error loading report."); resetView(); } }
-
-    window.addEventListener('scholarforge:view-report', (e) => { fetchAndDisplayReport(e.detail.reportId); });
-    document.addEventListener('DOMContentLoaded', () => { const urlParams = new URLSearchParams(window.location.search); const reportId = urlParams.get('view_report'); if (reportId) { window.history.replaceState({}, document.title, "/"); fetchAndDisplayReport(reportId); } else { setTimeout(typeWriter, 500); } });
+    // Configure global variables for external scripts
+    window.START_REPORT_URL = "{{ url_for('start_report') }}";
+    // Use a placeholder that we replace in JS
+    window.REPORT_STATUS_URL_TEMPLATE = "{{ url_for('report_status', task_id='TASK_ID_PLACEHOLDER') }}";
 </script>
+<script src="{{ url_for('static', filename='js/report.js') }}"></script>
 {% endblock %}

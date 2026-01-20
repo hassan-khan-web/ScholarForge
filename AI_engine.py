@@ -267,7 +267,7 @@ def write_section(section_title: str, topic: str, summary: str, full_report_cont
 
 def generate_chart_from_data(summary: str, topic: str) -> str:
     try:
-        chart_dir = "/app/static/charts"
+        chart_dir = os.path.join("static", "charts")
         if not os.path.exists(chart_dir): os.makedirs(chart_dir, exist_ok=True)
         clean_name = re.sub(r'\W+', '', topic)[:15] 
         filename = f"chart_{clean_name}_{os.urandom(4).hex()}.png"
