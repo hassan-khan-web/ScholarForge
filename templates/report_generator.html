@@ -1,131 +1,307 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<div class="absolute inset-0 z-0 opacity-[0.03]" 
-     style="background-image: radial-gradient(var(--text-main) 1px, transparent 1px); background-size: 24px 24px;">
+<div class="absolute inset-0 z-0 opacity-[0.03]"
+    style="background-image: radial-gradient(var(--text-main) 1px, transparent 1px); background-size: 24px 24px;">
 </div>
 
 <style>
     .input-theme {
-        background-color: var(--bg-sidebar); color: var(--text-main); border: 1px solid transparent; transition: all 0.3s ease;
+        background-color: var(--bg-sidebar);
+        color: var(--text-main);
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
     }
-    .input-theme:focus { background-color: var(--bg-panel); border-color: var(--accent-primary); outline: none; }
-    .input-theme option { background-color: var(--bg-panel); color: var(--text-main); }
-    .input-theme::placeholder { color: var(--text-muted); opacity: 0.5; }
+
+    .input-theme:focus {
+        background-color: var(--bg-panel);
+        border-color: var(--accent-primary);
+        outline: none;
+    }
+
+    .input-theme option {
+        background-color: var(--bg-panel);
+        color: var(--text-main);
+    }
+
+    .input-theme::placeholder {
+        color: var(--text-muted);
+        opacity: 0.5;
+    }
 </style>
 
 <div class="w-full h-full overflow-y-auto custom-scrollbar relative flex flex-col items-center justify-center p-6 z-10">
     <main id="input-section" class="w-full max-w-5xl transition-all duration-500 ease-in-out">
         <div class="mb-8 text-center h-12 flex items-center justify-center">
             <h1 class="text-4xl md:text-5xl font-mono font-bold tracking-tight whitespace-nowrap">
-                <span id="type-accent" style="color: var(--accent-primary);"></span><span id="type-main" style="color: var(--text-main);"></span><span id="cursor" class="animate-pulse" style="color: var(--accent-primary);">_</span>
+                <span id="type-accent" style="color: var(--accent-primary);"></span><span id="type-main"
+                    style="color: var(--text-main);"></span><span id="cursor" class="animate-pulse"
+                    style="color: var(--accent-primary);">_</span>
             </h1>
         </div>
 
-        <div class="rounded-xl overflow-hidden shadow-2xl flex flex-col md:flex-row border" style="background-color: var(--bg-panel); border-color: var(--border-color);">
-            <div class="md:w-2/5 p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r" style="background-color: var(--bg-sidebar); border-color: var(--border-color);">
+        <div class="rounded-xl overflow-hidden shadow-2xl flex flex-col md:flex-row border"
+            style="background-color: var(--bg-panel); border-color: var(--border-color);">
+            <div class="md:w-2/5 p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r"
+                style="background-color: var(--bg-sidebar); border-color: var(--border-color);">
                 <div>
                     <div class="flex items-center gap-2 mb-6">
                         <div class="w-2 h-8 rounded-full" style="background-color: var(--accent-primary);"></div>
                         <h1 class="text-2xl font-bold tracking-tight" style="color: var(--text-main);">ScholarForge</h1>
                     </div>
-                    <p class="text-sm leading-relaxed mb-8" style="color: var(--text-muted);">Initialize a deep-dive research agent. Configure your parameters on the right to generate comprehensive analysis.</p>
+                    <p class="text-sm leading-relaxed mb-8" style="color: var(--text-muted);">Initialize a deep-dive
+                        research agent. Configure your parameters on the right to generate comprehensive analysis.</p>
                     <div class="space-y-4">
-                        <div class="flex items-center gap-3 text-xs font-mono" style="color: var(--text-muted);"><span class="w-2 h-2 rounded-full bg-green-500"></span><span>System Online</span></div>
-                        <div class="flex items-center gap-3 text-xs font-mono" style="color: var(--text-muted);"><span class="w-2 h-2 rounded-full" style="background-color: var(--accent-primary);"></span><span>GPT-4 / Claude / Llama Ready</span></div>
-                        <div class="flex items-center gap-3 text-xs font-mono" style="color: var(--text-muted);"><span class="w-2 h-2 rounded-full bg-yellow-500"></span><span>Live Web Search Enabled</span></div>
+                        <div class="flex items-center gap-3 text-xs font-mono" style="color: var(--text-muted);"><span
+                                class="w-2 h-2 rounded-full bg-green-500"></span><span>System Online</span></div>
+                        <div class="flex items-center gap-3 text-xs font-mono" style="color: var(--text-muted);"><span
+                                class="w-2 h-2 rounded-full"
+                                style="background-color: var(--accent-primary);"></span><span>GPT-4 / Claude / Llama
+                                Ready</span></div>
+                        <div class="flex items-center gap-3 text-xs font-mono" style="color: var(--text-muted);"><span
+                                class="w-2 h-2 rounded-full bg-yellow-500"></span><span>Live Web Search Enabled</span>
+                        </div>
                     </div>
                 </div>
                 <div class="mt-8 md:mt-0 pt-6 border-t border-[var(--border-color)]">
-                    <p class="text-[10px] uppercase tracking-widest font-bold mb-2" style="color: var(--text-muted);">Recent Capability</p>
-                    <div class="text-xs" style="color: var(--text-main);">Added support for <span style="color: var(--accent-primary);">Multiple PDFs</span> and <span style="color: var(--accent-primary);">Recursive Research</span>.</div>
+                    <p class="text-[10px] uppercase tracking-widest font-bold mb-2" style="color: var(--text-muted);">
+                        Recent Capability</p>
+                    <div class="text-xs" style="color: var(--text-main);">Added support for <span
+                            style="color: var(--accent-primary);">Multiple PDFs</span> and <span
+                            style="color: var(--accent-primary);">Recursive Research</span>.</div>
                 </div>
             </div>
 
             <form id="report-form" class="md:w-3/5 p-8 flex flex-col gap-6">
                 <div class="group">
-                    <label for="query" class="block text-xs font-mono uppercase mb-2" style="color: var(--accent-primary);">// Research Objective</label>
+                    <label for="query" class="block text-xs font-mono uppercase mb-2"
+                        style="color: var(--accent-primary);">// Research Objective</label>
                     <div class="relative">
-                        <input type="text" id="query" name="query" class="w-full bg-transparent border-b-2 py-3 text-lg focus:outline-none transition-colors placeholder-opacity-50" style="color: var(--text-main); border-color: var(--border-color); caret-color: var(--accent-primary);" placeholder="Enter research topic..." required autocomplete="off" onfocus="this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary')" onblur="this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color')">
+                        <input type="text" id="query" name="query"
+                            class="w-full bg-transparent border-b-2 py-3 text-lg focus:outline-none transition-colors placeholder-opacity-50"
+                            style="color: var(--text-main); border-color: var(--border-color); caret-color: var(--accent-primary);"
+                            placeholder="Enter research topic..." required autocomplete="off"
+                            onfocus="this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary')"
+                            onblur="this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color')">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-mono uppercase mb-2" style="color: var(--text-muted);">Type</label>
-                        <div class="relative group">
-                            <select id="format-select" class="w-full pl-10 pr-8 py-3 text-sm font-medium rounded-lg appearance-none cursor-pointer shadow-sm hover:shadow-md input-theme">
-                                <option value="literature_review">Literature Review</option>
-                                <option value="case_study">Case Study</option>
-                                <option value="business_white_paper">White Paper</option>
-                                <option value="technical_manual">Tech Manual</option>
-                                <option value="journalistic_article">News Article</option>
-                                <option value="custom">Custom...</option>
-                            </select>
-                            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color: var(--accent-primary);"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 transition-transform group-hover:translate-y-0.5" style="color: var(--text-muted);"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                        <label class="block text-xs font-mono uppercase mb-2"
+                            style="color: var(--text-muted);">Type</label>
+                        <div class="relative group custom-select-container">
+                            <input type="hidden" id="format-select" value="literature_review">
+                            <button type="button" onclick="toggleCustomSelect('format-select')"
+                                class="custom-select-trigger w-full pl-4 pr-4 py-3 text-sm font-medium rounded-lg shadow-sm hover:shadow-md input-theme flex justify-between items-center gap-2">
+                                <span id="format-select-trigger-text">Literature Review</span>
+                                <svg class="w-4 h-4 text-[var(--accent-primary)]" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <div id="format-select-options" class="custom-select-options">
+                                <div class="custom-option selected" data-value="literature_review"
+                                    onclick="selectCustomOption('literature_review', 'Literature Review', 'format-select', 'handleFormatChange')">
+                                    <span>Literature Review</span>
+                                </div>
+                                <div class="custom-option" data-value="case_study"
+                                    onclick="selectCustomOption('case_study', 'Case Study', 'format-select', 'handleFormatChange')">
+                                    <span>Case Study</span>
+                                </div>
+                                <div class="custom-option" data-value="business_white_paper"
+                                    onclick="selectCustomOption('business_white_paper', 'White Paper', 'format-select', 'handleFormatChange')">
+                                    <span>White Paper</span>
+                                </div>
+                                <div class="custom-option" data-value="technical_manual"
+                                    onclick="selectCustomOption('technical_manual', 'Tech Manual', 'format-select', 'handleFormatChange')">
+                                    <span>Tech Manual</span>
+                                </div>
+                                <div class="custom-option" data-value="journalistic_article"
+                                    onclick="selectCustomOption('journalistic_article', 'News Article', 'format-select', 'handleFormatChange')">
+                                    <span>News Article</span>
+                                </div>
+                                <div class="custom-option" data-value="custom"
+                                    onclick="selectCustomOption('custom', 'Custom...', 'format-select', 'handleFormatChange')">
+                                    <span>Custom...</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-mono uppercase mb-2" style="color: var(--text-muted);">Scope</label>
-                        <div class="relative group">
-                            <select id="page-select" class="w-full pl-10 pr-8 py-3 text-sm font-medium rounded-lg appearance-none cursor-pointer shadow-sm hover:shadow-md input-theme">
-                                <option value="4">Brief (4 Pages)</option>
-                                <option value="8" selected>Standard (8 Pages)</option>
-                                <option value="14">Deep Dive (14 Pages)</option>
-                                <option value="20">Comprehensive (20 Pages)</option>
-                                <option value="30">Monograph (30+ Pages)</option>
-                            </select>
-                            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="color: var(--accent-primary);"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 transition-transform group-hover:translate-y-0.5" style="color: var(--text-muted);"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                        <label class="block text-xs font-mono uppercase mb-2"
+                            style="color: var(--text-muted);">Scope</label>
+                        <div class="relative group custom-select-container">
+                            <input type="hidden" id="page-select" value="8">
+                            <button type="button" onclick="toggleCustomSelect('page-select')"
+                                class="custom-select-trigger w-full pl-4 pr-4 py-3 text-sm font-medium rounded-lg shadow-sm hover:shadow-md input-theme flex justify-between items-center gap-2">
+                                <span id="page-select-trigger-text">Standard (8 Pages)</span>
+                                <svg class="w-4 h-4 text-[var(--accent-primary)]" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <div id="page-select-options" class="custom-select-options">
+                                <div class="custom-option" data-value="4"
+                                    onclick="selectCustomOption('4', 'Brief (4 Pages)', 'page-select')">
+                                    <span>Brief (4 Pages)</span>
+                                </div>
+                                <div class="custom-option selected" data-value="8"
+                                    onclick="selectCustomOption('8', 'Standard (8 Pages)', 'page-select')">
+                                    <span>Standard (8 Pages)</span>
+                                </div>
+                                <div class="custom-option" data-value="14"
+                                    onclick="selectCustomOption('14', 'Deep Dive (14 Pages)', 'page-select')">
+                                    <span>Deep Dive (14 Pages)</span>
+                                </div>
+                                <div class="custom-option" data-value="20"
+                                    onclick="selectCustomOption('20', 'Comprehensive (20 Pages)', 'page-select')">
+                                    <span>Comprehensive (20 Pages)</span>
+                                </div>
+                                <div class="custom-option" data-value="30"
+                                    onclick="selectCustomOption('30', 'Monograph (30+ Pages)', 'page-select')">
+                                    <span>Monograph (30+ Pages)</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="group">
-                    <label class="block text-xs font-mono uppercase mb-2" style="color: var(--text-muted);">Context Material (Optional)</label>
-                    <label for="pdf-upload" class="flex w-full cursor-pointer items-center justify-center gap-2 px-4 py-3 rounded-lg border border-dashed transition-all hover:bg-[var(--hover-bg)]" style="border-color: var(--border-color); color: var(--text-muted);" onmouseover="this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary'); this.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-main');" onmouseout="this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color'); this.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-muted');">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                    <label class="block text-xs font-mono uppercase mb-2" style="color: var(--text-muted);">Context
+                        Material (Optional)</label>
+                    <label for="pdf-upload"
+                        class="flex w-full cursor-pointer items-center justify-center gap-2 px-4 py-3 rounded-lg border border-dashed transition-all hover:bg-[var(--hover-bg)]"
+                        style="border-color: var(--border-color); color: var(--text-muted);"
+                        onmouseover="this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary'); this.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-main');"
+                        onmouseout="this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color'); this.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-muted');">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13">
+                            </path>
+                        </svg>
                         <span id="file-name" class="text-xs font-bold uppercase tracking-wider">Upload PDFs</span>
-                        <input type="file" id="pdf-upload" name="pdf_files" accept=".pdf" class="hidden" multiple onchange="updateFileName(this)">
+                        <input type="file" id="pdf-upload" name="pdf_files" accept=".pdf" class="hidden" multiple
+                            onchange="updateFileName(this)">
                     </label>
                 </div>
 
                 <div id="custom-format-container" class="hidden transition-all duration-300">
-                    <label class="block text-xs font-mono uppercase mb-2" style="color: var(--text-muted);">Blueprint Logic</label>
-                    <textarea id="custom-format-input" rows="2" class="w-full px-4 py-3 text-sm font-mono rounded-lg custom-scrollbar input-theme" placeholder="# 1. Overview..."></textarea>
+                    <label class="block text-xs font-mono uppercase mb-2" style="color: var(--text-muted);">Blueprint
+                        Logic</label>
+                    <textarea id="custom-format-input" rows="2"
+                        class="w-full px-4 py-3 text-sm font-mono rounded-lg custom-scrollbar input-theme"
+                        placeholder="# 1. Overview..."></textarea>
                 </div>
 
                 <div class="mt-auto pt-4 flex justify-end">
-                    <button type="submit" id="submit-btn" class="px-8 py-3 rounded text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:opacity-90 active:scale-95 flex items-center gap-2 transform hover:-translate-y-0.5" style="background-color: var(--accent-primary);"><span>Run Sequence</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg></button>
+                    <button type="submit" id="submit-btn"
+                        class="px-8 py-3 rounded text-sm font-bold uppercase tracking-wider text-white shadow-lg transition-all hover:opacity-90 active:scale-95 flex items-center gap-2 transform hover:-translate-y-0.5"
+                        style="background-color: var(--accent-primary);"><span>Run Sequence</span><svg class="w-4 h-4"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg></button>
                 </div>
             </form>
         </div>
     </main>
 
-    <div id="progress-section" class="hidden absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 z-20 bg-[var(--bg-main)] overflow-hidden">
-        <div id="step-1" class="progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform translate-y-12 opacity-0 scale-95"><div class="w-14 h-14 rounded-full border-[3px] border-t-transparent animate-spin mb-4" style="border-color: var(--border-color); border-top-color: var(--accent-primary);"></div><h2 class="text-2xl font-bold mb-1" style="color: var(--text-main);">Analyzing Topic</h2><p class="text-sm" style="color: var(--accent-primary);" id="step-1-text">Searching...</p></div>
-        <div id="step-2" class="progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform translate-y-12 opacity-0 scale-95"><div class="w-14 h-14 rounded-full border-2 flex items-center justify-center mb-4" style="background-color: var(--bg-panel); border-color: #a855f7;"><svg class="w-7 h-7 animate-pulse" style="color: #a855f7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg></div><h2 class="text-2xl font-bold mb-1" style="color: var(--text-main);">Planning</h2><p class="text-sm" style="color: #a855f7;" id="step-2-text">Structuring...</p></div>
-        <div id="step-3" class="progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform translate-y-12 opacity-0 scale-95"><div class="w-14 h-14 rounded-full border-2 flex items-center justify-center mb-4" style="background-color: var(--bg-panel); border-color: #22c55e;"><svg class="w-7 h-7 animate-bounce" style="color: #22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></div><h2 class="text-2xl font-bold mb-1" style="color: var(--text-main);">Drafting</h2><p class="text-sm" style="color: #22c55e;" id="step-3-text">Writing...</p></div>
-        <div id="step-4" class="progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform translate-y-12 opacity-0 scale-95"><div class="w-14 h-14 rounded-full border-2 flex items-center justify-center mb-4" style="background-color: var(--bg-panel); border-color: #06b6d4;"><svg class="w-7 h-7" style="color: #06b6d4;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><h2 class="text-2xl font-bold mb-1" style="color: var(--text-main);">Finalizing</h2><p class="text-sm" style="color: #06b6d4;" id="step-4-text">Formatting...</p></div>
+    <div id="progress-section"
+        class="hidden absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 z-20 bg-[var(--bg-main)] overflow-hidden">
+        <div id="step-1"
+            class="progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform translate-y-12 opacity-0 scale-95">
+            <div class="w-14 h-14 rounded-full border-[3px] border-t-transparent animate-spin mb-4"
+                style="border-color: var(--border-color); border-top-color: var(--accent-primary);"></div>
+            <h2 class="text-2xl font-bold mb-1" style="color: var(--text-main);">Analyzing Topic</h2>
+            <p class="text-sm" style="color: var(--accent-primary);" id="step-1-text">Searching...</p>
+        </div>
+        <div id="step-2"
+            class="progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform translate-y-12 opacity-0 scale-95">
+            <div class="w-14 h-14 rounded-full border-2 flex items-center justify-center mb-4"
+                style="background-color: var(--bg-panel); border-color: #a855f7;"><svg class="w-7 h-7 animate-pulse"
+                    style="color: #a855f7;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg></div>
+            <h2 class="text-2xl font-bold mb-1" style="color: var(--text-main);">Planning</h2>
+            <p class="text-sm" style="color: #a855f7;" id="step-2-text">Structuring...</p>
+        </div>
+        <div id="step-3"
+            class="progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform translate-y-12 opacity-0 scale-95">
+            <div class="w-14 h-14 rounded-full border-2 flex items-center justify-center mb-4"
+                style="background-color: var(--bg-panel); border-color: #22c55e;"><svg class="w-7 h-7 animate-bounce"
+                    style="color: #22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg></div>
+            <h2 class="text-2xl font-bold mb-1" style="color: var(--text-main);">Drafting</h2>
+            <p class="text-sm" style="color: #22c55e;" id="step-3-text">Writing...</p>
+        </div>
+        <div id="step-4"
+            class="progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform translate-y-12 opacity-0 scale-95">
+            <div class="w-14 h-14 rounded-full border-2 flex items-center justify-center mb-4"
+                style="background-color: var(--bg-panel); border-color: #06b6d4;"><svg class="w-7 h-7"
+                    style="color: #06b6d4;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg></div>
+            <h2 class="text-2xl font-bold mb-1" style="color: var(--text-main);">Finalizing</h2>
+            <p class="text-sm" style="color: #06b6d4;" id="step-4-text">Formatting...</p>
+        </div>
     </div>
 
-    <div id="results-container" class="hidden flex-col w-full min-h-full transition-opacity duration-700" style="background-color: var(--bg-main);">
-        <div id="result-bar" class="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 sticky top-0 z-40 backdrop-blur-md border-b" style="background-color: var(--bg-sidebar); border-color: var(--border-color);">
+    <div id="results-container" class="hidden flex-col w-full min-h-full transition-opacity duration-700"
+        style="background-color: var(--bg-main);">
+        <div id="result-bar"
+            class="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 sticky top-0 z-40 backdrop-blur-md border-b"
+            style="background-color: var(--bg-sidebar); border-color: var(--border-color);">
             <div class="flex items-center gap-3">
-                <div class="p-2 rounded-lg bg-green-500/10"><svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
-                <div><h3 class="font-medium text-sm" style="color: var(--text-main);">Report Generated</h3><p class="text-xs" style="color: var(--text-muted);" id="result-topic-display">Topic</p></div>
+                <div class="p-2 rounded-lg bg-green-500/10"><svg class="h-5 w-5 text-green-500" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg></div>
+                <div>
+                    <h3 class="font-medium text-sm" style="color: var(--text-main);">Report Generated</h3>
+                    <p class="text-xs" style="color: var(--text-muted);" id="result-topic-display">Topic</p>
+                </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="copyToClipboard()" class="px-3 py-2 rounded-lg border transition-colors" style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-muted);" onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text-main')" onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text-muted')"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
-                <button onclick="downloadFile('pdf')" class="px-4 py-2 text-xs font-medium rounded-lg border transition-colors" style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-main);">PDF</button>
-                <button onclick="downloadFile('docx')" class="px-4 py-2 text-xs font-medium rounded-lg border transition-colors" style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-main);">DOCX</button>
-                <button onclick="downloadFile('txt')" class="px-4 py-2 text-xs font-medium rounded-lg border transition-colors" style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-main);">TXT</button>
-                <button onclick="downloadFile('md')" class="px-4 py-2 text-xs font-medium rounded-lg border transition-colors" style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-main);">MD</button>
-                <button onclick="resetView()" class="px-4 py-2 text-white text-xs font-medium rounded-lg transition-colors shadow-lg" style="background-color: var(--accent-primary);">New Report</button>
+                <button onclick="copyToClipboard()" class="px-3 py-2 rounded-lg border transition-colors"
+                    style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-muted);"
+                    onmouseover="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text-main')"
+                    onmouseout="this.style.color=getComputedStyle(document.documentElement).getPropertyValue('--text-muted')"><svg
+                        class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                        </path>
+                    </svg></button>
+                <button onclick="downloadFile('pdf')"
+                    class="px-4 py-2 text-xs font-medium rounded-lg border transition-colors"
+                    style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-main);">PDF</button>
+                <button onclick="downloadFile('docx')"
+                    class="px-4 py-2 text-xs font-medium rounded-lg border transition-colors"
+                    style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-main);">DOCX</button>
+                <button onclick="downloadFile('txt')"
+                    class="px-4 py-2 text-xs font-medium rounded-lg border transition-colors"
+                    style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-main);">TXT</button>
+                <button onclick="downloadFile('md')"
+                    class="px-4 py-2 text-xs font-medium rounded-lg border transition-colors"
+                    style="background-color: var(--bg-panel); border-color: var(--border-color); color: var(--text-main);">MD</button>
+                <button onclick="resetView()"
+                    class="px-4 py-2 text-white text-xs font-medium rounded-lg transition-colors shadow-lg"
+                    style="background-color: var(--accent-primary);">New Report</button>
             </div>
         </div>
-        <div class="max-w-5xl mx-auto px-6 py-8 w-full"><article id="report-output" class="prose prose-invert prose-sm md:prose-base max-w-none" style="color: var(--text-main);"></article></div>
+        <div class="max-w-5xl mx-auto px-6 py-8 w-full">
+            <article id="report-output" class="prose prose-invert prose-sm md:prose-base max-w-none"
+                style="color: var(--text-main);"></article>
+        </div>
     </div>
 </div>
 
@@ -147,7 +323,7 @@
 
     function updateFileName(input) {
         const span = document.getElementById('file-name');
-        if(input.files && input.files.length > 0) {
+        if (input.files && input.files.length > 0) {
             span.innerText = `${input.files.length} FILE${input.files.length > 1 ? 'S' : ''} SELECTED`;
             span.style.color = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary');
         } else {
@@ -156,16 +332,26 @@
         }
     }
 
-    formatSelect.onchange = () => { if (formatSelect.value === 'custom') { customContainer.classList.remove('hidden'); setTimeout(() => customInput.focus(), 100); } else { customContainer.classList.add('hidden'); } };
+    // Callback for format change from global selectCustomOption
+    window.handleFormatChange = function (value) {
+        if (value === 'custom') {
+            customContainer.classList.remove('hidden');
+            setTimeout(() => customInput.focus(), 100);
+        } else {
+            customContainer.classList.add('hidden');
+        }
+    };
+
+    // formatSelect.onchange removed
 
     document.getElementById('report-form').onsubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData();
         formData.append('query', document.getElementById('query').value);
         formData.append('format_key', document.getElementById('format-select').value);
-        if(document.getElementById('custom-format-input').value) formData.append('format_content', document.getElementById('custom-format-input').value);
+        if (document.getElementById('custom-format-input').value) formData.append('format_content', document.getElementById('custom-format-input').value);
         formData.append('page_count', document.getElementById('page-select').value);
-        
+
         const fileInput = document.getElementById('pdf-upload');
         for (const file of fileInput.files) {
             formData.append('pdf_files', file);
@@ -178,13 +364,13 @@
         try {
             const res = await fetch("{{ url_for('start_report') }}", { method: 'POST', body: formData });
             const data = await res.json();
-            if(data.task_id) { intervalId = setInterval(() => checkStatus(data.task_id), 3000); } else { alert("Failed: " + (data.error || "Unknown")); resetView(); }
-        } catch(err) { console.error(err); alert("Network error"); resetView(); }
+            if (data.task_id) { intervalId = setInterval(() => checkStatus(data.task_id), 3000); } else { alert("Failed: " + (data.error || "Unknown")); resetView(); }
+        } catch (err) { console.error(err); alert("Network error"); resetView(); }
     };
 
     function updateProgressVisuals(activeStep, text) { for (let i = 1; i <= 4; i++) { const el = document.getElementById(`step-${i}`); if (!el) continue; el.className = "progress-step absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out transform"; if (i < activeStep) { el.classList.add('opacity-0', '-translate-y-12', 'scale-95', 'z-0'); } else if (i === activeStep) { el.classList.add('opacity-100', 'translate-y-0', 'scale-100', 'z-10'); const textEl = document.getElementById(`step-${i}-text`); if (textEl && text) textEl.innerText = text; } else { el.classList.add('opacity-0', 'translate-y-12', 'scale-95', 'z-0'); } } }
 
-    async function checkStatus(taskId) { try { const res = await fetch(`{{ url_for('report_status', task_id='TASK_ID') }}`.replace('TASK_ID', taskId)); const data = await res.json(); if (data.status === 'SUCCESS') { clearInterval(intervalId); updateProgressVisuals(4, "Done!"); setTimeout(() => { progressSection.classList.add('hidden'); resultsContainer.classList.remove('hidden'); setTimeout(() => resultsContainer.classList.remove('opacity-0'), 100); showResults(data.report_content, data.chart_path); }, 1000); } else if (data.status === 'FAILURE') { clearInterval(intervalId); alert("Error: " + data.error); resetView(); } else { let step = 1; if(data.message) { const msg = data.message.toLowerCase(); if(msg.includes("step 2") || msg.includes("synthesiz")) step = 2; else if(msg.includes("step 3") || msg.includes("writ") || msg.includes("visualiz")) step = 3; else if(msg.includes("step 4") || msg.includes("finaliz")) step = 4; } updateProgressVisuals(step, data.message); } } catch(e) { console.error("Polling error", e); } }
+    async function checkStatus(taskId) { try { const res = await fetch(`{{ url_for('report_status', task_id='TASK_ID') }}`.replace('TASK_ID', taskId)); const data = await res.json(); if (data.status === 'SUCCESS') { clearInterval(intervalId); updateProgressVisuals(4, "Done!"); setTimeout(() => { progressSection.classList.add('hidden'); resultsContainer.classList.remove('hidden'); setTimeout(() => resultsContainer.classList.remove('opacity-0'), 100); showResults(data.report_content, data.chart_path); }, 1000); } else if (data.status === 'FAILURE') { clearInterval(intervalId); alert("Error: " + data.error); resetView(); } else { let step = 1; if (data.message) { const msg = data.message.toLowerCase(); if (msg.includes("step 2") || msg.includes("synthesiz")) step = 2; else if (msg.includes("step 3") || msg.includes("writ") || msg.includes("visualiz")) step = 3; else if (msg.includes("step 4") || msg.includes("finaliz")) step = 4; } updateProgressVisuals(step, data.message); } } catch (e) { console.error("Polling error", e); } }
 
     function showResults(content, chartPath) { currentReportContent = content; currentChartPath = chartPath; resultTopicDisplay.innerText = currentQuery; let html = ""; if (chartPath) { const browserPath = chartPath.replace('/app/static', '/static'); html += `<div class="mb-8 p-4 rounded-xl border flex justify-center" style="background-color: var(--bg-panel); border-color: var(--border-color);"><img src="${browserPath}" class="rounded-lg shadow-lg max-h-[400px]"></div>`; } html += marked.parse(content); reportOutput.innerHTML = html; styleReportOutput(); }
 
@@ -192,12 +378,12 @@
 
     function resetView() { resultsContainer.classList.add('hidden', 'opacity-0'); progressSection.classList.add('hidden'); inputSection.classList.remove('hidden', 'opacity-0', '-translate-x-full'); queryInput.value = ""; }
 
-    window.downloadFile = function(format) { document.getElementById('dl-content').value = currentReportContent; document.getElementById('dl-topic').value = currentQuery; document.getElementById('dl-format').value = format; if(currentChartPath) document.getElementById('dl-chart-path').value = currentChartPath; document.getElementById('download-form').submit(); };
-    window.copyToClipboard = function() { if(!currentReportContent) return; navigator.clipboard.writeText(currentReportContent).then(() => alert("Copied!")); };
+    window.downloadFile = function (format) { document.getElementById('dl-content').value = currentReportContent; document.getElementById('dl-topic').value = currentQuery; document.getElementById('dl-format').value = format; if (currentChartPath) document.getElementById('dl-chart-path').value = currentChartPath; document.getElementById('download-form').submit(); };
+    window.copyToClipboard = function () { if (!currentReportContent) return; navigator.clipboard.writeText(currentReportContent).then(() => alert("Copied!")); };
 
-    async function fetchAndDisplayReport(id) { inputSection.classList.add('hidden'); progressSection.classList.remove('hidden'); updateProgressVisuals(4, "Loading..."); try { const res = await fetch(`/api/report/${id}`); const data = await res.json(); if(data.content) { currentQuery = data.topic; setTimeout(() => { progressSection.classList.add('hidden'); resultsContainer.classList.remove('hidden'); setTimeout(() => resultsContainer.classList.remove('opacity-0'), 100); showResults(data.content, null); }, 300); } else { alert("Report not found."); resetView(); } } catch(e) { console.error(e); alert("Error loading report."); resetView(); } }
+    async function fetchAndDisplayReport(id) { inputSection.classList.add('hidden'); progressSection.classList.remove('hidden'); updateProgressVisuals(4, "Loading..."); try { const res = await fetch(`/api/report/${id}`); const data = await res.json(); if (data.content) { currentQuery = data.topic; setTimeout(() => { progressSection.classList.add('hidden'); resultsContainer.classList.remove('hidden'); setTimeout(() => resultsContainer.classList.remove('opacity-0'), 100); showResults(data.content, null); }, 300); } else { alert("Report not found."); resetView(); } } catch (e) { console.error(e); alert("Error loading report."); resetView(); } }
 
     window.addEventListener('scholarforge:view-report', (e) => { fetchAndDisplayReport(e.detail.reportId); });
-    document.addEventListener('DOMContentLoaded', () => { const urlParams = new URLSearchParams(window.location.search); const reportId = urlParams.get('view_report'); if(reportId) { window.history.replaceState({}, document.title, "/"); fetchAndDisplayReport(reportId); } else { setTimeout(typeWriter, 500); } });
+    document.addEventListener('DOMContentLoaded', () => { const urlParams = new URLSearchParams(window.location.search); const reportId = urlParams.get('view_report'); if (reportId) { window.history.replaceState({}, document.title, "/"); fetchAndDisplayReport(reportId); } else { setTimeout(typeWriter, 500); } });
 </script>
 {% endblock %}

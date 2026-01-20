@@ -159,17 +159,15 @@ async def chat(
     files: List[UploadFile] = File(None)
 ):
     try:
-        # Extract text from files if any
         file_context = ""
         if files:
             for file in files:
-                if file.filename: # check if filename is present
+                if file.filename: 
                     file_context += await extract_text_from_file(file)
 
         msgs = database.get_session_messages(session_id)
         ctx = [{"role": m.role, "content": m.content} for m in msgs]
         
-        # Pass new params to chat engine
         resp = await chat_engine.get_chat_response_async(
             user_message=message, 
             history=ctx, 
@@ -178,7 +176,6 @@ async def chat(
             file_context=file_context
         )
         
-        # Save user message (append file note if present)
         user_msg_content = message
         if file_context:
             file_names = ", ".join([f.filename for f in files if f.filename])

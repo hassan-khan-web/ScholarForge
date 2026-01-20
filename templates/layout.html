@@ -494,6 +494,105 @@
         #sidebar.collapsed #sidebar-search-btn {
             display: none;
         }
+
+        /* Shutter Animation & Custom Selects */
+        .shutter-anim {
+            transform-origin: top;
+            transform: scaleY(0);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in;
+            pointer-events: none;
+        }
+
+        .shutter-anim.show {
+            transform: scaleY(1);
+            opacity: 1;
+            pointer-events: auto;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease-out;
+        }
+
+        /* Override existing dropdown-menu display behavior for animation */
+        .dropdown-menu {
+            display: block !important;
+            /* Force block so transform works, control visibility via opacity/scale */
+            transform-origin: top;
+            transform: scaleY(0);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in;
+            pointer-events: none;
+        }
+
+        .dropdown-menu.show {
+            transform: scaleY(1);
+            opacity: 1;
+            pointer-events: auto;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease-out;
+        }
+
+        /* Custom Select Styles */
+        .custom-select-container {
+            position: relative;
+        }
+
+        .custom-select-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .custom-select-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            margin-top: 0.25rem;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+
+            /* Animation base state */
+            transform-origin: top;
+            transform: scaleY(0);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in;
+            pointer-events: none;
+        }
+
+        .custom-select-options.open {
+            /* Open state */
+            transform: scaleY(1);
+            opacity: 1;
+            pointer-events: auto;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease-out;
+        }
+
+        .custom-option {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .custom-option:hover {
+            background-color: var(--hover-bg);
+            color: var(--text-main);
+        }
+
+        .custom-option.selected {
+            color: var(--accent-primary);
+            background-color: var(--active-bg);
+        }
     </style>
 </head>
 
@@ -827,9 +926,68 @@
             const el = document.getElementById(id);
             if (el) el.classList.toggle('show');
         };
-        window.closeAllDropdowns = () => {
+        window.closeAllDropdowns = (e) => {
             document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('show'));
             document.getElementById('global-download-menu').style.display = 'none';
+
+            // Close custom selects if click is outside
+            if (e && !e.target.closest('.custom-select-container')) {
+                document.querySelectorAll('.custom-select-options.open').forEach(el => el.classList.remove('open'));
+            }
+        };
+
+        // Global click listener for closing menus
+        window.onclick = function (event) {
+            // We need to manage closing standard dropdowns vs custom selects
+            // Standard dropdowns rely on explicit function calls often, but let's ensure global click closes them
+            // unless we clicked a trigger (which usually stops propagation)
+
+            closeAllDropdowns(event);
+        };
+
+        // Custom Select Logic
+        window.toggleCustomSelect = function (id) {
+            event.stopPropagation(); // Prevent immediate closing
+            const optionsId = id + '-options';
+            const options = document.getElementById(optionsId);
+
+            // Close others
+            document.querySelectorAll('.custom-select-options.open').forEach(el => {
+                if (el.id !== optionsId) el.classList.remove('open');
+            });
+
+            if (options) {
+                options.classList.toggle('open');
+            }
+        };
+
+        window.selectCustomOption = function (value, text, instanceId, callbackName) {
+            event.stopPropagation();
+            // Update UI
+            const triggerText = document.getElementById(instanceId + '-trigger-text');
+            if (triggerText) triggerText.innerText = text;
+
+            // Update hidden input if exists
+            const hiddenInput = document.getElementById(instanceId);
+            if (hiddenInput) {
+                hiddenInput.value = value;
+                hiddenInput.dispatchEvent(new Event('change'));
+            }
+
+            // Visual selection state
+            const options = document.getElementById(instanceId + '-options');
+            if (options) {
+                options.querySelectorAll('.custom-option').forEach(opt => {
+                    if (opt.dataset.value === value) opt.classList.add('selected');
+                    else opt.classList.remove('selected');
+                });
+                options.classList.remove('open');
+            }
+
+            // Callback if needed (global)
+            if (callbackName && typeof window[callbackName] === 'function') {
+                window[callbackName](value);
+            }
         };
 
         let currentDownloadId = null;

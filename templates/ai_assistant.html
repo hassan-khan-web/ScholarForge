@@ -48,41 +48,71 @@
             </button>
         </div>
 
-        <div id="chat-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 relative">
-            <div class="max-w-3xl mx-auto space-y-4" id="messages-container">
+        <div id="chat-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 relative"
+            style="mask-image: linear-gradient(to bottom, black 75%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent 100%);">
+            <div class="max-w-3xl mx-auto space-y-4 pb-24" id="messages-container">
             </div>
         </div>
 
         <div id="input-container"
-            class="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-out">
+            class="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-out z-20">
             <div id="input-wrapper" class="w-full max-w-3xl px-6 pointer-events-auto">
 
                 <div class="flex items-center gap-3 mb-2 px-1 transition-opacity duration-300" id="chat-settings">
-                    <div class="relative group">
-                        <select id="model-select"
-                            class="appearance-none bg-[var(--bg-panel)] border border-[var(--border-color)] text-[var(--text-muted)] text-xs rounded-lg px-3 py-1.5 pr-8 focus:outline-none focus:border-[var(--accent-primary)] hover:text-[var(--text-main)] cursor-pointer">
-                            <option value="default">Nemotron (Default)</option>
-                            <option value="qwen-80b">Qwen 2.5 72B</option>
-                            <option value="mistral">Mistral Small</option>
-                            <option value="gemini">Gemini 2.0 Flash</option>
-                            <option value="gpt-oss">GPT-4o (OSS)</option>
-                            <option value="gemma">Gemma 2 27B</option>
-                            <option value="deepseek">DeepSeek R1</option>
-                        </select>
-                        <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <svg class="w-3 h-3 text-[var(--text-muted)]" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
+                    <div class="relative group custom-select-container z-40">
+                        <input type="hidden" id="model-select" value="default">
+                        <button type="button" onclick="toggleCustomSelect('model-select')"
+                            class="custom-select-trigger bg-[var(--bg-panel)] border border-[var(--border-color)] text-[var(--text-muted)] text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-[var(--accent-primary)] hover:text-[var(--text-main)] transition-colors shadow-sm gap-2">
+                            <span id="model-select-trigger-text">nvidia/Nemotron</span>
+                            <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
+                        </button>
+
+                        <div id="model-select-options" class="custom-select-options min-w-[160px]">
+                            <div class="custom-option selected" data-value="default"
+                                onclick="selectCustomOption('default', 'nvidia/Nemotron', 'model-select')">
+                                <span>nvidia/Nemotron</span>
+                            </div>
+                            <div class="custom-option" data-value="qwen-80b"
+                                onclick="selectCustomOption('qwen-80b', 'Qwen 2.5 72B', 'model-select')">
+                                <span>Qwen 2.5 72B</span>
+                            </div>
+                            <div class="custom-option" data-value="mistral"
+                                onclick="selectCustomOption('mistral', 'Mistral Small', 'model-select')">
+                                <span>Mistral Small</span>
+                            </div>
+                            <div class="custom-option" data-value="gemini"
+                                onclick="selectCustomOption('gemini', 'Gemini 2.0 Flash', 'model-select')">
+                                <span>Gemini 2.0 Flash</span>
+                            </div>
+                            <div class="custom-option" data-value="gpt-oss"
+                                onclick="selectCustomOption('gpt-oss', 'GPT-4o (OSS)', 'model-select')">
+                                <span>GPT-4o (OSS)</span>
+                            </div>
+                            <div class="custom-option" data-value="gemma"
+                                onclick="selectCustomOption('gemma', 'Gemma 2 27B', 'model-select')">
+                                <span>Gemma 2 27B</span>
+                            </div>
+                            <div class="custom-option" data-value="deepseek"
+                                onclick="selectCustomOption('deepseek', 'DeepSeek R1', 'model-select')">
+                                <span>DeepSeek R1</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="flex bg-[var(--bg-panel)] rounded-lg p-0.5 border border-[var(--border-color)]">
+                    <div
+                        class="relative flex bg-[var(--bg-panel)] rounded-lg p-0.5 border border-[var(--border-color)] shadow-sm">
+                        <!-- Sliding Indicator -->
+                        <div id="mode-indicator"
+                            class="absolute top-0.5 bottom-0.5 left-0.5 w-[calc(50%-2px)] bg-[var(--accent-primary)] rounded-md transition-all duration-300 ease-in-out shadow-sm">
+                        </div>
+
                         <button onclick="setMode('normal')" id="mode-normal"
-                            class="px-3 py-1 rounded-md text-xs font-medium transition-all bg-[var(--accent-primary)] text-white shadow-sm">Normal</button>
+                            class="relative z-10 px-3 py-1 rounded-md text-xs font-medium transition-colors text-white">Standard</button>
                         <button onclick="setMode('deep_dive')" id="mode-deep"
-                            class="px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all">Deep
+                            class="relative z-10 px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">Deep
                             Dive</button>
                     </div>
                 </div>
@@ -91,7 +121,7 @@
 
                 <form id="chat-form" class="relative group">
                     <div
-                        class="relative flex items-end gap-2 bg-[var(--bg-sidebar)] border border-[var(--border-color)] rounded-xl shadow-lg transition-all focus-within:border-[var(--accent-primary)] focus-within:ring-1 focus-within:ring-blue-500/20">
+                        class="relative flex items-end gap-2 bg-[var(--bg-sidebar)] border border-[var(--border-color)] rounded-xl shadow-lg transition-all focus-within:border-[var(--accent-primary)] focus-within:ring-1 focus-within:ring-blue-500/20 backdrop-blur-sm bg-opacity-90">
 
                         <button type="button" onclick="document.getElementById('file-upload').click()"
                             class="p-3 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
@@ -177,7 +207,16 @@
         chatInterface.classList.remove('hidden');
         setTimeout(() => chatInterface.classList.remove('opacity-0'), 10);
 
+        chatInterface.classList.remove('hidden');
+        setTimeout(() => chatInterface.classList.remove('opacity-0'), 10);
+
         await fetchMessages(sessionId);
+
+        // Ensure UI is synced (using default 'normal' or whatever was saved if we had that info, for now default to Standard as per request)
+        // If we want to persist mode per session, we'd need backend support. 
+        // User request: "it stays at standard in every new chat". 
+        // It implies resetting to standard when entering.
+        setMode('normal');
     }
 
     async function fetchMessages(sessionId) {
@@ -226,6 +265,7 @@
         if (confirm(msg)) {
             const title = `Chat ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
             createNewChatSession(currentFolderId, title);
+            setMode('normal'); // Reset to standard for new chat
         }
     }
 
@@ -287,13 +327,86 @@
         currentMode = mode;
         const btnNormal = document.getElementById('mode-normal');
         const btnDeep = document.getElementById('mode-deep');
+        const indicator = document.getElementById('mode-indicator');
 
         if (mode === 'normal') {
-            btnNormal.className = "px-3 py-1 rounded-md text-xs font-medium transition-all bg-[var(--accent-primary)] text-white shadow-sm";
-            btnDeep.className = "px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all";
+            // Slide to left
+            indicator.style.transform = 'translateX(0)';
+            indicator.style.width = 'calc(50% - 2px)'; // approx width for "Standard" (adjust if needed or rely on container)
+
+            // Update text colors
+            btnNormal.className = "relative z-10 px-3 py-1 rounded-md text-xs font-medium transition-colors text-white";
+            btnDeep.className = "relative z-10 px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors";
         } else {
-            btnNormal.className = "px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all";
-            btnDeep.className = "px-3 py-1 rounded-md text-xs font-medium transition-all bg-[var(--accent-primary)] text-white shadow-sm";
+            // Slide to right
+            // We need to calculate the slide distance. 
+            // Since it's a flex container with 2 items, and the indicator is roughly half width (visually),
+            // a simple translation of 100% of its own width + spacing might work if widths are equal.
+            // But "Standard" and "Deep Dive" might have different widths.
+            // For a robust slider, usually we make the buttons equal width or execute math.
+            // Let's assume for now we want the indicator to move to the deep button's position.
+
+            // To be precise without complex JS math on every click, let's just use 100% translation if we assume equal distribution,
+            // or we could use flexbox order or just simply offsetTop/Left.
+            // Given the HTML structure: 
+            // <div class="relative ... p-0.5"> <div absolute></div> <btn> <btn> </div>
+            // The simplest 'pill' UI usually forces equal width buttons or calculates bounding rect.
+            // Let's try to assume relative equality or use `100%` plus gap.
+
+            // Let's try a simpler approach compatible with the CSS transition: transform translateX.
+            // If the parent is flex, and we want to move from item 1 to item 2.
+            // Let's force the buttons to be somewhat capable of equal width or just trust the visual align.
+
+            // Actually, let's refine the CSS in the previous step to make buttons strictly equal width or just measure here.
+
+            // Re-evaluating the JS logic for the slider:
+            // Since we can't easily change the CSS width of the siblings in this step without touching HTML again (which I just did),
+            // I will use simple offset logic assuming the previous HTML edit set them up in a flex row.
+
+            // Let's assume we want to slide to the position of the second button.
+            // Since I didn't enforce `flex-1` on buttons in HTML, they might be natural width.
+            // "Standard" vs "Deep Dive" -> Deep Dive is wider.
+            // The indicator logic `w-[calc(50%-2px)]` assumes equal split.
+            // I should update the button styles in the setMode to apply `flex-1` or `w-1/2` to make them equal width for the slider to look good.
+            // But I can only edit JS here. 
+            // Wait, I can't edit HTML from here. 
+
+            // Let's look at the HTML I just wrote:
+            // <div class="... flex ..."> <div indicator> <btn Standard> <btn Deep Dive> </div>
+            // I didn't verify if they are equal width.
+
+            // To make the slider work beautifully with different text lengths, we usually calculate layout.
+            const containerPadding = 2; // 0.5 * 4px roughly
+            const target = mode === 'normal' ? btnNormal : btnDeep;
+
+            indicator.style.width = `${target.offsetWidth}px`;
+            indicator.style.transform = `translateX(${target.offsetLeft - 2}px)`; // -2 for the parent padding (0.5 which is 2px usually)
+
+            // Wait, parent has p-0.5 (Tailwind ~2px). `left-0.5` sets initial at 2px.
+            // target.offsetLeft should be relative to parent.
+            // "Standard" is at ~2px. "Deep Dive" is at ~WidthOfStandard + Gap.
+
+            // Let's just use OffsetLeft.
+            indicator.style.width = `${target.offsetWidth}px`;
+            // indicator is absolute at left-0.5 (2px).
+            // if target is first child (normal), its offsetLeft is likely 2px (due to padding).
+            // so transform should be 0 ??? No, we want to match the position.
+            // Easier: Set indicator `left: 0` in CSS and just control `transform` to `target.offsetLeft`.
+
+            // But my HTML set `left-0.5`.
+            // Let's set transform to `translateX(${target.offsetLeft - 2}px)`.
+            // If target is first, offsetLeft is 2, result 0. Correct.
+            // If target is second, offsetLeft is say 50, result 48. Correct.
+
+            indicator.style.transform = `translateX(${target.offsetLeft - 2}px)`;
+
+            if (mode === 'normal') {
+                btnNormal.className = "relative z-10 px-3 py-1 rounded-md text-xs font-medium transition-colors text-white";
+                btnDeep.className = "relative z-10 px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors";
+            } else {
+                btnNormal.className = "relative z-10 px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors";
+                btnDeep.className = "relative z-10 px-3 py-1 rounded-md text-xs font-medium transition-colors text-white";
+            }
         }
     }
 
@@ -378,7 +491,7 @@
         try {
             const res = await fetch('/chat', {
                 method: 'POST',
-                body: formData 
+                body: formData
             });
             const data = await res.json();
 
