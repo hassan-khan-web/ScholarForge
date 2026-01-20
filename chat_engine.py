@@ -2,15 +2,36 @@ import os
 import json
 import httpx 
 
-LLAMA_MODEL_STRING = "nvidia/nemotron-nano-12b-v2-vl:free" 
+AVAILABLE_MODELS = {
+    "default": "nvidia/nemotron-nano-12b-v2-vl:free",
+    "qwen-80b": "qwen/qwen3-next-80b-a3b-instruct:free",
+    "mistral": "mistralai/devstral-2512:free",
+    "gemini": "google/gemini-2.0-flash-exp:free",
+    "gpt-oss": "openai/gpt-oss-120b:free",
+    "gemma": "google/gemma-3-27b-it:free",
+    "deepseek": "deepseek/deepseek-r1-0528:free"
+}
 
-async def get_chat_response_async(user_message: str, history: list) -> str:
+DEEP_DIVE_PROMPT = (
+    "\n\nMODE: DEEP DIVE ANALYSIS\n"
+    "You are in 'Deep Dive' mode. Your response must be extremely comprehensive, structured, and detailed. "
+    "Do NOT give a simple answer. "
+    "1. PLAN: First, briefly outline how you will approach this question (Chain of Thought). "
+    "2. EXECUTE: Provide a thorough explanation, covering historical context, technical details, conflicting theories, and practical examples. "
+    "3. CLARITY: Use analogies where complex. Ensure every claim is explained. "
+    "4. LENGTH: Your response should be significantly longer and more detailed than a standard reply."
+)
+
+async def get_chat_response_async(user_message: str, history: list, model: str = "default", mode: str = "normal", file_context: str = "") -> str:
     """
     Async version of chat response using HTTPX.
+    Supports model selection, response modes, and file context.
     """
     try:
         api_key = os.environ.get("OPENROUTER_API_KEY")
         if not api_key: return "Error: OPENROUTER_API_KEY environment variable not set."
+
+        selected_model = AVAILABLE_MODELS.get(model, AVAILABLE_MODELS["default"])
 
         system_instruction = (
             "You are a dedicated Senior Research Assistant. Your ONLY purpose is to assist with academic, scientific, and technical research.\n"
@@ -22,6 +43,13 @@ async def get_chat_response_async(user_message: str, history: list) -> str:
             "Your goal is to provide a 'deep dive' analysis, not a summary.\n"
             "3. TONE: Maintain a formal, doctoral-level academic tone at all times."
         )
+
+        if mode == "deep_dive":
+            system_instruction += DEEP_DIVE_PROMPT
+
+        if file_context:
+            system_instruction += f"\n\nCONTEXT FROM ATTACHED FILES:\n{file_context}\n\nUse the above context to answer the user's question if relevant."
+
         messages = [{"role": "system", "content": system_instruction}]
         
         for turn in history:
@@ -37,8 +65,8 @@ async def get_chat_response_async(user_message: str, history: list) -> str:
             response = await client.post(
                 url="https://openrouter.ai/api/v1/chat/completions",
                 headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                data=json.dumps({"model": LLAMA_MODEL_STRING, "messages": messages, "temperature": 0.7}),
-                timeout=30.0
+                data=json.dumps({"model": selected_model, "messages": messages, "temperature": 0.7}),
+                timeout=60.0
             )
             response.raise_for_status()
             result = response.json()

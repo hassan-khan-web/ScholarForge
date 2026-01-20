@@ -56,18 +56,76 @@
         <div id="input-container"
             class="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-out">
             <div id="input-wrapper" class="w-full max-w-3xl px-6 pointer-events-auto">
-                <form id="chat-form" class="relative group">
-                    <input type="text" id="chat-input"
-                        class="w-full bg-[var(--bg-sidebar)] border border-[var(--border-color)] text-[var(--text-main)] placeholder-[var(--text-muted)] rounded-xl py-4 pl-5 pr-14 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-blue-500/20 text-sm shadow-lg transition-all"
-                        placeholder="Ask a question to start the conversation..." autocomplete="off">
 
-                    <button type="submit" id="send-btn"
-                        class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg transition-all shadow-md">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-                        </svg>
-                    </button>
+                <div class="flex items-center gap-3 mb-2 px-1 transition-opacity duration-300" id="chat-settings">
+                    <div class="relative group">
+                        <select id="model-select"
+                            class="appearance-none bg-[var(--bg-panel)] border border-[var(--border-color)] text-[var(--text-muted)] text-xs rounded-lg px-3 py-1.5 pr-8 focus:outline-none focus:border-[var(--accent-primary)] hover:text-[var(--text-main)] cursor-pointer">
+                            <option value="default">Nemotron (Default)</option>
+                            <option value="qwen-80b">Qwen 2.5 72B</option>
+                            <option value="mistral">Mistral Small</option>
+                            <option value="gemini">Gemini 2.0 Flash</option>
+                            <option value="gpt-oss">GPT-4o (OSS)</option>
+                            <option value="gemma">Gemma 2 27B</option>
+                            <option value="deepseek">DeepSeek R1</option>
+                        </select>
+                        <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg class="w-3 h-3 text-[var(--text-muted)]" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="flex bg-[var(--bg-panel)] rounded-lg p-0.5 border border-[var(--border-color)]">
+                        <button onclick="setMode('normal')" id="mode-normal"
+                            class="px-3 py-1 rounded-md text-xs font-medium transition-all bg-[var(--accent-primary)] text-white shadow-sm">Normal</button>
+                        <button onclick="setMode('deep_dive')" id="mode-deep"
+                            class="px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all">Deep
+                            Dive</button>
+                    </div>
+                </div>
+
+                <div id="file-preview-area" class="flex flex-wrap gap-2 mb-2 px-1 empty:hidden"></div>
+
+                <form id="chat-form" class="relative group">
+                    <div
+                        class="relative flex items-end gap-2 bg-[var(--bg-sidebar)] border border-[var(--border-color)] rounded-xl shadow-lg transition-all focus-within:border-[var(--accent-primary)] focus-within:ring-1 focus-within:ring-blue-500/20">
+
+                        <button type="button" onclick="document.getElementById('file-upload').click()"
+                            class="p-3 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors"
+                            title="Attach Files">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13">
+                                </path>
+                            </svg>
+                        </button>
+                        <input type="file" id="file-upload" multiple class="hidden" accept=".pdf,.docx,.txt,.md">
+
+                        <input type="text" id="chat-input"
+                            class="w-full bg-transparent border-none text-[var(--text-main)] placeholder-[var(--text-muted)] py-4 focus:ring-0 text-sm"
+                            placeholder="Ask a question..." autocomplete="off">
+
+                        <button type="button" id="mic-btn" onclick="toggleRecording()"
+                            class="p-3 text-[var(--text-muted)] hover:text-red-500 transition-colors"
+                            title="Voice Input">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
+                                </path>
+                            </svg>
+                        </button>
+
+                        <button type="submit" id="send-btn"
+                            class="p-2 m-2 bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg transition-all shadow-md flex-shrink-0">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                            </svg>
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -185,14 +243,94 @@
         } catch (e) { alert("Error creating session"); }
     }
 
+    let currentMode = 'normal';
+    let localFiles = [];
+    let isRecording = false;
+    let recognition = null;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function () {
+            isRecording = true;
+            document.getElementById('mic-btn').classList.add('text-red-500', 'animate-pulse');
+        };
+
+        recognition.onend = function () {
+            isRecording = false;
+            document.getElementById('mic-btn').classList.remove('text-red-500', 'animate-pulse');
+        };
+
+        recognition.onresult = function (event) {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value += (chatInput.value ? ' ' : '') + transcript;
+            chatInput.focus();
+        };
+    }
+
+    function toggleRecording() {
+        if (!recognition) {
+            alert("Speech recognition is not supported in this browser.");
+            return;
+        }
+        if (isRecording) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        const btnNormal = document.getElementById('mode-normal');
+        const btnDeep = document.getElementById('mode-deep');
+
+        if (mode === 'normal') {
+            btnNormal.className = "px-3 py-1 rounded-md text-xs font-medium transition-all bg-[var(--accent-primary)] text-white shadow-sm";
+            btnDeep.className = "px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all";
+        } else {
+            btnNormal.className = "px-3 py-1 rounded-md text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-all";
+            btnDeep.className = "px-3 py-1 rounded-md text-xs font-medium transition-all bg-[var(--accent-primary)] text-white shadow-sm";
+        }
+    }
+
+    // File Handling
+    document.getElementById('file-upload').addEventListener('change', function (e) {
+        const newFiles = Array.from(e.target.files);
+        localFiles = [...localFiles, ...newFiles];
+        renderFilePreviews();
+    });
+
+    function renderFilePreviews() {
+        const container = document.getElementById('file-preview-area');
+        container.innerHTML = '';
+        localFiles.forEach((file, index) => {
+            const chip = document.createElement('div');
+            chip.className = 'flex items-center gap-2 bg-[var(--bg-sidebar)] border border-[var(--border-color)] px-2 py-1 rounded text-xs text-[var(--text-main)]';
+            chip.innerHTML = `
+                <span class="truncate max-w-[150px]">${file.name}</span>
+                <button type="button" onclick="removeFile(${index})" class="text-[var(--text-muted)] hover:text-red-500">×</button>
+            `;
+            container.appendChild(chip);
+        });
+    }
+
+    window.removeFile = function (index) {
+        localFiles.splice(index, 1);
+        renderFilePreviews();
+    }
+
     document.getElementById('chat-form').onsubmit = async (e) => {
         e.preventDefault();
         const text = chatInput.value.trim();
-        if (!text) return;
+        const model = document.getElementById('model-select').value;
 
-        // Do not accept trivial / non-important messages from user
-        if (isTrivialMessage(text)) {
-            // Show a short inline assistant message inside the chat indicating refusal
+        if (!text && localFiles.length === 0) return;
+
+        if (text && isTrivialMessage(text) && localFiles.length === 0) {
             if (!hasMessages) { moveInputToBottom(); hasMessages = true; }
             renderMessage('user', text, false);
             chatInput.value = '';
@@ -211,17 +349,36 @@
             hasMessages = true;
         }
 
-        renderMessage('user', text, false);
+        let userDisplayHtml = text;
+        if (localFiles.length > 0) {
+            userDisplayHtml += `<div class="mt-2 flex flex-wrap gap-2">` +
+                localFiles.map(f => `<span class="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs border border-blue-500/20">📎 ${f.name}</span>`).join('') +
+                `</div>`;
+        }
+        renderMessage('user', userDisplayHtml, false);
+
         chatInput.value = '';
         sendBtn.disabled = true;
-
         const botBubble = renderMessage('bot', '', true);
+
+        const formData = new FormData();
+        formData.append('message', text || (localFiles.length > 0 ? "Analyzed attached files." : "")); // Fallback text if only files sent
+        formData.append('session_id', currentSessionId);
+        formData.append('model', model);
+        formData.append('mode', currentMode);
+
+        localFiles.forEach(file => {
+            formData.append('files', file);
+        });
+
+        localFiles = [];
+        renderFilePreviews();
+        document.getElementById('file-upload').value = '';
 
         try {
             const res = await fetch('/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text, session_id: currentSessionId })
+                body: formData 
             });
             const data = await res.json();
 
@@ -235,7 +392,6 @@
         const cleaned = text.toLowerCase().replace(/[!?.]/g, '').trim();
         if (cleaned.length <= 2) return true;
         if (trivial.includes(cleaned)) return true;
-        // very short messages with <=2 words and <=4 chars each considered trivial
         const words = cleaned.split(/\s+/);
         if (words.length <= 2 && words.every(w => w.length <= 4)) return true;
         return false;
@@ -330,7 +486,6 @@
         container.querySelectorAll('blockquote').forEach(bq => bq.className = 'border-l-4 border-[var(--accent-primary)] pl-4 my-3 italic text-[var(--text-muted)]');
     }
 
-    // --- HOOK FEATURE ---
     document.addEventListener('mouseup', (event) => {
         if (!event.target.closest('#chat-container')) return;
         const selection = window.getSelection();

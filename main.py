@@ -12,6 +12,8 @@ from fastapi.responses import JSONResponse, FileResponse
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 from celery.result import AsyncResult
+import fitz  # PyMuPDF for PDFs
+from docx import Document as DocxDocument  # python-docx for DOCX
 
 from task import generate_report_task, celery_app
 import AI_engine 
@@ -123,14 +125,72 @@ def get_history(session_id: int):
     msgs = database.get_session_messages(session_id)
     return [{"role": m.role, "content": m.content} for m in msgs]
 
+# Helper function to extract text from uploaded files
+async def extract_text_from_file(file: UploadFile) -> str:
+    content = ""
+    try:
+        if file.filename.lower().endswith('.pdf'):
+            pdf_bytes = await file.read()
+            with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+                for page in doc:
+                    content += page.get_text() + "\n"
+        elif file.filename.lower().endswith('.docx'):
+            file_bytes = await file.read()
+            from io import BytesIO
+            doc = DocxDocument(BytesIO(file_bytes))
+            for para in doc.paragraphs:
+                content += para.text + "\n"
+        elif file.filename.lower().endswith('.txt') or file.filename.lower().endswith('.md'):
+            content = (await file.read()).decode('utf-8', errors='ignore')
+        else:
+            return f"[Unsupported file type: {file.filename}]"
+            
+        return f"\n--- FILE: {file.filename} ---\n{content[:20000]}\n--------------------------\n"
+    except Exception as e:
+        print(f"Error reading file {file.filename}: {e}")
+        return f"[Error reading {file.filename}]"
+
 @app.post("/chat")
-async def chat(data: ChatRequest):
-    msgs = database.get_session_messages(data.session_id)
-    ctx = [{"role": m.role, "content": m.content} for m in msgs]
-    resp = await chat_engine.get_chat_response_async(data.message, ctx)
-    database.save_chat_message(data.session_id, "user", data.message)
-    database.save_chat_message(data.session_id, "assistant", resp)
-    return {'response': resp}
+async def chat(
+    message: str = Form(...),
+    session_id: int = Form(...),
+    model: str = Form("default"),
+    mode: str = Form("normal"),
+    files: List[UploadFile] = File(None)
+):
+    try:
+        # Extract text from files if any
+        file_context = ""
+        if files:
+            for file in files:
+                if file.filename: # check if filename is present
+                    file_context += await extract_text_from_file(file)
+
+        msgs = database.get_session_messages(session_id)
+        ctx = [{"role": m.role, "content": m.content} for m in msgs]
+        
+        # Pass new params to chat engine
+        resp = await chat_engine.get_chat_response_async(
+            user_message=message, 
+            history=ctx, 
+            model=model, 
+            mode=mode, 
+            file_context=file_context
+        )
+        
+        # Save user message (append file note if present)
+        user_msg_content = message
+        if file_context:
+            file_names = ", ".join([f.filename for f in files if f.filename])
+            user_msg_content += f"\n\n[Attached: {file_names}]"
+
+        database.save_chat_message(session_id, "user", user_msg_content)
+        database.save_chat_message(session_id, "assistant", resp)
+        
+        return {'response': resp}
+    except Exception as e:
+        print(f"Chat Error: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.get("/api/history")
 def history():
