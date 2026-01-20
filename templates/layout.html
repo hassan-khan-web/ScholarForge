@@ -490,10 +490,9 @@
             opacity: 1;
         }
 
-        /* Search button stays visible in collapsed mode too */
+        /* Hide search button when collapsed so it doesn't peek out */
         #sidebar.collapsed #sidebar-search-btn {
-            opacity: 1;
-            pointer-events: auto;
+            display: none;
         }
     </style>
 </head>
