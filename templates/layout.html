@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
 </head>
 
 <body class="flex h-screen w-full" onclick="closeAllDropdowns()">
@@ -286,14 +286,15 @@
         </div>
     </div>
 
-    <form id="dl-helper-form" action="{{ url_for('download') }}" method="POST" target="_blank" class="hidden">
-        <input type="hidden" name="report_content" id="hlp-content">
-        <input type="hidden" name="topic" id="hlp-topic">
-        <input type="hidden" name="format" id="hlp-format">
-    </form>
+    <div class="hidden">
+        <form id="dl-helper-form" action="{{ url_for('download') }}" method="POST" target="_blank" class="hidden">
+            <input type="hidden" name="report_content" id="hlp-content">
+            <input type="hidden" name="topic" id="hlp-topic">
+            <input type="hidden" name="format" id="hlp-format">
+        </form>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    {% block scripts %}{% endblock %}
+        <script src="{{ url_for('static', path='js/main.js') }}"></script>
+        {% block scripts %}{% endblock %}
 </body>
 
 </html>

@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/chat.css') }}">
 <div class="flex-1 flex flex-col h-full relative w-full">
 
     <button id="hook-button-fixed" onclick="handleHookButtonClick()"
@@ -166,5 +166,5 @@
     // Configure global variables for external scripts
     window.ADD_HOOK_URL = "{{ url_for('add_hook') }}";
 </script>
-<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script src="{{ url_for('static', path='js/chat.js') }}"></script>
 {% endblock %}
