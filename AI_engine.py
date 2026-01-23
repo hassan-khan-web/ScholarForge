@@ -38,7 +38,7 @@ def clean_section_output(text: str, section_title: str) -> str:
     lines = text.split('\n')
     while lines and not lines[0].strip(): lines.pop(0)
     if not lines: return ""
-    
+    # API_KEY
     first_line = lines[0].strip().lower()
     clean_title = section_title.lower().replace('#', '').strip()
     clean_first = first_line.replace('#', '').strip()

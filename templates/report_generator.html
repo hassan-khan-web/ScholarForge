@@ -5,7 +5,7 @@
     style="background-image: radial-gradient(var(--text-main) 1px, transparent 1px); background-size: 24px 24px;">
 </div>
 
-<link rel="stylesheet" href="{{ url_for('static', path='css/report.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='css/report_generator.css') }}">
 
 <div class="w-full h-full overflow-y-auto custom-scrollbar relative flex flex-col items-center justify-center p-6 z-10">
     <main id="input-section" class="w-full max-w-5xl transition-all duration-500 ease-in-out">
@@ -297,5 +297,5 @@
     // Use a placeholder that we replace in JS
     window.REPORT_STATUS_URL_TEMPLATE = "{{ url_for('report_status', task_id='TASK_ID_PLACEHOLDER') }}";
 </script>
-<script src="{{ url_for('static', path='js/report.js') }}"></script>
+<script src="{{ url_for('static', path='js/report_generator.js') }}"></script>
 {% endblock %}

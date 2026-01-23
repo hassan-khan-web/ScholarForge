@@ -9,90 +9,98 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
+    {% block styles %}{% endblock %}
 </head>
 
 <body class="flex h-screen w-full" onclick="closeAllDropdowns()">
 
     <nav id="sidebar" class="collapsed">
-        <div class="sidebar-header border-b border-[var(--border-color)] shrink-0">
-            <button onclick="document.getElementById('sidebar').classList.toggle('collapsed')" class="icon-btn"
-                title="Toggle sidebar" id="sidebar-toggle-inside">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
+        <!-- 1. Top Toggle Button -->
+        <div class="sidebar-header border-b border-[var(--border-color)] shrink-0 flex items-center justify-center h-16">
+            <button onclick="toggleSidebar()" class="icon-btn w-full h-full flex items-center justify-center hover:bg-[var(--hover-bg)] transition-colors" title="Toggle Sidebar">
+                <svg id="sidebar-icon-expanded" class="w-6 h-6 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <svg id="sidebar-icon-collapsed" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
                     <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
-            </button>
-            <a href="/search" class="icon-btn search-btn-header" title="Search (Ctrl+K)" id="sidebar-search-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-            </a>
-            <button id="sidebar-toggle" class="icon-btn" style="display: none;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
+                <span class="nav-text ml-3 font-semibold hidden">Close Menu</span>
             </button>
         </div>
 
         <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col py-4">
-            <a href="{{ url_for('index') }}" class="nav-item {% if request.path == '/' %}active{% endif %}"
-                title="Report Generator">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                    </path>
+            
+            <!-- 2. Separator -->
+            <!-- (Optional: The header border-b acts as a separator, but if explicit space is needed, we can add margin) -->
+            
+            <!-- 3. Report Generator -->
+            <a href="{{ url_for('index') }}" class="nav-item {% if request.path == '/' %}active{% endif %}" title="Report Generator">
+                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                 </svg>
-                <span class="nav-text">Report Generator</span>
+                <span class="nav-text whitespace-nowrap overflow-hidden text-ellipsis">Report Generator</span>
             </a>
 
-            <div onclick="toggleHistory()" class="nav-item" title="History">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <!-- 4. Generated History -->
+            <div onclick="toggleHistory()" class="nav-item" title="Generated History">
+                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span class="nav-text">Generated History</span>
+                <span class="nav-text whitespace-nowrap overflow-hidden text-ellipsis">Generated History</span>
             </div>
 
-            <div class="h-px bg-[var(--border-color)] mt-4 mb-4 mx-4 sidebar-divider"></div>
+            <!-- 5. Separator -->
+            <div class="h-px bg-[var(--border-color)] my-4 mx-4 sidebar-divider"></div>
 
-            <div class="px-5 mb-2 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider section-label">
-                Research Assistant
-            </div>
+            <!-- 6. Create Folder -->
+            <button onclick="openFolderModal()" class="nav-item !text-[var(--accent-primary)] hover:bg-[var(--hover-bg)] transition-colors w-full justify-start" title="Create Folder">
+                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                </svg>
+                <span class="nav-text font-semibold whitespace-nowrap overflow-hidden text-ellipsis">Create Folder</span>
+            </button>
 
-            <div id="folder-section-wrapper" class="flex flex-col">
-                <button onclick="openFolderModal()" class="nav-item !text-[var(--accent-primary)] justify-start">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
-                    </svg>
-                    <span class="nav-text font-semibold create-folder-btn-text">Create Folder</span>
-                </button>
-                <div id="folder-tree-container" class="flex flex-col gap-0.5 mt-2">
-                    <div class="text-xs text-[var(--text-muted)] pl-5 italic">Loading...</div>
-                </div>
+            <!-- 7. Folders & Chats List -->
+            <div id="folder-tree-container" class="flex flex-col gap-0.5 mt-2 overflow-y-auto">
+                <div class="text-xs text-[var(--text-muted)] pl-5 italic nav-text">Loading...</div>
             </div>
         </div>
 
-        <div class="mt-auto p-3 border-t border-[var(--border-color)] flex justify-center settings-container">
-            <button onclick="openSettingsModal()" class="icon-btn" title="Settings">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                    </path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        <!-- Settings (Bottom) -->
+        <div class="mt-auto p-3 border-t border-[var(--border-color)] flex justify-start items-center overflow-hidden">
+            <button onclick="openSettingsModal()" class="nav-item w-full justify-start !p-2" title="Settings">
+                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
+                <span class="nav-text ml-3 whitespace-nowrap overflow-hidden text-ellipsis">Settings</span>
             </button>
         </div>
     </nav>
+
+    <!-- Script to handle Sidebar Toggling -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const iconExpanded = document.getElementById('sidebar-icon-expanded');
+            const iconCollapsed = document.getElementById('sidebar-icon-collapsed');
+            
+            sidebar.classList.toggle('collapsed');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                // Now in Sidebar mode (icons only)
+                iconExpanded.classList.add('hidden');
+                iconCollapsed.classList.remove('hidden');
+            } else {
+                // Now in Menu Panel mode (expanded)
+                iconExpanded.classList.remove('hidden');
+                iconCollapsed.classList.add('hidden');
+            }
+        }
+    </script>
 
     <aside id="history-panel">
         <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
@@ -293,7 +301,6 @@
             <input type="hidden" name="format" id="hlp-format">
         </form>
 
-        <script src="{{ url_for('static', path='js/main.js') }}"></script>
         {% block scripts %}{% endblock %}
 </body>
 

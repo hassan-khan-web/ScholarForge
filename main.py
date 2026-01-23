@@ -36,7 +36,7 @@ templates = Jinja2Templates(directory="templates")
 
 @app.on_event("startup")
 def startup():
-    required_secrets = ["API_KEY", "OPENROUTER_API_KEY"]
+    required_secrets = ["OPENROUTER_API_KEY"]
     missing = [k for k in required_secrets if not os.environ.get(k)]
     if missing:
         print(f"CRITICAL: Missing keys: {missing}")
