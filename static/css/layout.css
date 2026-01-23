@@ -1,0 +1,117 @@
+/* Combined main.css + layout-specific styles (standalone) */
+:root {
+	--bg-main: #f8fafc;
+	--bg-panel: #ffffff;
+	--bg-sidebar: #ffffff;
+	--accent-primary: #2563eb;
+	--border-color: #e6e9ee;
+	--text-main: #0f1722;
+	--text-muted: #6b7280;
+	--hover-bg: #f3f4f6;
+}
+
+.theme-dark {
+	--bg-main: #0b1220;
+	--bg-panel: #0f1724;
+	--bg-sidebar: #0b1320;
+	--accent-primary: #2563eb;
+	--border-color: #1f2937;
+	--text-main: #e6eef8;
+	--text-muted: #94a3b8;
+	--hover-bg: rgba(255,255,255,0.03);
+}
+
+.theme-tokyo {
+	--bg-main: #0f1720;
+	--bg-panel: #111827;
+	--bg-sidebar: #0b1220;
+	--accent-primary: #7aa2f7;
+	--border-color: #1f2a37;
+	--text-main: #cfe3ff;
+	--text-muted: #94a3b8;
+	--hover-bg: rgba(255,255,255,0.03);
+}
+
+/* Layout helpers */
+body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: var(--bg-main); color: var(--text-main); }
+.glass-panel { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); }
+
+.icon-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:6px; border-radius:8px; color:var(--text-main); background:transparent; }
+.icon-btn:hover { background:var(--hover-bg); }
+
+.nav-item { display:flex; gap:10px; align-items:center; padding:10px 14px; color:var(--text-muted); cursor:pointer; }
+.nav-item.active, .nav-item:hover { color:var(--text-main); background:var(--hover-bg); }
+.nav-text { font-size:14px; }
+
+.custom-modal-overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:60; }
+.custom-modal-overlay .glass-panel { border:1px solid var(--border-color); }
+.custom-modal-overlay.active { display:flex; }
+
+.dropdown-menu { display:none; position:absolute; right:0; background:var(--bg-panel); border:1px solid var(--border-color); border-radius:8px; overflow:hidden; min-width:140px; z-index:999; }
+.dropdown-menu.show { display:block; }
+.dropdown-item { padding:8px 12px; cursor:pointer; color:var(--text-main); font-size:13px; }
+.dropdown-item:hover { background:var(--hover-bg); }
+
+.custom-scrollbar::-webkit-scrollbar { width:8px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.25); border-radius:8px; }
+
+.btn-danger { background:#dc2626; color:white; }
+.btn-cancel { background:transparent; border:1px solid var(--border-color); color:var(--text-main); }
+
+#toast-notification .hidden { display:none; }
+
+/* small responsive tweaks */
+@media (max-width: 800px) {
+	nav#sidebar { transform: translateX(-100%); position:fixed; z-index:50; }
+}
+
+/* layout-specific overrides */
+/* layout-specific overrides */
+nav#sidebar {
+    width: 260px; /* Expanded Width */
+    transition: width 0.3s ease;
+    border-right: 1px solid var(--border-color);
+    background: var(--bg-sidebar);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+nav#sidebar.collapsed {
+    width: 80px; /* Collapsed Width (Icons only) */
+}
+
+/* Hide text when collapsed */
+nav#sidebar.collapsed .nav-text,
+nav#sidebar.collapsed .sidebar-divider,
+nav#sidebar.collapsed .section-label {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Ensure text fades in/out smoothly if we want, but display:none is safer for layout */
+.nav-text {
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+}
+
+/* Center icons when collapsed */
+nav#sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 10px 0;
+}
+
+nav#sidebar.collapsed .icon-btn {
+    justify-content: center;
+}
+
+/* Hide the search button in header if we are collapsed (optional, user didn't ask but good specifically) */
+/* Actually the user said "when its side bar only the icons will be shown as a button" */
+/* The header now only has the toggle button based on my HTML change. */
+
+/* Custom Scrollbar for sidebar */
+#sidebar-content {
+    overflow-x: hidden;
+}
