@@ -8,300 +8,332 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Force load layout.css with cache busting -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/layout.css') }}?v=10">
 
     {% block styles %}{% endblock %}
 </head>
 
-<body class="flex h-screen w-full" onclick="closeAllDropdowns()">
+<body class="flex h-screen w-full overflow-hidden" onclick="closeAllDropdowns()">
 
-    <nav id="sidebar" class="collapsed">
-        <!-- 1. Top Toggle Button -->
-        <div class="sidebar-header border-b border-[var(--border-color)] shrink-0 flex items-center justify-center h-16">
-            <button onclick="toggleSidebar()" class="icon-btn w-full h-full flex items-center justify-center hover:bg-[var(--hover-bg)] transition-colors" title="Toggle Sidebar">
-                <svg id="sidebar-icon-expanded" class="w-6 h-6 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
+    <!-- Premium Glass Sidebar -->
+    <!-- Default state is now COLLAPSED (Menu Bar) by CSS structure. We add 'expanded' to open it. -->
+    <nav id="sidebar"
+        class="border-r border-[var(--border-color)] bg-[var(--bg-sidebar)] flex flex-col transition-all duration-300 z-50">
+        <!-- Header: Toggle (Left) -->
+        <!-- Header: Toggle (Left) -->
+        <div class="sidebar-section">
+            <!-- Menu Toggle -->
+            <button onclick="toggleSidebar()" class="icon-btn hover:bg-[var(--hover-bg)] shrink-0 z-10 transition-all"
+                title="Toggle Menu">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
                 </svg>
-                <svg id="sidebar-icon-collapsed" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
+            </button>
+
+            <!-- Search Button (Expanded Only) -->
+            <button class="icon-btn hover:bg-[var(--hover-bg)] shrink-0 z-10 expanded-only" title="Search">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
-                <span class="nav-text ml-3 font-semibold hidden">Close Menu</span>
             </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col py-4">
-            
-            <!-- 2. Separator -->
-            <!-- (Optional: The header border-b acts as a separator, but if explicit space is needed, we can add margin) -->
-            
-            <!-- 3. Report Generator -->
-            <a href="{{ url_for('index') }}" class="nav-item {% if request.path == '/' %}active{% endif %}" title="Report Generator">
-                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2M5 11V9a2 2 0 00-2-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        <!-- Navigation (Middle) -->
+        <div
+            class="flex-1 overflow-y-auto py-4 custom-scrollbar space-y-4 flex flex-col items-center overflow-x-hidden">
+
+            <!-- Report Generator Option -->
+            <a href="{{ url_for('index') }}" class="icon-btn w-full justify-start pl-[15px]" title="Report Generator">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
                 </svg>
-                <span class="nav-text whitespace-nowrap overflow-hidden text-ellipsis">Report Generator</span>
+                <span class="nav-text text-sm font-medium whitespace-nowrap ml-3">Report Generator</span>
             </a>
 
-            <!-- 4. Generated History -->
-            <div onclick="toggleHistory()" class="nav-item" title="Generated History">
-                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <!-- Generated History Option -->
+            <div onclick="toggleHistory()" class="icon-btn w-full justify-start pl-[15px]" title="Generated History">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span class="nav-text whitespace-nowrap overflow-hidden text-ellipsis">Generated History</span>
+                <span class="nav-text text-sm font-medium whitespace-nowrap ml-3">Generated History</span>
             </div>
 
-            <!-- 5. Separator -->
-            <div class="h-px bg-[var(--border-color)] my-4 mx-4 sidebar-divider"></div>
+            <!-- Header: Research Assistant (Expanded Only) -->
+            <div
+                class="nav-text mt-4 mb-1 pl-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap overflow-hidden">
+                Research Assistant
+            </div>
 
-            <!-- 6. Create Folder -->
-            <button onclick="openFolderModal()" class="nav-item !text-[var(--accent-primary)] hover:bg-[var(--hover-bg)] transition-colors w-full justify-start" title="Create Folder">
-                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+            <div class="border-t border-[var(--border-color)] w-8 mx-auto nav-text-hidden"></div>
+
+            <!-- AI Assistant Folder Option -->
+            <button onclick="openFolderModal()" class="icon-btn w-full justify-start pl-[15px] text-[var(--text-main)]"
+                title="Create Folder">
+                <svg class="w-5 h-5 shrink-0 text-[var(--accent-primary)]" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                <span class="nav-text font-semibold whitespace-nowrap overflow-hidden text-ellipsis">Create Folder</span>
+                <span class="nav-text text-sm font-medium whitespace-nowrap ml-3">Create Folder</span>
             </button>
 
-            <!-- 7. Folders & Chats List -->
-            <div id="folder-tree-container" class="flex flex-col gap-0.5 mt-2 overflow-y-auto">
-                <div class="text-xs text-[var(--text-muted)] pl-5 italic nav-text">Loading...</div>
+            <div id="folder-tree-container" class="hidden">
+                <!-- Hidden foldertree -->
             </div>
+
         </div>
 
-        <!-- Settings (Bottom) -->
-        <div class="mt-auto p-3 border-t border-[var(--border-color)] flex justify-start items-center overflow-hidden">
-            <button onclick="openSettingsModal()" class="nav-item w-full justify-start !p-2" title="Settings">
-                <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        <!-- Footer Settings (Bottom) -->
+        <!-- Footer Settings (Bottom) -->
+        <!-- Footer Settings (Bottom) -->
+        <div class="sidebar-section border-t border-[var(--border-color)]">
+            <!-- Settings (Fixed Position) -->
+            <button onclick="openSettingsModal()" class="icon-btn shrink-0" title="Settings">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
-                <span class="nav-text ml-3 whitespace-nowrap overflow-hidden text-ellipsis">Settings</span>
+                <!-- No text for settings as requested -->
+            </button>
+
+            <!-- Profile Button (Expanded Only) -->
+            <button class="icon-btn expanded-only shrink-0" title="Profile">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 shadow-md"></div>
             </button>
         </div>
     </nav>
 
-    <!-- Script to handle Sidebar Toggling -->
+    <!-- Sidebar Toggle Script -->
     <script>
-        function toggleSidebar() {
+        // Init sidebar state - Ensure sync if browser remembers state, or always start collapsed
+        document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('sidebar');
-            const iconExpanded = document.getElementById('sidebar-icon-expanded');
-            const iconCollapsed = document.getElementById('sidebar-icon-collapsed');
-            
-            sidebar.classList.toggle('collapsed');
-            
-            if (sidebar.classList.contains('collapsed')) {
-                // Now in Sidebar mode (icons only)
-                iconExpanded.classList.add('hidden');
-                iconCollapsed.classList.remove('hidden');
+            // By default structure, it's collapsed. If we wanted to restore state, we would check localStorage here.
+            // For now, enforce "Menu Bar First" means always start small.
+            if (sidebar.classList.contains('expanded')) {
+                document.body.classList.add('sidebar-expanded');
             } else {
-                // Now in Menu Panel mode (expanded)
-                iconExpanded.classList.remove('hidden');
-                iconCollapsed.classList.add('hidden');
+                document.body.classList.remove('sidebar-expanded');
             }
+        });
+
+        function toggleSidebar() {
+            const s = document.getElementById('sidebar');
+            s.classList.toggle('expanded');
+            document.body.classList.toggle('sidebar-expanded');
+        }
+
+        // Override toggleHistory to use classes for smooth CSS transitions
+        window.toggleHistory = function () {
+            const p = document.getElementById('history-panel');
+            if (!p) return;
+            // logic: if it has -translate-x-full, it is hidden. Remove to show.
+            p.classList.toggle('-translate-x-full');
+        }
+
+        // Dropdown Logic
+        function toggleHistoryMenu(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('history-menu-dropdown');
+            if (menu) {
+                if (menu.classList.contains('hidden')) {
+                    // Show
+                    closeAllDropdowns(); // Close others first
+                    menu.classList.remove('hidden');
+                } else {
+                    // Hide
+                    menu.classList.add('hidden');
+                }
+            }
+        }
+
+        function closeAllDropdowns() {
+            const dropdowns = document.querySelectorAll('.dropdown-menu-custom');
+            dropdowns.forEach(d => d.classList.add('hidden'));
         }
     </script>
 
-    <aside id="history-panel">
-        <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
-            <span class="font-bold text-[var(--text-main)]">Generated Reports</span>
-            <div class="flex items-center gap-2 relative">
-                <button onclick="event.stopPropagation(); toggleDropdown('history-main-menu')"
-                    class="text-[var(--text-muted)] hover:text-[var(--text-main)] font-bold px-2">⋮</button>
-                <div id="history-main-menu" class="dropdown-menu">
-                    <div class="dropdown-item" onclick="toggleSelectMode()">Select Items</div>
-                    <div class="dropdown-item" onclick="selectAllReports()">Select All</div>
-                    <div class="dropdown-item text-red-400" onclick="deleteSelectedReports()">Delete All</div>
-                </div>
+    <!-- Overlay Panels (History/Hooks) -->
 
-                <div class="w-px h-4 bg-[var(--border-color)]"></div>
-                <button onclick="toggleHistory()"
-                    class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
-            </div>
-        </div>
-        <div id="history-list-content" class="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar"></div>
-    </aside>
-
-    <aside id="hook-panel"
-        style="position: fixed; top: 0; bottom: 0; right: 0; width: 20rem; background: var(--bg-sidebar); border-left: 1px solid var(--border-color); transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 40; display: flex; flex-direction: column; box-shadow: -10px 0 25px -5px rgba(0,0,0,0.1);">
-        <div class="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)]">
-            <div class="flex items-center gap-3">
-                <span class="font-bold text-[var(--text-main)]">Hooked Points</span>
-                <button onclick="openMergePanel()"
-                    class="px-3 py-1 bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs rounded-lg font-medium transition-colors">
-                    Merge Hook
-                </button>
-            </div>
-            <div class="flex items-center gap-2 relative">
-                <button onclick="event.stopPropagation(); toggleDropdown('hook-main-menu')"
-                    class="text-[var(--text-muted)] hover:text-[var(--text-main)] font-bold px-2">⋮</button>
-                <div id="hook-main-menu" class="dropdown-menu">
-                    <div class="dropdown-item text-red-400" onclick="deleteAllHooks()">Delete All</div>
-                </div>
-
-                <div class="w-px h-4 bg-[var(--border-color)]"></div>
-                <button onclick="toggleHookPanel()"
-                    class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
-            </div>
-        </div>
-        <div id="hook-list-content" class="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar"></div>
-    </aside>
-
-    <div class="flex-1 flex flex-col relative overflow-hidden h-full z-0 bg-[var(--bg-main)]">
-        {% block content %}{% endblock %}
-    </div>
-
-
-    <div id="merge-panel"
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center"
-        onclick="if(event.target === this) closeMergePanel()">
+    <!-- History Panel -->
+    <aside id="history-panel"
+        class="fixed inset-y-0 left-[80px] w-80 bg-[var(--bg-panel)] border-r border-[var(--border-color)] shadow-2xl z-40 transform -translate-x-full transition-transform duration-300">
         <div
-            class="w-full max-w-6xl h-[85vh] bg-[var(--bg-main)] border border-[var(--border-color)] rounded-xl shadow-2xl flex flex-col mx-4">
-            <div
-                class="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-panel)]">
-                <h2 class="text-lg font-bold text-[var(--text-main)]">Merge Hooks into Report</h2>
-                <button onclick="closeMergePanel()"
-                    class="text-[var(--text-muted)] hover:text-[var(--text-main)] text-xl">&times;</button>
-            </div>
-
-            <div class="flex-1 flex overflow-hidden">
-                <div class="w-[20%] border-r border-[var(--border-color)] flex flex-col bg-[var(--bg-sidebar)]">
-                    <div class="p-3 border-b border-[var(--border-color)]">
-                        <h3 class="text-sm font-bold text-[var(--text-main)]">Reports</h3>
-                    </div>
-                    <div id="merge-reports-list" class="flex-1 overflow-y-auto custom-scrollbar p-2"></div>
-                </div>
-
-                <div class="w-[40%] border-r border-[var(--border-color)] flex flex-col">
-                    <div class="p-3 border-b border-[var(--border-color)] flex items-center justify-between">
-                        <h3 class="text-sm font-bold text-[var(--text-main)]">Report Content</h3>
-                        <button onclick="saveEditedReport()"
-                            class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg font-medium transition-colors">
-                            Save
-                        </button>
-                    </div>
-                    <div class="flex-1 overflow-hidden p-4">
-                        <textarea id="merge-report-content"
-                            class="w-full h-full bg-[var(--bg-sidebar)] border border-[var(--border-color)] text-[var(--text-main)] rounded-lg p-4 text-sm focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-blue-500/20 font-mono resize-none"
-                            placeholder="Select a report from the list..."></textarea>
+            class="h-16 flex items-center justify-between px-6 border-b border-[var(--border-color)] bg-[var(--bg-main)]">
+            <h3 class="font-bold text-[var(--text-main)]">Reports</h3>
+            <div class="flex items-center gap-2">
+                <!-- 3 Dots Menu (Select All, Delete All) -->
+                <div class="relative">
+                    <button onclick="toggleHistoryMenu(event)"
+                        class="icon-btn p-1 hover:bg-[var(--hover-bg)] rounded-full">
+                        <svg class="w-5 h-5 text-[var(--text-muted)]" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
+                            </path>
+                        </svg>
+                    </button>
+                    <!-- Dropdown Content -->
+                    <div id="history-menu-dropdown"
+                        class="dropdown-menu-custom absolute right-0 top-full mt-2 w-48 bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-lg shadow-xl hidden z-50 transform transition-all duration-200 origin-top-right">
+                        <div class="py-1">
+                            <button onclick="console.log('Select All')"
+                                class="w-full text-left px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Select
+                                All</button>
+                            <button onclick="console.log('Delete All')"
+                                class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-[var(--hover-bg)]">Delete
+                                All</button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="w-[40%] flex flex-col">
-                    <div class="p-3 border-b border-[var(--border-color)] flex items-center justify-between">
-                        <h3 class="text-sm font-bold text-[var(--text-main)]">Hooks</h3>
-                        <button onclick="smartPushHooks()"
-                            class="px-3 py-1.5 bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs rounded-lg font-medium transition-colors flex items-center gap-2">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                            Smart Push
-                        </button>
-                    </div>
-                    <div id="merge-hooks-list" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast-notification"
-        class="fixed bottom-0 left-0 right-0 z-[100] transform translate-y-full transition-transform duration-300">
-        <div class="mx-auto max-w-md mb-4">
-            <div class="bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span id="toast-message" class="text-sm font-medium">Success!</span>
-                </div>
-                <button onclick="hideToast()" class="text-white hover:text-gray-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button onclick="toggleHistory()" class="icon-btn"><svg class="w-4 h-4" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
                         </path>
-                    </svg>
-                </button>
+                    </svg></button>
             </div>
         </div>
-    </div>
+        <div id="history-list-content" class="h-full overflow-y-auto custom-scrollbar p-2">
+            <!-- Content -->
+        </div>
+    </aside>
 
+    <!-- Hook Panel (Right Side) -->
+    <aside id="hook-panel"
+        class="fixed inset-y-0 right-0 w-80 bg-[var(--bg-panel)] border-l border-[var(--border-color)] shadow-2xl z-40 transform translate-x-full transition-transform duration-300">
+        <div
+            class="h-16 flex items-center justify-between px-6 border-b border-[var(--border-color)] bg-[var(--bg-main)]">
+            <h3 class="font-bold text-[var(--text-main)]">Research Hooks</h3>
+            <button onclick="toggleHookPanel()" class="icon-btn"><svg class="w-4 h-4" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg></button>
+        </div>
+        <div id="hook-list-content" class="h-full overflow-y-auto custom-scrollbar p-4"></div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative h-full overflow-hidden bg-[var(--bg-main)] flex flex-col">
+        <!-- New Top Header in Main Content (Title) -->
+        <header class="h-16 shrink-0 flex items-center px-6 border-b border-[var(--border-color)] bg-[var(--bg-panel)]">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
+                    SF
+                </div>
+                <span class="font-bold text-lg tracking-tight text-[var(--text-main)]">ScholarForge</span>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-auto relative">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- MODALS (Settings, Folder, Confirm, etc) are retained below with updated classes -->
+
+    <!-- Folder Modal -->
     <div id="folder-modal" class="custom-modal-overlay">
-        <div class="glass-panel rounded-xl p-6 w-full max-w-sm">
-            <h3 class="text-lg font-bold text-[var(--text-main)] mb-1">New Project Folder</h3>
-            <p class="text-xs text-[var(--text-muted)] mb-5">Group your research chats.</p>
+        <div
+            class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-[var(--border-color)]">
+            <h3 class="text-lg font-bold text-[var(--text-main)] mb-1">New Project</h3>
+            <p class="text-xs text-[var(--text-muted)] mb-5">Organize your research sessions.</p>
             <input type="text" id="fm-input"
-                class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg px-3 py-2.5 text-[var(--text-main)] text-sm focus:outline-none focus:border-[var(--accent-primary)] mb-6"
-                placeholder="Folder Name" onkeypress="if(event.key === 'Enter') submitFolderCreation()">
-            <div class="flex justify-end gap-2">
-                <button onclick="closeFolderModal()" class="px-4 py-2 text-xs font-medium btn-cancel">Cancel</button>
+                class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] mb-6 transition-all"
+                placeholder="Project Name" onkeypress="if(event.key === 'Enter') submitFolderCreation()">
+            <div class="flex justify-end gap-3">
+                <button onclick="closeFolderModal()"
+                    class="px-4 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors">Cancel</button>
                 <button onclick="submitFolderCreation()" id="btn-create-folder"
-                    class="px-4 py-2 text-xs font-medium bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg">Create</button>
+                    class="px-5 py-2 text-sm font-medium bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all">Create
+                    Project</button>
             </div>
         </div>
     </div>
 
+    <!-- Settings Modal -->
     <div id="settings-modal" class="custom-modal-overlay">
-        <div class="glass-panel rounded-xl p-6 w-full max-w-md">
-            <div class="flex justify-between items-center mb-6 border-b border-[var(--border-color)] pb-3">
+        <div
+            class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-6 w-full max-w-md border border-[var(--border-color)]">
+            <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-[var(--text-main)]">Settings</h3>
-                <button onclick="closeSettingsModal()"
-                    class="text-[var(--text-muted)] hover:text-[var(--text-main)]">✕</button>
+                <button onclick="closeSettingsModal()" class="icon-btn"><svg class="w-5 h-5" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg></button>
             </div>
-
             <div class="space-y-6">
-                <div class="grid grid-cols-[120px_1fr] gap-4 items-center">
-                    <label class="text-xs font-bold text-[var(--text-muted)] uppercase">Theme</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="setTheme('default')"
-                            class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Tokyo</button>
+                <div>
+                    <label
+                        class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Appearance</label>
+                    <div class="grid grid-cols-3 gap-3">
                         <button onclick="setTheme('light')"
-                            class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Light</button>
+                            class="border border-[var(--border-color)] rounded-xl p-3 text-sm text-[var(--text-main)] hover:bg-[var(--hover-bg)] transition-colors text-center">Light</button>
+                        <button onclick="setTheme('default')"
+                            class="border border-[var(--border-color)] rounded-xl p-3 text-sm text-[var(--text-main)] hover:bg-[var(--hover-bg)] transition-colors text-center">Soft
+                            Blue</button> <!-- mapped to old 'tokyo' or default -->
                         <button onclick="setTheme('dark')"
-                            class="border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] hover:bg-[var(--hover-bg)]">Dark</button>
+                            class="border border-[var(--border-color)] rounded-xl p-3 text-sm text-[var(--text-main)] hover:bg-[var(--hover-bg)] transition-colors text-center">Dark
+                            Space</button>
                     </div>
                 </div>
-                <div class="grid grid-cols-[120px_1fr] gap-4 items-start border-t border-[var(--border-color)] pt-4">
-                    <label class="text-xs font-bold text-red-400 uppercase mt-1">Danger</label>
-                    <div class="flex flex-col gap-2 w-full">
-                        <p class="text-[10px] text-[var(--text-muted)]">Database corrupted? Reset it here.</p>
-                        <button onclick="resetDatabase()"
-                            class="w-full btn-danger rounded-lg p-2 text-xs text-center font-bold">Reset
-                            Database</button>
-                    </div>
+                <div class="pt-6 border-t border-[var(--border-color)]">
+                    <label class="text-xs font-bold text-red-500 uppercase tracking-wider mb-2 block">System</label>
+                    <button onclick="resetDatabase()"
+                        class="w-full border border-red-200 bg-red-50 text-red-600 rounded-xl p-3 text-sm font-bold hover:bg-red-100 transition-colors">Reset
+                        Database</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="global-download-menu"
-        class="fixed hidden bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-md shadow-2xl z-[9999] min-w-[120px]"
-        onmouseleave="hideGlobalMenu()">
-        <div class="dropdown-item" onclick="triggerGlobalDownload('pdf')">PDF</div>
-        <div class="dropdown-item" onclick="triggerGlobalDownload('docx')">DOCX</div>
-        <div class="dropdown-item" onclick="triggerGlobalDownload('txt')">TXT</div>
-        <div class="dropdown-item" onclick="triggerGlobalDownload('md')">MD</div>
-        <div class="dropdown-item" onclick="triggerGlobalDownload('json')">JSON</div>
+    <!-- Toast Notification -->
+    <div id="toast-notification"
+        class="fixed bottom-6 right-6 z-[100] transform translate-y-32 transition-transform duration-300">
+        <div
+            class="bg-[var(--bg-panel)] border border-[var(--border-color)] text-[var(--text-main)] px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4">
+            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+            <span id="toast-message" class="text-sm font-medium">Notification</span>
+        </div>
     </div>
 
+    <!-- Confirm Modal -->
     <div id="confirm-modal" class="custom-modal-overlay">
-        <div class="glass-panel rounded-xl p-6 w-full max-w-sm">
-            <h3 id="confirm-title" class="text-lg font-bold text-[var(--text-main)] mb-2">Are you sure?</h3>
-            <p id="confirm-msg" class="text-sm text-[var(--text-muted)] mb-6">This action cannot be undone.</p>
-            <div class="flex justify-end gap-2">
-                <button id="btn-cancel-confirm" class="px-4 py-2 text-xs font-medium btn-cancel">Cancel</button>
-                <button id="btn-do-confirm" class="px-4 py-2 text-xs font-medium btn-danger rounded-lg">Confirm</button>
+        <div
+            class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-[var(--border-color)]">
+            <h3 id="confirm-title" class="text-lg font-bold text-[var(--text-main)] mb-2">Confirm Action</h3>
+            <p id="confirm-msg" class="text-sm text-[var(--text-muted)] mb-6">Are you sure you want to proceed?</p>
+            <div class="flex justify-end gap-3">
+                <button id="btn-cancel-confirm"
+                    class="px-4 py-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-main)]">Cancel</button>
+                <button id="btn-do-confirm"
+                    class="px-5 py-2 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-xl shadow-lg shadow-red-500/20">Confirm</button>
             </div>
         </div>
     </div>
 
+    <!-- Hidden Forms & Helpers -->
     <div class="hidden">
         <form id="dl-helper-form" action="{{ url_for('download') }}" method="POST" target="_blank" class="hidden">
             <input type="hidden" name="report_content" id="hlp-content">
             <input type="hidden" name="topic" id="hlp-topic">
             <input type="hidden" name="format" id="hlp-format">
         </form>
+    </div>
 
-        {% block scripts %}{% endblock %}
+    <!-- Global Scripts Block -->
+    {% block scripts %}{% endblock %}
 </body>
 
 </html>

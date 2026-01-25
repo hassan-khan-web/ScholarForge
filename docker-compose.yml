@@ -40,7 +40,7 @@ services:
   worker:
     build: .
     container_name: scholarforge_worker
-    
+
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A task.celery_app worker --loglevel=info
 
     volumes:

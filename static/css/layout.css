@@ -1,117 +1,350 @@
-/* Combined main.css + layout-specific styles (standalone) */
+/* Modern Premium Design System */
 :root {
-	--bg-main: #f8fafc;
+	/* Light Mode (Premium SaaS) */
+	--bg-main: #f3f6fc;
+	/* Soft blue-grey tint */
 	--bg-panel: #ffffff;
 	--bg-sidebar: #ffffff;
-	--accent-primary: #2563eb;
-	--border-color: #e6e9ee;
-	--text-main: #0f1722;
-	--text-muted: #6b7280;
-	--hover-bg: #f3f4f6;
+	--accent-primary: #3b82f6;
+	/* Vibrant Blue */
+	--accent-secondary: #8b5cf6;
+	/* Purple for gradients */
+	--border-color: #e2e8f0;
+	--text-main: #0f172a;
+	--text-main: #0f172a;
+	--text-muted: #64748b;
+	--hover-bg: #f1f5f9;
+	--glass-bg: rgba(255, 255, 255, 0.7);
+	--glass-border: rgba(255, 255, 255, 0.5);
+	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+	--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 .theme-dark {
-	--bg-main: #0b1220;
-	--bg-panel: #0f1724;
-	--bg-sidebar: #0b1320;
-	--accent-primary: #2563eb;
-	--border-color: #1f2937;
-	--text-main: #e6eef8;
+	/* Dark Mode (Deep Space Glass) */
+	--bg-main: #020617;
+	/* Very dark blue, almost black */
+	--bg-panel: #0f172a;
+	--bg-sidebar: #0f172a;
+	--accent-primary: #3b82f6;
+	--accent-secondary: #a855f7;
+	--border-color: #1e293b;
+	--text-main: #f8fafc;
 	--text-muted: #94a3b8;
-	--hover-bg: rgba(255,255,255,0.03);
+	--hover-bg: rgba(255, 255, 255, 0.05);
+	--glass-bg: rgba(15, 23, 42, 0.7);
+	--glass-border: rgba(255, 255, 255, 0.1);
+	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+	--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
 }
 
-.theme-tokyo {
-	--bg-main: #0f1720;
-	--bg-panel: #111827;
-	--bg-sidebar: #0b1220;
-	--accent-primary: #7aa2f7;
-	--border-color: #1f2a37;
-	--text-main: #cfe3ff;
-	--text-muted: #94a3b8;
-	--hover-bg: rgba(255,255,255,0.03);
+/* Base Reset & Typography */
+body {
+	font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	background: var(--bg-main);
+	color: var(--text-main);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
-/* Layout helpers */
-body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: var(--bg-main); color: var(--text-main); }
-.glass-panel { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); }
-
-.icon-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:6px; border-radius:8px; color:var(--text-main); background:transparent; }
-.icon-btn:hover { background:var(--hover-bg); }
-
-.nav-item { display:flex; gap:10px; align-items:center; padding:10px 14px; color:var(--text-muted); cursor:pointer; }
-.nav-item.active, .nav-item:hover { color:var(--text-main); background:var(--hover-bg); }
-.nav-text { font-size:14px; }
-
-.custom-modal-overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:60; }
-.custom-modal-overlay .glass-panel { border:1px solid var(--border-color); }
-.custom-modal-overlay.active { display:flex; }
-
-.dropdown-menu { display:none; position:absolute; right:0; background:var(--bg-panel); border:1px solid var(--border-color); border-radius:8px; overflow:hidden; min-width:140px; z-index:999; }
-.dropdown-menu.show { display:block; }
-.dropdown-item { padding:8px 12px; cursor:pointer; color:var(--text-main); font-size:13px; }
-.dropdown-item:hover { background:var(--hover-bg); }
-
-.custom-scrollbar::-webkit-scrollbar { width:8px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.25); border-radius:8px; }
-
-.btn-danger { background:#dc2626; color:white; }
-.btn-cancel { background:transparent; border:1px solid var(--border-color); color:var(--text-main); }
-
-#toast-notification .hidden { display:none; }
-
-/* small responsive tweaks */
-@media (max-width: 800px) {
-	nav#sidebar { transform: translateX(-100%); position:fixed; z-index:50; }
+/* Glassmorphism Utilities */
+.glass-panel {
+	background: var(--glass-bg);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border: 1px solid var(--border-color);
+	box-shadow: var(--shadow-md);
 }
 
-/* layout-specific overrides */
-/* layout-specific overrides */
+/* Common UI Elements */
+.icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 8px;
+	border-radius: 10px;
+	color: var(--text-muted);
+	background: transparent;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.icon-btn:hover {
+	color: var(--text-main);
+	background: var(--hover-bg);
+}
+
+:root {
+	--sidebar-width: 50px;
+	/* Default Collapsed (Menu Bar) */
+}
+
+/* Sidebar Layout */
 nav#sidebar {
-    width: 260px; /* Expanded Width */
-    transition: width 0.3s ease;
-    border-right: 1px solid var(--border-color);
-    background: var(--bg-sidebar);
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+	width: var(--sidebar-width);
+	background: var(--bg-sidebar);
+	border-right: 1px solid var(--border-color);
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+	transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
+	z-index: 50;
+	/* Topmost */
+	/* Fix horizontal scroll */
+	overflow-x: hidden !important;
 }
 
-nav#sidebar.collapsed {
-    width: 80px; /* Collapsed Width (Icons only) */
+nav#sidebar:not(.expanded) .nav-item {
+	margin-left: 0;
+	margin-right: 0;
+	width: 100%;
+	padding-left: 0;
+	padding-right: 0;
+	justify-content: center;
+	border-radius: 0;
+	/* Optional: square off if full width, often looks cleaner for "superposed" look, but keeping radius is fine too. Let's keep radius but rely on width. */
 }
 
-/* Hide text when collapsed */
-nav#sidebar.collapsed .nav-text,
-nav#sidebar.collapsed .sidebar-divider,
-nav#sidebar.collapsed .section-label {
-    display: none;
-    opacity: 0;
-    pointer-events: none;
+nav#sidebar.expanded {
+	width: 200px;
 }
 
-/* Ensure text fades in/out smoothly if we want, but display:none is safer for layout */
+body.sidebar-expanded {
+	--sidebar-width: 200px;
+}
+
+/* Dynamic Alignment for Header and Footer */
+.sidebar-section {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	height: 64px;
+	flex-shrink: 0;
+	/* NO transition on padding or justify-content to ensure stability */
+	transition: width 0.3s ease;
+
+	/* LOCKED LEFT STRATEGY */
+	/* 50px sidebar - 36px button (20px icon + 8px*2 padding) = 14px space. / 2 = 7px */
+	padding-left: 7px;
+	padding-right: 7px;
+	justify-content: flex-start;
+}
+
+/* Expanded state: Padding DOES NOT CHANGE for the left side */
+nav#sidebar.expanded .sidebar-section {
+	padding-left: 7px;
+	/* Remains locked */
+	/* Space accomodation happens via width expansion */
+}
+
+/* Ensure no stray margins disrupt positioning */
+nav#sidebar .sidebar-section .icon-btn {
+	margin: 0;
+}
+
+/* Items that are completely hidden in narrow mode (Search, Profile) */
+.expanded-only {
+	display: none !important;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+
+	/* FLEX STRATEGY: Push to right */
+	margin-left: auto !important;
+}
+
+nav#sidebar.expanded .expanded-only {
+	display: flex !important;
+	opacity: 1;
+	animation: fadeIn 0.3s forwards;
+}
+
+/* Special fix for the flex display override */
+nav#sidebar.expanded .expanded-only.flex {
+	display: flex !important;
+}
+
+/* Icon-only items (Report, History, Settings) */
+.nav-icon-only {
+	width: 40px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	justify-content: center !important;
+}
+
+#history-panel {
+	z-index: 40;
+	left: var(--sidebar-width);
+	transition: transform 0.3s ease, left 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.nav-item:hover,
+.nav-item.active {
+	background: var(--hover-bg);
+	color: var(--text-main);
+}
+
+.nav-item.active {
+	background: rgba(59, 130, 246, 0.08);
+	color: var(--accent-primary);
+}
+
+/* Sidebar behavior */
 .nav-text {
-    transition: opacity 0.2s ease;
-    white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+	width: 0;
+	display: none;
+	transition: opacity 0.2s ease;
 }
 
-/* Center icons when collapsed */
-nav#sidebar.collapsed .nav-item {
-    justify-content: center;
-    padding: 10px 0;
+nav#sidebar.expanded .nav-text {
+	opacity: 1;
+	pointer-events: auto;
+	width: auto;
+	display: block;
 }
 
-nav#sidebar.collapsed .icon-btn {
-    justify-content: center;
+nav#sidebar.expanded .nav-text.flex {
+	display: flex;
 }
 
-/* Hide the search button in header if we are collapsed (optional, user didn't ask but good specifically) */
-/* Actually the user said "when its side bar only the icons will be shown as a button" */
-/* The header now only has the toggle button based on my HTML change. */
+nav#sidebar.expanded button.nav-text {
+	display: inline-flex;
+}
 
-/* Custom Scrollbar for sidebar */
-#sidebar-content {
-    overflow-x: hidden;
+/* Dynamic Alignment for Header and Footer */
+.sidebar-section {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	height: 64px;
+	/* h-16 */
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+
+	/* Collapsed State: Strict Center */
+	justify-content: center;
+	padding: 0;
+}
+
+nav#sidebar.expanded .sidebar-section {
+	/* Expanded State: Space Between for Search/Profile */
+	justify-content: space-between;
+	padding-left: 0.75rem;
+	padding-right: 0.75rem;
+}
+
+/* Ensure no stray margins disrupt centering */
+nav#sidebar .sidebar-section .icon-btn {
+	margin: 0;
+}
+
+/* Ensure search button is totally hidden when collapsed (handled by nav-text class on it, but ensure display:none takes effect) */
+
+/* Main Content Headers */
+main header {
+	z-index: 30;
+	/* Below sidebar, above content */
+}
+
+/* Modals & Overlays */
+.custom-modal-overlay {
+	position: fixed;
+	inset: 0;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	z-index: 100;
+	background: rgba(0, 0, 0, 0.4);
+	backdrop-filter: blur(4px);
+	animation: fadeIn 0.2s ease-out;
+}
+
+.custom-modal-overlay.active {
+	display: flex;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+/* Dropdown Menus */
+.dropdown-menu {
+	display: none;
+	position: absolute;
+	right: 0;
+	background: var(--bg-panel);
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	box-shadow: var(--shadow-lg);
+	overflow: hidden;
+	min-width: 160px;
+	z-index: 999;
+	padding: 4px;
+	animation: slideDown 0.15s ease-out;
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.dropdown-menu.show {
+	display: block;
+}
+
+.dropdown-item {
+	padding: 8px 12px;
+	border-radius: 6px;
+	cursor: pointer;
+	color: var(--text-main);
+	font-size: 13px;
+	font-weight: 500;
+	transition: background 0.1s;
+}
+
+.dropdown-item:hover {
+	background: var(--hover-bg);
+}
+
+/* Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+	width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background: var(--border-color);
+	border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+/* Premium Button Styles */
+.btn-primary {
+	background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+	color: white;
+	box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover {
+	box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+	transform: translateY(-1px);
 }
