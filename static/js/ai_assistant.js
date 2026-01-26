@@ -1,90 +1,55 @@
-// Combined main.js + page-specific JS for ai_assistant.html (standalone)
+// Page-specific JS for ai_assistant.html
 (function () {
-  const body = document.body;
-  const THEME_KEY = 'sf_theme';
+  // Check if there is a session_id in URL to load
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const sessId = params.get('session_id');
+    if (sessId) {
+      window.loadSession(sessId);
+      // Remove param to clean URL
+      window.history.replaceState({}, document.title, "/chat");
+    }
+  });
 
-  function byId(id){ return document.getElementById(id); }
+  window.loadSession = function (id) {
+    // Switch to chat view
+    const w = document.getElementById('welcome-state');
+    if (w) w.classList.add('hidden');
 
-  function initTheme(){
-    const saved = localStorage.getItem(THEME_KEY) || 'default';
-    applyTheme(saved);
-  }
+    const c = document.getElementById('chat-interface');
+    if (c) {
+      c.classList.remove('hidden');
+      setTimeout(() => c.classList.remove('opacity-0'), 50);
+    }
 
-  function applyTheme(name){
-    body.classList.remove('theme-dark','theme-tokyo');
-    if(name === 'dark') body.classList.add('theme-dark');
-    else if(name === 'light') { /* default root variables are light */ }
-    else { /* default -> tokyo */ body.classList.add('theme-tokyo'); }
-    localStorage.setItem(THEME_KEY, name);
-  }
+    document.getElementById('active-session-title').textContent = "Chat Session " + id;
+    document.getElementById('messages-container').innerHTML = ''; // Start fresh or fetch details
+    // fetch(`/api/sessions/${id}/messages`) ...
+  };
 
-  window.setTheme = function(name){ applyTheme(name); showToast('Theme set to ' + name); };
-
-  // Dropdowns
-  window.toggleDropdown = function(id){ const el = byId(id); if(!el) return; closeAllDropdowns(); el.classList.toggle('show'); };
-  window.closeAllDropdowns = function(){ document.querySelectorAll('.dropdown-menu.show').forEach(d=>d.classList.remove('show')); };
-
-  // History panel
-  window.toggleHistory = function(){ const p = byId('history-panel'); if(!p) return; if(p.style.display === 'block' || p.style.transform === 'translateX(0%)'){ p.style.transform = 'translateX(100%)'; p.style.display = 'none'; } else { p.style.display = 'block'; p.style.transform = 'translateX(0%)'; } };
-
-  // Hook panel
-  window.toggleHookPanel = function(){ const p = byId('hook-panel'); if(!p) return; if(p.style.transform === 'translateX(0%)') p.style.transform = 'translateX(100%)'; else p.style.transform = 'translateX(0%)'; };
-
-  // Modals
-  function showModal(id){ const m = byId(id); if(m){ m.classList.add('active'); }}
-  function hideModal(id){ const m = byId(id); if(m){ m.classList.remove('active'); }}
-  window.openFolderModal = function(){ showModal('folder-modal'); }
-  window.closeFolderModal = function(){ hideModal('folder-modal'); }
-  window.openSettingsModal = function(){ showModal('settings-modal'); }
-  window.closeSettingsModal = function(){ hideModal('settings-modal'); }
-
-  window.submitFolderCreation = function(){ const val = (byId('fm-input')||{value:''}).value.trim(); if(!val){ showToast('Please enter a folder name'); return; } showToast('Created folder: '+val); closeFolderModal(); };
-
-  // Confirm helper
-  let _confirmCb = null;
-  function showConfirm(title, msg, cb){ const t = byId('confirm-title'); const m = byId('confirm-msg'); t && (t.textContent = title || 'Are you sure?'); m && (m.textContent = msg || 'This action cannot be undone.'); _confirmCb = cb; showModal('confirm-modal'); }
-  byId('btn-cancel-confirm')?.addEventListener('click', ()=>{ hideModal('confirm-modal'); _confirmCb = null; });
-  byId('btn-do-confirm')?.addEventListener('click', ()=>{ hideModal('confirm-modal'); if(typeof _confirmCb === 'function') _confirmCb(); _confirmCb = null; });
-
-  // History actions
-  window.toggleSelectMode = function(){ showToast('Toggled select mode'); };
-  window.selectAllReports = function(){ showToast('Selected all reports'); };
-  window.deleteSelectedReports = function(){ showConfirm('Delete reports','Delete selected reports?', ()=> showToast('Deleted selected reports')); };
-
-  // Merge panel
-  window.openMergePanel = function(){ showModal('merge-panel'); };
-  window.closeMergePanel = function(){ hideModal('merge-panel'); };
-  window.saveEditedReport = function(){ showToast('Saved edited report'); };
-  window.smartPushHooks = function(){ showToast('Pushed hooks into report'); };
-  window.deleteAllHooks = function(){ showConfirm('Delete hooks','Delete all hooks?', ()=> showToast('All hooks deleted')); };
-
-  // Toast
-  let toastTimer = null;
-  window.showToast = function(msg, timeout=2500){ const t = byId('toast-notification'); const m = byId('toast-message'); if(!t || !m) return console.log('Toast:', msg); m.textContent = msg; t.classList.remove('translate-y-full'); t.style.transform = 'translateY(0)'; clearTimeout(toastTimer); toastTimer = setTimeout(()=>{ hideToast(); }, timeout); };
-  window.hideToast = function(){ const t = byId('toast-notification'); if(t){ t.style.transform = 'translateY(100%)'; }};
-
-  // Danger action
-  window.resetDatabase = function(){ showConfirm('Reset Database','This will reset local database. Continue?', ()=> showToast('Database reset (stub)')); };
-
-  // Global download
-  window.triggerGlobalDownload = function(fmt){ const form = byId('dl-helper-form'); if(!form){ showToast('Download form not found'); return; } byId('hlp-format').value = fmt; byId('hlp-content').value = (document.querySelector('#merge-report-content')||{value:''}).value; form.submit(); showToast('Preparing download: '+fmt); hideGlobalMenu(); };
-  window.hideGlobalMenu = function(){ const g = byId('global-download-menu'); if(g) g.classList.add('hidden'); };
-
-  // Misc
-  document.addEventListener('click', (e)=>{ if(!e.target.closest('.dropdown-menu') && !e.target.closest('[onclick*="toggleDropdown"]')) closeAllDropdowns(); });
-  document.addEventListener('keydown', (e)=>{ if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){ e.preventDefault(); const btn = byId('sidebar-search-btn'); if(btn) btn.click(); } if(e.key === 'Escape') { closeAllDropdowns(); hideModal('settings-modal'); hideModal('folder-modal'); } });
-
-  // Init
-  document.addEventListener('DOMContentLoaded', ()=>{ initTheme(); });
-
-  // Page-specific JS for ai_assistant.html
-  function handleHookButtonClick(){ openMergePanel?.(); }
+  function handleHookButtonClick() { window.openMergePanel?.(); }
   window.handleHookButtonClick = handleHookButtonClick;
-  window.attemptNewChat = function(){ showToast('Starting new chat (stub)'); };
-  window.toggleChatModelSelect = function(id){ const opt = document.getElementById(id + '-options'); if(opt) opt.classList.toggle('show'); };
-  window.selectCustomOption = function(value, text, inputId, changeCb){ const hidden = document.getElementById(inputId); const trigger = document.getElementById(inputId + '-trigger-text'); if(hidden) hidden.value = value; if(trigger) trigger.textContent = text; const opts = document.getElementById(inputId + '-options'); if(opts) opts.classList.remove('show'); if(changeCb && typeof window[changeCb] === 'function') window[changeCb](value); };
-  window.setMode = function(mode){ document.getElementById('mode-normal')?.classList.toggle('text-white', mode==='normal'); document.getElementById('mode-deep')?.classList.toggle('text-white', mode==='deep_dive'); showToast('Mode: '+mode); };
-  window.toggleRecording = function(){ showToast('Toggle recording (stub)'); };
-  document.addEventListener('DOMContentLoaded', ()=>{ const form = document.getElementById('chat-form'); form?.addEventListener('submit', function(e){ e.preventDefault(); showToast('Message sent (stub)'); }); });
+
+  window.attemptNewChat = function () {
+    // Logic for top-right "New Chat" button
+    // Should create in active folder or prompt? Default to first available folder?
+    // We can access currentFolders from global scope? No, encapsulated.
+    // We can expose currentFolders or just make a new session in "New Research" folder if needed.
+    // For now, simple toast.
+    window.showToast('Select a folder from sidebar to create new chat');
+  };
+
+  window.toggleChatModelSelect = function (id) { const opt = document.getElementById(id + '-options'); if (opt) opt.classList.toggle('show'); };
+  window.selectCustomOption = function (value, text, inputId, changeCb) { const hidden = document.getElementById(inputId); const trigger = document.getElementById(inputId + '-trigger-text'); if (hidden) hidden.value = value; if (trigger) trigger.textContent = text; const opts = document.getElementById(inputId + '-options'); if (opts) opts.classList.remove('show'); if (changeCb && typeof window[changeCb] === 'function') window[changeCb](value); };
+  window.setMode = function (mode) { document.getElementById('mode-normal')?.classList.toggle('text-white', mode === 'normal'); document.getElementById('mode-deep')?.classList.toggle('text-white', mode === 'deep_dive'); showToast('Mode: ' + mode); };
+  window.toggleRecording = function () { showToast('Toggle recording (stub)'); };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('chat-form');
+    form?.addEventListener('submit', function (e) {
+      e.preventDefault();
+      window.showToast('Message sent (stub)');
+    });
+  });
 
 })();

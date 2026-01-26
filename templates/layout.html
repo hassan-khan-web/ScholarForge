@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Force load layout.css with cache busting -->
-    <link rel="stylesheet" href="{{ url_for('static', path='css/layout.css') }}?v=10">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/layout.css') }}?v=26">
 
     {% block styles %}{% endblock %}
 </head>
@@ -24,62 +24,76 @@
         <!-- Header: Toggle (Left) -->
         <div class="sidebar-section">
             <!-- Menu Toggle -->
-            <button onclick="toggleSidebar()" class="icon-btn hover:bg-[var(--hover-bg)] shrink-0 z-10 transition-all"
-                title="Toggle Menu">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
-                    </path>
-                </svg>
+            <button onclick="toggleSidebar()"
+                class="icon-btn hover:bg-[var(--hover-bg)] shrink-0 z-10 transition-all px-0 py-3" title="Toggle Menu">
+                <div class="w-[50px] flex justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16">
+                        </path>
+                    </svg>
+                </div>
             </button>
 
             <!-- Search Button (Expanded Only) -->
-            <button class="icon-btn hover:bg-[var(--hover-bg)] shrink-0 z-10 expanded-only" title="Search">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
+            <button class="icon-btn hover:bg-[var(--hover-bg)] shrink-0 z-10 expanded-only px-0 py-3" title="Search">
+                <div class="w-[50px] flex justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
             </button>
         </div>
 
         <!-- Navigation (Middle) -->
-        <div
-            class="flex-1 overflow-y-auto py-4 custom-scrollbar space-y-4 flex flex-col items-center overflow-x-hidden">
+        <div class="flex-1 overflow-y-auto py-4 custom-scrollbar space-y-4 flex flex-col overflow-x-hidden">
+
+            <!-- Header Separator -->
+            <div class="border-t border-[var(--border-color)] w-full mx-auto mb-2"></div>
 
             <!-- Report Generator Option -->
-            <a href="{{ url_for('index') }}" class="icon-btn w-full justify-start pl-[15px]" title="Report Generator">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                    </path>
-                </svg>
-                <span class="nav-text text-sm font-medium whitespace-nowrap ml-3">Report Generator</span>
+            <a href="{{ url_for('index') }}" class="icon-btn w-full px-0 py-3" title="Report Generator">
+                <div class="w-[50px] flex justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                </div>
+                <span class="nav-text text-sm font-medium whitespace-nowrap ml-1">Report Generator</span>
             </a>
 
             <!-- Generated History Option -->
-            <div onclick="toggleHistory()" class="icon-btn w-full justify-start pl-[15px]" title="Generated History">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="nav-text text-sm font-medium whitespace-nowrap ml-3">Generated History</span>
+            <div onclick="toggleHistory()" class="icon-btn w-full px-0 py-3" title="Generated History">
+                <div class="w-[50px] flex justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <span class="nav-text text-sm font-medium whitespace-nowrap ml-1">Generated History</span>
             </div>
 
-            <!-- Header: Research Assistant (Expanded Only) -->
+            <!-- Full Width Separator -->
+            <div class="border-t border-[var(--border-color)] w-full mx-auto my-2"></div>
+
+            <!-- Header: Research Assistant (Expanded Only, Fades) -->
             <div
-                class="nav-text mt-4 mb-1 pl-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap overflow-hidden">
+                class="nav-text mb-2 pl-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap overflow-hidden">
                 Research Assistant
             </div>
 
-            <div class="border-t border-[var(--border-color)] w-8 mx-auto nav-text-hidden"></div>
-
             <!-- AI Assistant Folder Option -->
-            <button onclick="openFolderModal()" class="icon-btn w-full justify-start pl-[15px] text-[var(--text-main)]"
+            <button onclick="openFolderModal()" class="icon-btn w-full px-0 py-3 text-[var(--text-main)] text-left"
                 title="Create Folder">
-                <svg class="w-5 h-5 shrink-0 text-[var(--accent-primary)]" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                <span class="nav-text text-sm font-medium whitespace-nowrap ml-3">Create Folder</span>
+                <div class="w-[50px] flex justify-center shrink-0">
+                    <svg class="w-5 h-5 text-[var(--accent-primary)]" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </div>
+                <span class="nav-text text-sm font-medium whitespace-nowrap ml-1 text-left">Create Folder</span>
             </button>
 
             <div id="folder-tree-container" class="hidden">
@@ -93,20 +107,24 @@
         <!-- Footer Settings (Bottom) -->
         <div class="sidebar-section border-t border-[var(--border-color)]">
             <!-- Settings (Fixed Position) -->
-            <button onclick="openSettingsModal()" class="icon-btn shrink-0" title="Settings">
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                    </path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
+            <button onclick="openSettingsModal()" class="icon-btn shrink-0 px-0 py-3" title="Settings">
+                <div class="w-[50px] flex justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </div>
                 <!-- No text for settings as requested -->
             </button>
 
             <!-- Profile Button (Expanded Only) -->
-            <button class="icon-btn expanded-only shrink-0" title="Profile">
-                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 shadow-md"></div>
+            <button class="icon-btn expanded-only shrink-0 px-0 py-3" title="Profile">
+                <div class="w-[50px] flex justify-center shrink-0">
+                    <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 shadow-md"></div>
+                </div>
             </button>
         </div>
     </nav>
@@ -245,7 +263,7 @@
     <!-- Folder Modal -->
     <div id="folder-modal" class="custom-modal-overlay">
         <div
-            class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-[var(--border-color)]">
+            class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-[var(--border-color)] modal-pop">
             <h3 class="text-lg font-bold text-[var(--text-main)] mb-1">New Project</h3>
             <p class="text-xs text-[var(--text-muted)] mb-5">Organize your research sessions.</p>
             <input type="text" id="fm-input"
@@ -333,6 +351,7 @@
     </div>
 
     <!-- Global Scripts Block -->
+    <script src="{{ url_for('static', path='js/global.js') }}?v=1"></script>
     {% block scripts %}{% endblock %}
 </body>
 

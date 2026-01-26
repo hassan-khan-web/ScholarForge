@@ -76,6 +76,17 @@ body {
 	background: var(--hover-bg);
 }
 
+/* Sidebar Icon Alignment Strategy */
+/* Revert to robust Flex-Start because HTML containers now handle geometry */
+#sidebar .icon-btn {
+	justify-content: flex-start;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	/* Allow vertical padding for spacing */
+	/* Width handled by utility classes (w-full or w-[30px]) */
+}
+
+
 :root {
 	--sidebar-width: 50px;
 	/* Default Collapsed (Menu Bar) */
@@ -192,19 +203,23 @@ nav#sidebar.expanded .expanded-only.flex {
 }
 
 /* Sidebar behavior */
+/* Sidebar behavior */
 .nav-text {
 	opacity: 0;
-	pointer-events: none;
 	width: 0;
-	display: none;
-	transition: opacity 0.2s ease;
+	overflow: hidden;
+	white-space: nowrap;
+	display: block;
+	/* Ensure it affects layout to animate */
+	transition: opacity 0.2s ease, width 0.3s ease;
 }
 
 nav#sidebar.expanded .nav-text {
 	opacity: 1;
-	pointer-events: auto;
-	width: auto;
-	display: block;
+	width: 200px;
+	/* Increased to show 'Research Assistant' fully */
+	transition-delay: 0.1s;
+	/* Wait for sidebar to start opening */
 }
 
 nav#sidebar.expanded .nav-text.flex {
@@ -225,16 +240,16 @@ nav#sidebar.expanded button.nav-text {
 	flex-shrink: 0;
 	transition: all 0.3s ease;
 
-	/* Collapsed State: Strict Center */
-	justify-content: center;
+	/* Collapsed State: Zero Padding (Rely on internal padding) */
+	justify-content: flex-start;
 	padding: 0;
 }
 
 nav#sidebar.expanded .sidebar-section {
-	/* Expanded State: Space Between for Search/Profile */
+	/* Expanded State: Space Between for Search/Profile, STILL NO PADDING on left */
 	justify-content: space-between;
-	padding-left: 0.75rem;
-	padding-right: 0.75rem;
+	padding-left: 0;
+	padding-right: 0;
 }
 
 /* Ensure no stray margins disrupt centering */
@@ -275,6 +290,28 @@ main header {
 	to {
 		opacity: 1;
 	}
+}
+
+/* Custom Modal Pop Expand Animation */
+@keyframes modalPopExpand {
+	0% {
+		opacity: 0;
+		transform: scale(0.8) scaleX(0.1);
+	}
+
+	50% {
+		opacity: 1;
+		transform: scale(1) scaleX(0.1);
+	}
+
+	100% {
+		opacity: 1;
+		transform: scale(1) scaleX(1);
+	}
+}
+
+.modal-pop {
+	animation: modalPopExpand 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* Dropdown Menus */
