@@ -8,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Force load layout.css with cache busting -->
     <link rel="stylesheet" href="{{ url_for('static', path='css/layout.css') }}?v=26">
 
     {% block styles %}{% endblock %}
@@ -16,14 +15,9 @@
 
 <body class="flex h-screen w-full overflow-hidden" onclick="closeAllDropdowns()">
 
-    <!-- Premium Glass Sidebar -->
-    <!-- Default state is now COLLAPSED (Menu Bar) by CSS structure. We add 'expanded' to open it. -->
     <nav id="sidebar"
         class="border-r border-[var(--border-color)] bg-[var(--bg-sidebar)] flex flex-col transition-all duration-300 z-50">
-        <!-- Header: Toggle (Left) -->
-        <!-- Header: Toggle (Left) -->
         <div class="sidebar-section">
-            <!-- Menu Toggle -->
             <button onclick="toggleSidebar()"
                 class="icon-btn hover:bg-[var(--hover-bg)] shrink-0 z-10 transition-all px-0 py-3" title="Toggle Menu">
                 <div class="w-[50px] flex justify-center shrink-0">
@@ -35,7 +29,6 @@
                 </div>
             </button>
 
-            <!-- Search Button (Expanded Only) -->
             <button class="icon-btn hover:bg-[var(--hover-bg)] shrink-0 z-10 expanded-only px-0 py-3" title="Search">
                 <div class="w-[50px] flex justify-center shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -46,13 +39,10 @@
             </button>
         </div>
 
-        <!-- Navigation (Middle) -->
         <div class="flex-1 overflow-y-auto py-4 custom-scrollbar space-y-4 flex flex-col overflow-x-hidden">
 
-            <!-- Header Separator -->
             <div class="border-t border-[var(--border-color)] w-full mx-auto mb-2"></div>
 
-            <!-- Report Generator Option -->
             <a href="{{ url_for('index') }}" class="icon-btn w-full px-0 py-3" title="Report Generator">
                 <div class="w-[50px] flex justify-center shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +54,6 @@
                 <span class="nav-text text-sm font-medium whitespace-nowrap ml-1">Report Generator</span>
             </a>
 
-            <!-- Generated History Option -->
             <div onclick="toggleHistory()" class="icon-btn w-full px-0 py-3" title="Generated History">
                 <div class="w-[50px] flex justify-center shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,16 +64,13 @@
                 <span class="nav-text text-sm font-medium whitespace-nowrap ml-1">Generated History</span>
             </div>
 
-            <!-- Full Width Separator -->
             <div class="border-t border-[var(--border-color)] w-full mx-auto my-2"></div>
 
-            <!-- Header: Research Assistant (Expanded Only, Fades) -->
             <div
                 class="nav-text mb-2 pl-4 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap overflow-hidden">
                 Research Assistant
             </div>
 
-            <!-- AI Assistant Folder Option -->
             <button onclick="openFolderModal()" class="icon-btn w-full px-0 py-3 text-[var(--text-main)] text-left"
                 title="Create Folder">
                 <div class="w-[50px] flex justify-center shrink-0">
@@ -97,16 +83,11 @@
             </button>
 
             <div id="folder-tree-container" class="hidden">
-                <!-- Hidden foldertree -->
             </div>
 
         </div>
 
-        <!-- Footer Settings (Bottom) -->
-        <!-- Footer Settings (Bottom) -->
-        <!-- Footer Settings (Bottom) -->
         <div class="sidebar-section border-t border-[var(--border-color)]">
-            <!-- Settings (Fixed Position) -->
             <button onclick="openSettingsModal()" class="icon-btn shrink-0 px-0 py-3" title="Settings">
                 <div class="w-[50px] flex justify-center shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,10 +98,8 @@
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                 </div>
-                <!-- No text for settings as requested -->
             </button>
 
-            <!-- Profile Button (Expanded Only) -->
             <button class="icon-btn expanded-only shrink-0 px-0 py-3" title="Profile">
                 <div class="w-[50px] flex justify-center shrink-0">
                     <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 shadow-md"></div>
@@ -129,7 +108,6 @@
         </div>
     </nav>
 
-    <!-- Sidebar Toggle Script -->
     <script>
         // Init sidebar state - Ensure sync if browser remembers state, or always start collapsed
         document.addEventListener('DOMContentLoaded', () => {
@@ -179,16 +157,13 @@
         }
     </script>
 
-    <!-- Overlay Panels (History/Hooks) -->
 
-    <!-- History Panel -->
     <aside id="history-panel"
         class="fixed inset-y-0 left-[80px] w-80 bg-[var(--bg-panel)] border-r border-[var(--border-color)] shadow-2xl z-40 transform -translate-x-full transition-transform duration-300">
         <div
             class="h-16 flex items-center justify-between px-6 border-b border-[var(--border-color)] bg-[var(--bg-main)]">
             <h3 class="font-bold text-[var(--text-main)]">Reports</h3>
             <div class="flex items-center gap-2">
-                <!-- 3 Dots Menu (Select All, Delete All) -->
                 <div class="relative">
                     <button onclick="toggleHistoryMenu(event)"
                         class="icon-btn p-1 hover:bg-[var(--hover-bg)] rounded-full">
@@ -199,7 +174,6 @@
                             </path>
                         </svg>
                     </button>
-                    <!-- Dropdown Content -->
                     <div id="history-menu-dropdown"
                         class="dropdown-menu-custom absolute right-0 top-full mt-2 w-48 bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-lg shadow-xl hidden z-50 transform transition-all duration-200 origin-top-right">
                         <div class="py-1">
@@ -221,11 +195,9 @@
             </div>
         </div>
         <div id="history-list-content" class="h-full overflow-y-auto custom-scrollbar p-2">
-            <!-- Content -->
         </div>
     </aside>
 
-    <!-- Hook Panel (Right Side) -->
     <aside id="hook-panel"
         class="fixed inset-y-0 right-0 w-80 bg-[var(--bg-panel)] border-l border-[var(--border-color)] shadow-2xl z-40 transform translate-x-full transition-transform duration-300">
         <div
@@ -240,10 +212,7 @@
         <div id="hook-list-content" class="h-full overflow-y-auto custom-scrollbar p-4"></div>
     </aside>
 
-    <!-- Main Content Area -->
     <main class="flex-1 relative h-full overflow-hidden bg-[var(--bg-main)] flex flex-col">
-        <!-- New Top Header in Main Content (Title) -->
-        <!-- Global Header -->
         <div class="h-16 shrink-0 flex items-center justify-between px-6 pt-4">
             <h1 class="font-bold text-2xl tracking-tight">
                 <span class="text-blue-600">Scholar</span><span class="text-[var(--text-main)]">Forge</span>
@@ -258,9 +227,7 @@
         </div>
     </main>
 
-    <!-- MODALS (Settings, Folder, Confirm, etc) are retained below with updated classes -->
 
-    <!-- Folder Modal -->
     <div id="folder-modal" class="custom-modal-overlay">
         <div
             class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-[var(--border-color)] modal-pop">
@@ -279,7 +246,6 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
     <div id="settings-modal" class="custom-modal-overlay">
         <div
             class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-6 w-full max-w-md border border-[var(--border-color)]">
@@ -316,11 +282,8 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <!-- Toast Notification Removed -->
     <div id="toast-notification" class="hidden"></div>
 
-    <!-- Confirm Modal -->
     <div id="confirm-modal" class="custom-modal-overlay">
         <div
             class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-[var(--border-color)]">
@@ -335,7 +298,6 @@
         </div>
     </div>
 
-    <!-- Hidden Forms & Helpers -->
     <div class="hidden">
         <form id="dl-helper-form" action="{{ url_for('download') }}" method="POST" target="_blank" class="hidden">
             <input type="hidden" name="report_content" id="hlp-content">
@@ -344,7 +306,6 @@
         </form>
     </div>
 
-    <!-- Global Scripts Block -->
     <script src="{{ url_for('static', path='js/global.js') }}?v=2"></script>
     {% block scripts %}{% endblock %}
 </body>

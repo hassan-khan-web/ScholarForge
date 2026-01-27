@@ -12,8 +12,8 @@ from fastapi.responses import JSONResponse, FileResponse
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 from celery.result import AsyncResult
-import fitz  # PyMuPDF for PDFs
-from docx import Document as DocxDocument  # python-docx for DOCX
+import fitz
+from docx import Document as DocxDocument
 
 from task import generate_report_task, celery_app
 import AI_engine 
@@ -125,7 +125,6 @@ def get_history(session_id: int):
     msgs = database.get_session_messages(session_id)
     return [{"role": m.role, "content": m.content} for m in msgs]
 
-# Helper function to extract text from uploaded files
 async def extract_text_from_file(file: UploadFile) -> str:
     content = ""
     try:

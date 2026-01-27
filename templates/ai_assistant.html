@@ -1,17 +1,14 @@
 {% extends 'layout.html' %}
 
 {% block header_actions %}
-<!-- Green Indicator (Hidden by default until chat active) -->
 <div id="active-indicator" class="hidden w-2 h-2 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]">
 </div>
 
-<!-- New Chat Button -->
 <button onclick="attemptNewChat()"
     class="text-xs text-[var(--text-muted)] border border-[var(--border-color)] hover:text-[var(--text-main)] hover:bg-[var(--hover-bg)] px-3 py-1.5 rounded-lg transition-colors">
     + New Chat
 </button>
 
-<!-- Hook Button -->
 <button onclick="handleHookButtonClick()"
     class="bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-md transition-all flex items-center gap-2">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,7 +105,6 @@
 
                     <div
                         class="relative flex bg-[var(--bg-panel)] rounded-lg p-0.5 border border-[var(--border-color)] shadow-sm">
-                        <!-- Sliding Indicator -->
                         <div id="mode-indicator"
                             class="absolute top-0.5 bottom-0.5 left-0.5 w-[calc(50%-2px)] bg-[var(--accent-primary)] rounded-md transition-all duration-300 ease-in-out shadow-sm">
                         </div>

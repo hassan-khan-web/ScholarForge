@@ -13,52 +13,33 @@ FORMATTING RULES:
 """
 
 LIT_REVIEW_BASE = """
-# 1. [Engaging Title for Scope & Rationale]
-# 2. [Engaging Title for Main Thematic Analysis]
 [INSTRUCTION: Generate {section_count} distinct thematic sections. 
 {complexity_note}
 {common_ins}]
-# {last_n}. [Engaging Title for Future Outlook]
-# {last}. References
 """
 
 CASE_STUDY_BASE = """
-# 1. Executive Summary
-# 2. [Engaging Title for Problem Statement]
-# 3. [Engaging Title for Context]
 [INSTRUCTION: Analyze the case phases. Generate {section_count} sections covering Strategy, Execution, and Outcome. 
 {complexity_note}
 {common_ins}]
-# {last_n}. [Engaging Title for Lessons Learned]
-# {last}. Conclusion
 """
 
 WHITE_PAPER_BASE = """
-# 1. Executive Summary
-# 2. [Engaging Title for Market Context]
 [INSTRUCTION: Compare solutions. Generate {section_count} sections analyzing ROI and Technical Nuance. 
 {complexity_note}
 {common_ins}]
-# {last_n}. [Engaging Title for Implementation]
-# {last}. Call to Action
 """
 
 TECH_MANUAL_BASE = """
-# 1. System Overview
-# 2. Quick Start Guide
 [INSTRUCTION: Technical Breakdown. Generate {section_count} sections covering Core Features and API usage. 
 {complexity_note}
 {common_ins}]
-# {last_n}. Troubleshooting
-# {last}. Glossary/Appendix
 """
 
 ARTICLE_BASE = """
-# 1. The Lead (Headline)
 [INSTRUCTION: Narrative Flow. Generate {section_count} sections that tell the story. Use punchy, magazine-style headers.
 {complexity_note}
 {common_ins}]
-# {last}. The Kicker (Conclusion)
 """
 
 FORMAT_TEMPLATES = {

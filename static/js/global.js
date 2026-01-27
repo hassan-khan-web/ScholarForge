@@ -1,4 +1,3 @@
-// Global JS for Sidebar, Modals, and Folder Logic
 (function () {
     const body = document.body;
     const THEME_KEY = 'sf_theme';
@@ -13,14 +12,13 @@
     function applyTheme(name) {
         body.classList.remove('theme-dark', 'theme-tokyo');
         if (name === 'dark') body.classList.add('theme-dark');
-        else if (name === 'light') { /* default root variables are light */ }
-        else { /* default -> tokyo */ body.classList.add('theme-tokyo'); }
+        else if (name === 'light') {  }
+        else {  body.classList.add('theme-tokyo'); }
         localStorage.setItem(THEME_KEY, name);
     }
 
     window.setTheme = function (name) { applyTheme(name); showToast('Theme set to ' + name); };
 
-    // Dropdowns (Global close)
     window.toggleDropdown = function (id) {
         const el = byId(id);
         if (!el) return;
@@ -30,13 +28,10 @@
     };
     window.closeAllDropdowns = function () { document.querySelectorAll('.dropdown-menu.show').forEach(d => d.classList.remove('show')); };
 
-    // History panel (Legacy)
     window.toggleHistory = function () { const p = byId('history-panel'); if (!p) return; if (p.style.display === 'block' || p.style.transform === 'translateX(0%)') { p.style.transform = 'translateX(100%)'; p.style.display = 'none'; } else { p.style.display = 'block'; p.style.transform = 'translateX(0%)'; } };
 
-    // Hook panel
     window.toggleHookPanel = function () { const p = byId('hook-panel'); if (!p) return; if (p.style.transform === 'translateX(0%)') { p.style.transform = 'translateX(100%)'; } else { p.style.transform = 'translateX(0%)'; } };
 
-    // Modals
     function showModal(id) { const m = byId(id); if (m) { m.classList.add('active'); if (id === 'folder-modal') setTimeout(() => byId('fm-input')?.focus(), 100); } }
     function hideModal(id) { const m = byId(id); if (m) { m.classList.remove('active'); } }
     window.openFolderModal = function () { showModal('folder-modal'); }
@@ -44,23 +39,19 @@
     window.openSettingsModal = function () { showModal('settings-modal'); }
     window.closeSettingsModal = function () { hideModal('settings-modal'); }
 
-    // Toast
     let toastTimer = null;
     window.showToast = function (msg, timeout = 2500) {
         console.log('Toast suppressed:', msg);
     };
     window.hideToast = function () { };
 
-    // FOLDER AND SESSION LOGIC
     let currentFolders = [];
 
-    // Init Logic
     document.addEventListener('DOMContentLoaded', () => {
         initTheme();
-        fetchFolders(); // Load sidebar tree
+        fetchFolders();
     });
 
-    // 1. Create Folder
     window.submitFolderCreation = async function () {
         const input = byId('fm-input');
         const name = (input?.value || '').trim();
@@ -77,9 +68,7 @@
                 showToast('Created project: ' + name);
                 closeFolderModal();
                 input.value = '';
-                // Auto-create initial session
                 await createSession(data.folder.id, "New Research", true);
-                // Refresh tree is handled by createSession's success
             } else {
                 showToast(data.error || 'Failed to create folder');
             }
@@ -89,7 +78,6 @@
         }
     };
 
-    // 2. Fetch & Render Tree
     async function fetchFolders() {
         try {
             const res = await fetch('/api/folders');
@@ -112,7 +100,6 @@
             const folderEl = document.createElement('div');
             folderEl.className = 'mb-1';
 
-            // Folder Header
             const header = document.createElement('div');
             header.className = 'group flex items-center justify-between px-3 py-2 hover:bg-[var(--hover-bg)] rounded-lg cursor-pointer transition-colors';
 
@@ -166,7 +153,6 @@
     window.toggleFolder = function (id) {
         const content = byId(`folder-content-${id}`);
         const arrow = byId(`arrow-${id}`);
-        // If state is saved in localstorage, we can use that. For now default closed.
         if (content.classList.contains('hidden')) {
             content.classList.remove('hidden');
             arrow.classList.remove('-rotate-90');
@@ -186,15 +172,12 @@
             if (data.status === 'success') {
                 await fetchFolders();
                 if (redirect || window.location.pathname === '/chat') {
-                    // If on chat page, load session
                     if (window.loadSession) window.loadSession(data.session.id);
-                    else window.location.href = '/chat?session_id=' + data.session.id; // Or just /chat
+                    else window.location.href = '/chat?session_id=' + data.session.id;
                 } else {
-                    // Redirect to chat
                     window.location.href = '/chat';
                 }
 
-                // Auto-expand folder
                 setTimeout(() => {
                     const content = byId(`folder-content-${folderId}`);
                     if (content && content.classList.contains('hidden')) toggleFolder(folderId);
@@ -203,19 +186,14 @@
         } catch (e) { console.error(e); }
     };
 
-    // Global loadSession - if on another page, redirect. If on chat page, custom logic handles it.
     window.loadSessionGlobal = function (id) {
         if (window.location.pathname.includes('/chat')) {
             if (window.loadSession) window.loadSession(id);
         } else {
-            // Store session ID to load? 
-            // Simplified: Go to chat page. Chat page should default to latest or empty?
-            // Let's pass query param
             window.location.href = '/chat?session_id=' + id;
         }
     };
 
-    // Options Logic
     window.showFolderOptions = function (e, id, name) {
         e.stopPropagation();
         showContextMenu(e.clientX, e.clientY, [

@@ -1,4 +1,4 @@
-/* Combined main.css + search-specific styles (standalone) */
+
 :root {
 	--bg-main: #f8fafc;
 	--bg-panel: #ffffff;
@@ -32,7 +32,7 @@
 	--hover-bg: rgba(255,255,255,0.03);
 }
 
-/* Layout helpers */
+
 body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background: var(--bg-main); color: var(--text-main); }
 .glass-panel { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); }
 
@@ -60,11 +60,11 @@ body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvet
 
 #toast-notification .hidden { display:none; }
 
-/* small responsive tweaks */
+
 @media (max-width: 800px) {
 	nav#sidebar { transform: translateX(-100%); position:fixed; z-index:50; }
 }
 
-/* search-specific */
+
 .search-result-item { padding: 12px; border-radius: 8px; }
 .search-result-item.selected { background: rgba(37,99,235,0.06); }

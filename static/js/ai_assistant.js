@@ -1,18 +1,14 @@
-// Page-specific JS for ai_assistant.html
 (function () {
-  // Check if there is a session_id in URL to load
   document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const sessId = params.get('session_id');
     if (sessId) {
       window.loadSession(sessId);
-      // Remove param to clean URL
       window.history.replaceState({}, document.title, "/chat");
     }
   });
 
   window.loadSession = function (id) {
-    // Switch to chat view
     const w = document.getElementById('welcome-state');
     if (w) w.classList.add('hidden');
 
@@ -25,19 +21,13 @@
 
     const titleEl = document.getElementById('active-session-title');
     if (titleEl) titleEl.textContent = "Chat Session " + id;
-    document.getElementById('messages-container').innerHTML = ''; // Start fresh or fetch details
-    // fetch(`/api/sessions/${id}/messages`) ...
+    document.getElementById('messages-container').innerHTML = '';
   };
 
   function handleHookButtonClick() { window.openMergePanel?.(); }
   window.handleHookButtonClick = handleHookButtonClick;
 
   window.attemptNewChat = function () {
-    // Logic for top-right "New Chat" button
-    // Should create in active folder or prompt? Default to first available folder?
-    // We can access currentFolders from global scope? No, encapsulated.
-    // We can expose currentFolders or just make a new session in "New Research" folder if needed.
-    // For now, simple toast.
     window.showToast('Select a folder from sidebar to create new chat');
   };
 
@@ -50,13 +40,11 @@
     const btnDeep = document.getElementById('mode-deep');
 
     if (mode === 'normal') {
-      // Move indicator to left using explicit style to avoid class conflicts
       if (indicator) {
-        indicator.style.left = '0.125rem'; // 0.5 tailwind spacing is 0.125rem
-        indicator.classList.remove('left-1/2'); // Cleanup just in case
+        indicator.style.left = '0.125rem';
+        indicator.classList.remove('left-1/2');
       }
 
-      // Update Text Colors
       btnNormal?.classList.add('text-white');
       btnNormal?.classList.remove('text-[var(--text-muted)]');
 
@@ -64,13 +52,11 @@
       btnDeep?.classList.remove('text-white');
 
     } else if (mode === 'deep_dive') {
-      // Move indicator to right
       if (indicator) {
         indicator.style.left = '50%';
-        indicator.classList.remove('left-0.5'); // Cleanup just in case
+        indicator.classList.remove('left-0.5');
       }
 
-      // Update Text Colors
       btnNormal?.classList.remove('text-white');
       btnNormal?.classList.add('text-[var(--text-muted)]');
 

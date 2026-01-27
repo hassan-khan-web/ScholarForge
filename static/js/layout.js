@@ -1,4 +1,3 @@
-// Combined main.js + minimal layout JS (standalone)
 (function () {
     const body = document.body;
     const THEME_KEY = 'sf_theme';
@@ -13,8 +12,8 @@
     function applyTheme(name) {
         body.classList.remove('theme-dark', 'theme-tokyo');
         if (name === 'dark') body.classList.add('theme-dark');
-        else if (name === 'light') { /* default root variables are light */ }
-        else { /* default -> tokyo */ body.classList.add('theme-tokyo'); }
+        else if (name === 'light') {  }
+        else {  body.classList.add('theme-tokyo'); }
         localStorage.setItem(THEME_KEY, name);
     }
 
@@ -59,7 +58,6 @@
     document.addEventListener('click', (e) => { if (!e.target.closest('.dropdown-menu') && !e.target.closest('[onclick*="toggleDropdown"]')) closeAllDropdowns(); });
     document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); const btn = byId('sidebar-search-btn'); if (btn) btn.click(); } if (e.key === 'Escape') { closeAllDropdowns(); hideModal('settings-modal'); hideModal('folder-modal'); } });
 
-    // Folder & Chat Logic
     async function loadFolders() {
         const container = byId('folder-tree-container');
         if (!container) return;
@@ -79,7 +77,6 @@
         container.innerHTML = '';
 
         folders.forEach(folder => {
-            // Folder Item
             const folderEl = document.createElement('div');
             folderEl.className = 'flex flex-col';
 
@@ -99,7 +96,6 @@
 
             container.appendChild(header);
 
-            // Sessions Container
             const sessContainer = document.createElement('div');
             sessContainer.id = `folder-content-${folder.id}`;
             sessContainer.className = `ml-6 flex flex-col border-l border-[var(--border-color)] pl-2 ${folder.isOpen ? '' : 'hidden'}`;
@@ -110,7 +106,6 @@
                     sessEl.href = `/chat?session_id=${session.id}`;
                     sessEl.className = 'nav-item py-1.5 text-xs nav-text truncate block';
                     sessEl.innerText = session.title || 'Untitled Chat';
-                    // Highlight active session if needed
                     const urlParams = new URLSearchParams(window.location.search);
                     if (urlParams.get('session_id') == session.id) sessEl.classList.add('text-[var(--accent-primary)]', 'font-semibold');
 
@@ -164,7 +159,7 @@
                 showToast('Created folder: ' + val);
                 closeFolderModal();
                 input.value = '';
-                loadFolders(); // Reload list
+                loadFolders();
             } else {
                 showToast('Failed to create folder');
             }
@@ -174,13 +169,11 @@
         }
     };
 
-    window.loadFolders = loadFolders; // Export for external usage if needed
+    window.loadFolders = loadFolders;
 
-    // Init
     document.addEventListener('DOMContentLoaded', () => {
         initTheme();
         loadFolders();
-        // Only attach if not using inline onclick, but we are using inline onclick for toggle
     });
 
 })();

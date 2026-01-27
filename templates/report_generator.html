@@ -13,10 +13,8 @@
         <div
             class="w-full max-w-4xl bg-[var(--bg-panel)] rounded-3xl shadow-2xl border border-[var(--border-color)] overflow-hidden flex flex-col md:flex-row h-[700px]">
 
-            <!-- Left Side: Brand & Info -->
             <div
                 class="w-full md:w-1/3 bg-gradient-to-br from-blue-600 to-indigo-700 p-8 flex flex-col justify-between text-white relative overflow-hidden">
-                <!-- Decorative Circle -->
                 <div class="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-white opacity-5 blur-3xl"></div>
 
                 <div class="relative z-10">
@@ -51,7 +49,6 @@
                 </div>
             </div>
 
-            <!-- Right Side: Configuration -->
             <form id="report-form"
                 class="w-full md:w-2/3 p-8 flex flex-col gap-6 bg-[var(--bg-panel)] overflow-y-auto custom-scrollbar">
 
@@ -72,7 +69,6 @@
                             <input type="hidden" id="format-select" name="format_key" value="literature_review">
                             <div
                                 class="border border-[var(--border-color)] rounded-xl p-1 bg-[var(--bg-main)] flex flex-col gap-1">
-                                <!-- Trigger (Visual only, we use JS for logic) -->
                                 <button type="button" onclick="toggleCustomSelect('format-select')"
                                     class="w-full flex justify-between items-center p-3 text-sm font-medium text-[var(--text-main)] hover:bg-[var(--hover-bg)] rounded-lg transition-colors text-left">
                                     <span id="format-select-trigger-text">Literature Review</span>
@@ -83,7 +79,6 @@
                                     </svg>
                                 </button>
 
-                                <!-- Dropdown Options -->
                                 <div id="format-select-options"
                                     class="hidden absolute top-full left-0 right-0 mt-2 bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-xl shadow-xl z-20 overflow-hidden p-1">
                                     <div class="p-2 hover:bg-[var(--hover-bg)] rounded-lg cursor-pointer text-sm font-medium text-[var(--text-main)]"
@@ -135,7 +130,6 @@
                     </div>
                 </div>
 
-                <!-- Custom Format Logic Input -->
                 <div id="custom-format-container" class="hidden transition-all duration-300">
                     <label
                         class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 block">Instruction
@@ -190,13 +184,11 @@
             <h2 class="text-2xl font-bold text-center mb-8 text-[var(--text-main)]">Generating Research</h2>
 
             <div class="relative space-y-8">
-                <!-- Vertical Progress Line -->
                 <div class="absolute left-6 top-4 bottom-4 w-0.5 bg-[var(--border-color)]">
                     <div id="progress-line-fill"
                         class="w-full bg-blue-600 transition-all duration-[3000ms] ease-linear h-0"></div>
                 </div>
 
-                <!-- Step 1 -->
                 <div id="step-1" class="relative flex items-center gap-4 opacity-50 transition-all duration-300">
                     <div
                         class="w-12 h-12 rounded-full flex items-center justify-center bg-[var(--bg-panel)] border-2 border-[var(--border-color)] z-10 transition-colors duration-300">
@@ -212,7 +204,6 @@
                     </div>
                 </div>
 
-                <!-- Step 2 -->
                 <div id="step-2" class="relative flex items-center gap-4 opacity-50 transition-all duration-300">
                     <div
                         class="w-12 h-12 rounded-full flex items-center justify-center bg-[var(--bg-panel)] border-2 border-[var(--border-color)] z-10 transition-colors duration-300">
@@ -229,7 +220,6 @@
                     </div>
                 </div>
 
-                <!-- Step 3 -->
                 <div id="step-3" class="relative flex items-center gap-4 opacity-50 transition-all duration-300">
                     <div
                         class="w-12 h-12 rounded-full flex items-center justify-center bg-[var(--bg-panel)] border-2 border-[var(--border-color)] z-10 transition-colors duration-300">
@@ -247,7 +237,6 @@
                     </div>
                 </div>
 
-                <!-- Step 4 -->
                 <div id="step-4" class="relative flex items-center gap-4 opacity-50 transition-all duration-300">
                     <div
                         class="w-12 h-12 rounded-full flex items-center justify-center bg-[var(--bg-panel)] border-2 border-[var(--border-color)] z-10 transition-colors duration-300">

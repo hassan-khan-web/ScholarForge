@@ -1,5 +1,3 @@
-// Combined main.js + search page JS (standalone)
-// Main shared utilities (copied from main.js)
 (function(){
     const body = document.body;
     const THEME_KEY = 'sf_theme';
@@ -43,10 +41,8 @@ let currentSearchTab = 'all';
 let selectedSearchIndex = -1;
 let filteredResults = [];
 
-// Load data on page load
 document.addEventListener('DOMContentLoaded', loadSearchData);
 
-// ESC to go back
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
         window.history.back();

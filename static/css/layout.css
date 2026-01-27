@@ -1,14 +1,14 @@
-/* Modern Premium Design System */
+
 :root {
-	/* Light Mode (Premium SaaS) */
+	
 	--bg-main: #f3f6fc;
-	/* Soft blue-grey tint */
+	
 	--bg-panel: #ffffff;
 	--bg-sidebar: #ffffff;
 	--accent-primary: #3b82f6;
-	/* Vibrant Blue */
+	
 	--accent-secondary: #8b5cf6;
-	/* Purple for gradients */
+	
 	--border-color: #e2e8f0;
 	--text-main: #0f172a;
 	--text-main: #0f172a;
@@ -22,9 +22,9 @@
 }
 
 .theme-dark {
-	/* Dark Mode (Deep Space Glass) */
+	
 	--bg-main: #020617;
-	/* Very dark blue, almost black */
+	
 	--bg-panel: #0f172a;
 	--bg-sidebar: #0f172a;
 	--accent-primary: #3b82f6;
@@ -40,7 +40,7 @@
 	--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
 }
 
-/* Base Reset & Typography */
+
 body {
 	font-family: 'Inter', system-ui, -apple-system, sans-serif;
 	background: var(--bg-main);
@@ -49,7 +49,7 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism Utilities */
+
 .glass-panel {
 	background: var(--glass-bg);
 	backdrop-filter: blur(12px);
@@ -58,7 +58,7 @@ body {
 	box-shadow: var(--shadow-md);
 }
 
-/* Common UI Elements */
+
 .icon-btn {
 	display: inline-flex;
 	align-items: center;
@@ -76,23 +76,23 @@ body {
 	background: var(--hover-bg);
 }
 
-/* Sidebar Icon Alignment Strategy */
-/* Revert to robust Flex-Start because HTML containers now handle geometry */
+
+
 #sidebar .icon-btn {
 	justify-content: flex-start;
 	padding-left: 0 !important;
 	padding-right: 0 !important;
-	/* Allow vertical padding for spacing */
-	/* Width handled by utility classes (w-full or w-[30px]) */
+	
+	
 }
 
 
 :root {
 	--sidebar-width: 50px;
-	/* Default Collapsed (Menu Bar) */
+	
 }
 
-/* Sidebar Layout */
+
 nav#sidebar {
 	width: var(--sidebar-width);
 	background: var(--bg-sidebar);
@@ -103,8 +103,8 @@ nav#sidebar {
 	height: 100vh;
 	transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
 	z-index: 50;
-	/* Topmost */
-	/* Fix horizontal scroll */
+	
+	
 	overflow-x: hidden !important;
 }
 
@@ -116,7 +116,7 @@ nav#sidebar:not(.expanded) .nav-item {
 	padding-right: 0;
 	justify-content: center;
 	border-radius: 0;
-	/* Optional: square off if full width, often looks cleaner for "superposed" look, but keeping radius is fine too. Let's keep radius but rely on width. */
+	
 }
 
 nav#sidebar.expanded {
@@ -127,42 +127,42 @@ body.sidebar-expanded {
 	--sidebar-width: 200px;
 }
 
-/* Dynamic Alignment for Header and Footer */
+
 .sidebar-section {
 	display: flex;
 	align-items: center;
 	width: 100%;
 	height: 64px;
 	flex-shrink: 0;
-	/* NO transition on padding or justify-content to ensure stability */
+	
 	transition: width 0.3s ease;
 
-	/* LOCKED LEFT STRATEGY */
-	/* 50px sidebar - 36px button (20px icon + 8px*2 padding) = 14px space. / 2 = 7px */
+	
+	
 	padding-left: 7px;
 	padding-right: 7px;
 	justify-content: flex-start;
 }
 
-/* Expanded state: Padding DOES NOT CHANGE for the left side */
+
 nav#sidebar.expanded .sidebar-section {
 	padding-left: 7px;
-	/* Remains locked */
-	/* Space accomodation happens via width expansion */
+	
+	
 }
 
-/* Ensure no stray margins disrupt positioning */
+
 nav#sidebar .sidebar-section .icon-btn {
 	margin: 0;
 }
 
-/* Items that are completely hidden in narrow mode (Search, Profile) */
+
 .expanded-only {
 	display: none !important;
 	opacity: 0;
 	transition: opacity 0.2s ease;
 
-	/* FLEX STRATEGY: Push to right */
+	
 	margin-left: auto !important;
 }
 
@@ -172,12 +172,12 @@ nav#sidebar.expanded .expanded-only {
 	animation: fadeIn 0.3s forwards;
 }
 
-/* Special fix for the flex display override */
+
 nav#sidebar.expanded .expanded-only.flex {
 	display: flex !important;
 }
 
-/* Icon-only items (Report, History, Settings) */
+
 .nav-icon-only {
 	width: 40px !important;
 	padding: 0 !important;
@@ -202,24 +202,24 @@ nav#sidebar.expanded .expanded-only.flex {
 	color: var(--accent-primary);
 }
 
-/* Sidebar behavior */
-/* Sidebar behavior */
+
+
 .nav-text {
 	opacity: 0;
 	width: 0;
 	overflow: hidden;
 	white-space: nowrap;
 	display: block;
-	/* Ensure it affects layout to animate */
+	
 	transition: opacity 0.2s ease, width 0.3s ease;
 }
 
 nav#sidebar.expanded .nav-text {
 	opacity: 1;
 	width: 200px;
-	/* Increased to show 'Research Assistant' fully */
+	
 	transition-delay: 0.1s;
-	/* Wait for sidebar to start opening */
+	
 }
 
 nav#sidebar.expanded .nav-text.flex {
@@ -230,42 +230,42 @@ nav#sidebar.expanded button.nav-text {
 	display: inline-flex;
 }
 
-/* Dynamic Alignment for Header and Footer */
+
 .sidebar-section {
 	display: flex;
 	align-items: center;
 	width: 100%;
 	height: 64px;
-	/* h-16 */
+	
 	flex-shrink: 0;
 	transition: all 0.3s ease;
 
-	/* Collapsed State: Zero Padding (Rely on internal padding) */
+	
 	justify-content: flex-start;
 	padding: 0;
 }
 
 nav#sidebar.expanded .sidebar-section {
-	/* Expanded State: Space Between for Search/Profile, STILL NO PADDING on left */
+	
 	justify-content: space-between;
 	padding-left: 0;
 	padding-right: 0;
 }
 
-/* Ensure no stray margins disrupt centering */
+
 nav#sidebar .sidebar-section .icon-btn {
 	margin: 0;
 }
 
-/* Ensure search button is totally hidden when collapsed (handled by nav-text class on it, but ensure display:none takes effect) */
 
-/* Main Content Headers */
+
+
 main header {
 	z-index: 30;
-	/* Below sidebar, above content */
+	
 }
 
-/* Modals & Overlays */
+
 .custom-modal-overlay {
 	position: fixed;
 	inset: 0;
@@ -292,7 +292,7 @@ main header {
 	}
 }
 
-/* Custom Modal Pop Expand Animation */
+
 @keyframes modalPopExpand {
 	0% {
 		opacity: 0;
@@ -314,7 +314,7 @@ main header {
 	animation: modalPopExpand 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* Dropdown Menus */
+
 .dropdown-menu {
 	display: none;
 	position: absolute;
@@ -360,7 +360,7 @@ main header {
 	background: var(--hover-bg);
 }
 
-/* Scrollbars */
+
 .custom-scrollbar::-webkit-scrollbar {
 	width: 6px;
 }
@@ -374,7 +374,7 @@ main header {
 	background: transparent;
 }
 
-/* Premium Button Styles */
+
 .btn-primary {
 	background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
 	color: white;

@@ -2,7 +2,6 @@
 
 {% block content %}
 <div class="flex-1 flex flex-col h-full overflow-hidden bg-[var(--bg-main)]">
-    <!-- Search Header -->
     <div class="h-16 border-b border-[var(--border-color)] flex items-center px-6 bg-[var(--bg-panel)] shrink-0">
         <div class="flex items-center gap-4 flex-1 max-w-3xl mx-auto">
             <svg class="w-5 h-5 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -20,7 +19,6 @@
         </div>
     </div>
 
-    <!-- Search Tabs -->
     <div class="border-b border-[var(--border-color)] bg-[var(--bg-panel)]">
         <div class="flex max-w-3xl mx-auto px-6">
             <button onclick="switchSearchTab('all')" id="search-tab-all"
@@ -38,7 +36,6 @@
         </div>
     </div>
 
-    <!-- Search Results -->
     <div class="flex-1 overflow-y-auto custom-scrollbar">
         <div id="search-results" class="max-w-3xl mx-auto p-6">
             <div class="text-center text-[var(--text-muted)] py-16">
