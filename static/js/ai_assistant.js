@@ -21,8 +21,10 @@
       c.classList.remove('hidden');
       setTimeout(() => c.classList.remove('opacity-0'), 50);
     }
+    document.getElementById('active-indicator')?.classList.remove('hidden');
 
-    document.getElementById('active-session-title').textContent = "Chat Session " + id;
+    const titleEl = document.getElementById('active-session-title');
+    if (titleEl) titleEl.textContent = "Chat Session " + id;
     document.getElementById('messages-container').innerHTML = ''; // Start fresh or fetch details
     // fetch(`/api/sessions/${id}/messages`) ...
   };
@@ -41,7 +43,41 @@
 
   window.toggleChatModelSelect = function (id) { const opt = document.getElementById(id + '-options'); if (opt) opt.classList.toggle('show'); };
   window.selectCustomOption = function (value, text, inputId, changeCb) { const hidden = document.getElementById(inputId); const trigger = document.getElementById(inputId + '-trigger-text'); if (hidden) hidden.value = value; if (trigger) trigger.textContent = text; const opts = document.getElementById(inputId + '-options'); if (opts) opts.classList.remove('show'); if (changeCb && typeof window[changeCb] === 'function') window[changeCb](value); };
-  window.setMode = function (mode) { document.getElementById('mode-normal')?.classList.toggle('text-white', mode === 'normal'); document.getElementById('mode-deep')?.classList.toggle('text-white', mode === 'deep_dive'); showToast('Mode: ' + mode); };
+  window.setMode = function (mode) {
+    console.log('setMode called with:', mode);
+    const indicator = document.getElementById('mode-indicator');
+    const btnNormal = document.getElementById('mode-normal');
+    const btnDeep = document.getElementById('mode-deep');
+
+    if (mode === 'normal') {
+      // Move indicator to left using explicit style to avoid class conflicts
+      if (indicator) {
+        indicator.style.left = '0.125rem'; // 0.5 tailwind spacing is 0.125rem
+        indicator.classList.remove('left-1/2'); // Cleanup just in case
+      }
+
+      // Update Text Colors
+      btnNormal?.classList.add('text-white');
+      btnNormal?.classList.remove('text-[var(--text-muted)]');
+
+      btnDeep?.classList.add('text-[var(--text-muted)]');
+      btnDeep?.classList.remove('text-white');
+
+    } else if (mode === 'deep_dive') {
+      // Move indicator to right
+      if (indicator) {
+        indicator.style.left = '50%';
+        indicator.classList.remove('left-0.5'); // Cleanup just in case
+      }
+
+      // Update Text Colors
+      btnNormal?.classList.remove('text-white');
+      btnNormal?.classList.add('text-[var(--text-muted)]');
+
+      btnDeep?.classList.remove('text-[var(--text-muted)]');
+      btnDeep?.classList.add('text-white');
+    }
+  };
   window.toggleRecording = function () { showToast('Toggle recording (stub)'); };
 
   document.addEventListener('DOMContentLoaded', () => {

@@ -46,8 +46,10 @@
     window.deleteAllHooks = function () { showConfirm('Delete hooks', 'Delete all hooks?', () => showToast('All hooks deleted')); };
 
     let toastTimer = null;
-    window.showToast = function (msg, timeout = 2500) { const t = byId('toast-notification'); const m = byId('toast-message'); if (!t || !m) return console.log('Toast:', msg); m.textContent = msg; t.classList.remove('translate-y-full'); t.style.transform = 'translateY(0)'; clearTimeout(toastTimer); toastTimer = setTimeout(() => { hideToast(); }, timeout); };
-    window.hideToast = function () { const t = byId('toast-notification'); if (t) { t.style.transform = 'translateY(100%)'; } };
+    window.showToast = function (msg, timeout = 2500) {
+        console.log('Toast suppressed (layout.js):', msg);
+    };
+    window.hideToast = function () { };
 
     window.resetDatabase = function () { showConfirm('Reset Database', 'This will reset local database. Continue?', () => showToast('Database reset (stub)')); };
 

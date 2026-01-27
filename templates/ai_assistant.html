@@ -1,17 +1,32 @@
 {% extends 'layout.html' %}
 
+{% block header_actions %}
+<!-- Green Indicator (Hidden by default until chat active) -->
+<div id="active-indicator" class="hidden w-2 h-2 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]">
+</div>
+
+<!-- New Chat Button -->
+<button onclick="attemptNewChat()"
+    class="text-xs text-[var(--text-muted)] border border-[var(--border-color)] hover:text-[var(--text-main)] hover:bg-[var(--hover-bg)] px-3 py-1.5 rounded-lg transition-colors">
+    + New Chat
+</button>
+
+<!-- Hook Button -->
+<button onclick="handleHookButtonClick()"
+    class="bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-md transition-all flex items-center gap-2">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+    </svg>
+    <span>Hook</span>
+</button>
+{% endblock %}
+
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/ai_assistant.css') }}">
 <div class="flex-1 flex flex-col h-full relative w-full">
 
-    <button id="hook-button-fixed" onclick="handleHookButtonClick()"
-        class="fixed top-16 right-4 z-50 bg-[var(--accent-primary)] hover:opacity-90 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-lg border border-[var(--accent-primary)] transition-all transform hover:scale-105 flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
-        </svg>
-        <span>Hook</span>
-    </button>
+
 
     <div id="welcome-state"
         class="absolute inset-0 z-10 flex flex-col justify-center items-center bg-[var(--bg-main)] transition-opacity duration-300">
@@ -36,18 +51,7 @@
     <div id="chat-interface"
         class="flex-1 flex flex-col h-full hidden opacity-0 transition-opacity duration-300 relative">
 
-        <div
-            class="h-14 border-b border-[var(--border-color)] flex items-center justify-between px-6 bg-[var(--bg-panel)]">
-            <div class="flex items-center gap-3">
-                <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]"></span>
-                <span id="active-session-title"
-                    class="text-[var(--text-main)] text-sm font-medium tracking-wide">Loading...</span>
-            </div>
-            <button onclick="attemptNewChat()"
-                class="text-xs text-[var(--text-muted)] border border-[var(--border-color)] hover:text-[var(--text-main)] hover:bg-[var(--hover-bg)] px-3 py-1.5 rounded-lg transition-colors">
-                + New Chat
-            </button>
-        </div>
+
 
         <div id="chat-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 relative chat-fade-mask">
             <div class="max-w-3xl mx-auto space-y-4 pb-24" id="messages-container">
@@ -166,5 +170,5 @@
     // Configure global variables for external scripts
     window.ADD_HOOK_URL = "{{ url_for('add_hook') }}";
 </script>
-<script src="{{ url_for('static', path='js/ai_assistant.js') }}"></script>
+<script src="{{ url_for('static', path='js/ai_assistant.js') }}?v=11"></script>
 {% endblock %}

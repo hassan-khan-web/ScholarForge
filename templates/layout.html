@@ -243,15 +243,15 @@
     <!-- Main Content Area -->
     <main class="flex-1 relative h-full overflow-hidden bg-[var(--bg-main)] flex flex-col">
         <!-- New Top Header in Main Content (Title) -->
-        <header class="h-16 shrink-0 flex items-center px-6 border-b border-[var(--border-color)] bg-[var(--bg-panel)]">
-            <div class="flex items-center gap-3">
-                <div
-                    class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
-                    SF
-                </div>
-                <span class="font-bold text-lg tracking-tight text-[var(--text-main)]">ScholarForge</span>
+        <!-- Global Header -->
+        <div class="h-16 shrink-0 flex items-center justify-between px-6 pt-4">
+            <h1 class="font-bold text-2xl tracking-tight">
+                <span class="text-blue-600">Scholar</span><span class="text-[var(--text-main)]">Forge</span>
+            </h1>
+            <div id="header-actions" class="flex items-center gap-3">
+                {% block header_actions %}{% endblock %}
             </div>
-        </header>
+        </div>
 
         <div class="flex-1 overflow-auto relative">
             {% block content %}{% endblock %}
@@ -317,14 +317,8 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast-notification"
-        class="fixed bottom-6 right-6 z-[100] transform translate-y-32 transition-transform duration-300">
-        <div
-            class="bg-[var(--bg-panel)] border border-[var(--border-color)] text-[var(--text-main)] px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4">
-            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-            <span id="toast-message" class="text-sm font-medium">Notification</span>
-        </div>
-    </div>
+    <!-- Toast Notification Removed -->
+    <div id="toast-notification" class="hidden"></div>
 
     <!-- Confirm Modal -->
     <div id="confirm-modal" class="custom-modal-overlay">
@@ -351,7 +345,7 @@
     </div>
 
     <!-- Global Scripts Block -->
-    <script src="{{ url_for('static', path='js/global.js') }}?v=1"></script>
+    <script src="{{ url_for('static', path='js/global.js') }}?v=2"></script>
     {% block scripts %}{% endblock %}
 </body>
 

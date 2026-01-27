@@ -46,8 +46,10 @@
 
     // Toast
     let toastTimer = null;
-    window.showToast = function (msg, timeout = 2500) { const t = byId('toast-notification'); const m = byId('toast-message'); if (!t || !m) return console.log('Toast:', msg); m.textContent = msg; t.classList.remove('translate-y-full'); t.style.transform = 'translateY(0)'; clearTimeout(toastTimer); toastTimer = setTimeout(() => { hideToast(); }, timeout); };
-    window.hideToast = function () { const t = byId('toast-notification'); if (t) { t.style.transform = 'translateY(100%)'; } };
+    window.showToast = function (msg, timeout = 2500) {
+        console.log('Toast suppressed:', msg);
+    };
+    window.hideToast = function () { };
 
     // FOLDER AND SESSION LOGIC
     let currentFolders = [];
@@ -186,7 +188,7 @@
                 if (redirect || window.location.pathname === '/chat') {
                     // If on chat page, load session
                     if (window.loadSession) window.loadSession(data.session.id);
-                    else window.location.href = '/chat?session=' + data.session.id; // Or just /chat
+                    else window.location.href = '/chat?session_id=' + data.session.id; // Or just /chat
                 } else {
                     // Redirect to chat
                     window.location.href = '/chat';
