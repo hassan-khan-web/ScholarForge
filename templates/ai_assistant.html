@@ -67,7 +67,7 @@
                     <input type="hidden" id="chat-mode" value="normal">
 
                     <!-- Settings Bar: Outside the input box, above it, left-aligned -->
-                    <div class="flex items-center gap-3 mb-2" id="chat-settings">
+                    <div class="flex items-center justify-start gap-3 mb-2" id="chat-settings">
                         <div class="relative group custom-select-container z-40">
                             <button type="button" onclick="toggleChatModelSelect('model-select')"
                                 class="custom-select-trigger bg-[var(--bg-panel)] border border-[var(--border-color)] text-[var(--text-muted)] text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-[var(--accent-primary)] hover:text-[var(--text-main)] transition-colors shadow-sm flex items-center gap-2">
@@ -172,5 +172,5 @@
     // Configure global variables for external scripts
     window.ADD_HOOK_URL = "{{ url_for('add_hook') }}";
 </script>
-<script src="{{ url_for('static', path='js/ai_assistant.js') }}?v=13"></script>
+<script src="{{ url_for('static', path='js/ai_assistant.js') }}?v=14"></script>
 {% endblock %}
