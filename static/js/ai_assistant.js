@@ -131,7 +131,7 @@
   function renderUserMessage(text, fileNames = []) {
     const container = document.getElementById('messages-container');
     const msgDiv = document.createElement('div');
-    msgDiv.className = 'message user-message flex justify-end mb-4';
+    msgDiv.className = 'message user-message';
 
     let filesHtml = '';
     if (fileNames.length > 0) {
@@ -141,8 +141,8 @@
     }
 
     msgDiv.innerHTML = `
-      <div class="max-w-[80%] bg-[var(--accent-primary)] text-white px-4 py-3 rounded-2xl rounded-tr-sm shadow-lg">
-        <p class="text-sm whitespace-pre-wrap">${escapeHtml(text)}</p>
+      <div class="message-bubble">
+        <p class="message-text">${escapeHtml(text)}</p>
         ${filesHtml}
       </div>
     `;
@@ -153,13 +153,13 @@
   function renderAssistantMessage(text) {
     const container = document.getElementById('messages-container');
     const msgDiv = document.createElement('div');
-    msgDiv.className = 'message assistant-message flex justify-start mb-4';
+    msgDiv.className = 'message assistant-message';
 
     const formattedText = formatMarkdown(text);
 
     msgDiv.innerHTML = `
-      <div class="max-w-[80%] bg-[var(--bg-panel)] border border-[var(--border-color)] text-[var(--text-main)] px-4 py-3 rounded-2xl rounded-tl-sm shadow-lg">
-        <div class="text-sm prose prose-invert max-w-none">${formattedText}</div>
+      <div class="message-bubble">
+        <div class="message-text prose">${formattedText}</div>
       </div>
     `;
     container.appendChild(msgDiv);
@@ -170,13 +170,13 @@
     const container = document.getElementById('messages-container');
     const indicator = document.createElement('div');
     indicator.id = 'typing-indicator';
-    indicator.className = 'message assistant-message flex justify-start mb-4';
+    indicator.className = 'typing-indicator';
     indicator.innerHTML = `
-      <div class="bg-[var(--bg-panel)] border border-[var(--border-color)] px-4 py-3 rounded-2xl rounded-tl-sm shadow-lg">
-        <div class="typing-dots flex gap-1">
-          <span class="w-2 h-2 bg-[var(--text-muted)] rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-          <span class="w-2 h-2 bg-[var(--text-muted)] rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-          <span class="w-2 h-2 bg-[var(--text-muted)] rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+      <div class="typing-bubble">
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
       </div>
     `;
@@ -189,23 +189,23 @@
   }
 
   function transitionInputToBottom() {
-    const inputContainer = document.getElementById('input-container');
-    if (inputContainer) {
-      inputContainer.classList.remove('items-center', 'justify-center');
-      inputContainer.classList.add('input-docked');
+    const unitMsg = document.getElementById('unit-msg');
+    if (unitMsg) {
+      unitMsg.classList.remove('unit-msg-centered');
+      unitMsg.classList.add('unit-msg-docked');
     }
   }
 
   function resetInputToCenter() {
-    const inputContainer = document.getElementById('input-container');
-    if (inputContainer) {
-      inputContainer.classList.add('items-center', 'justify-center');
-      inputContainer.classList.remove('input-docked');
+    const unitMsg = document.getElementById('unit-msg');
+    if (unitMsg) {
+      unitMsg.classList.remove('unit-msg-docked');
+      unitMsg.classList.add('unit-msg-centered');
     }
   }
 
   function scrollToBottom() {
-    const container = document.getElementById('chat-container');
+    const container = document.getElementById('messages-container');
     if (container) {
       container.scrollTop = container.scrollHeight;
     }
@@ -220,8 +220,8 @@
   function formatMarkdown(text) {
     if (!text) return '';
     let html = escapeHtml(text);
-    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="bg-[var(--bg-main)] p-3 rounded-lg overflow-x-auto my-2"><code>$2</code></pre>');
-    html = html.replace(/`([^`]+)`/g, '<code class="bg-[var(--bg-main)] px-1.5 py-0.5 rounded text-sm">$1</code>');
+    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
     html = html.replace(/^### (.+)$/gm, '<h3 class="font-bold text-base mt-3 mb-1">$1</h3>');
@@ -271,7 +271,6 @@
     const c = document.getElementById('chat-interface');
     if (c) {
       c.classList.remove('hidden');
-      setTimeout(() => c.classList.remove('opacity-0'), 50);
     }
     document.getElementById('active-indicator')?.classList.remove('hidden');
 

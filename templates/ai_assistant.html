@@ -20,13 +20,10 @@
 {% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/ai_assistant.css') }}">
-<div class="flex-1 flex flex-col h-full relative w-full">
+<link rel="stylesheet" href="{{ url_for('static', path='css/ai_assistant.css') }}?v=3">
+<div class="chat-page-container">
 
-
-
-    <div id="welcome-state"
-        class="absolute inset-0 z-10 flex flex-col justify-center items-center bg-[var(--bg-main)] transition-opacity duration-300">
+    <div id="welcome-state" class="welcome-overlay">
         <div
             class="p-8 rounded-2xl bg-[var(--bg-panel)] border border-[var(--border-color)] text-center max-w-sm shadow-2xl">
             <div class="w-14 h-14 bg-blue-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -45,29 +42,20 @@
         </div>
     </div>
 
-    <div id="chat-interface"
-        class="flex-1 flex flex-col h-full hidden opacity-0 transition-opacity duration-300 relative">
+    <div id="chat-interface" class="chat-interface hidden">
 
+        <div id="messages-container" class="messages-area"></div>
 
-
-        <div id="chat-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 relative chat-fade-mask">
-            <div class="max-w-3xl mx-auto space-y-4 pb-24" id="messages-container">
-            </div>
-        </div>
-
-        <div id="input-container"
-            class="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-500 ease-out z-20">
-            <div id="input-wrapper" class="w-full max-w-3xl px-6 pointer-events-auto">
+        <div id="unit-msg" class="unit-msg unit-msg-centered">
+            <div class="unit-msg-inner">
 
                 <div id="file-preview-area" class="flex flex-wrap gap-2 mb-2 px-1 empty:hidden"></div>
 
-                <form id="chat-form" class="relative group">
-                    <!-- Hidden inputs for model and mode -->
+                <form id="chat-form" class="chat-form">
                     <input type="hidden" id="model-select" value="default">
                     <input type="hidden" id="chat-mode" value="normal">
 
-                    <!-- Settings Bar: Outside the input box, above it, left-aligned -->
-                    <div class="flex items-center justify-start gap-3 mb-2" id="chat-settings">
+                    <div class="chat-settings" id="chat-settings">
                         <div class="relative group custom-select-container z-40">
                             <button type="button" onclick="toggleChatModelSelect('model-select')"
                                 class="custom-select-trigger bg-[var(--bg-panel)] border border-[var(--border-color)] text-[var(--text-muted)] text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-[var(--accent-primary)] hover:text-[var(--text-main)] transition-colors shadow-sm flex items-center gap-2">
@@ -125,9 +113,7 @@
                         </div>
                     </div>
 
-                    <!-- Input Box Container -->
-                    <div
-                        class="flex items-end gap-2 p-2 bg-[var(--bg-sidebar)] border border-[var(--border-color)] rounded-xl shadow-lg backdrop-blur-sm bg-opacity-90">
+                    <div class="input-box">
                         <button type="button" onclick="document.getElementById('file-upload').click()"
                             class="p-2 text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors rounded-lg hover:bg-[var(--hover-bg)]"
                             title="Attach Files">
@@ -140,7 +126,7 @@
                         <input type="file" id="file-upload" multiple class="hidden" accept=".pdf,.docx,.txt,.md">
 
                         <input type="text" id="chat-input"
-                            class="w-full bg-transparent border-none text-[var(--text-main)] placeholder-[var(--text-muted)] py-2 focus:ring-0 focus:outline-none text-sm"
+                            class="flex-1 bg-transparent border-none text-[var(--text-main)] placeholder-[var(--text-muted)] py-2 focus:ring-0 focus:outline-none text-sm"
                             placeholder="Ask a question..." autocomplete="off"
                             style="outline: none !important; box-shadow: none !important;">
 
@@ -169,8 +155,7 @@
 </div>
 
 <script>
-    // Configure global variables for external scripts
     window.ADD_HOOK_URL = "{{ url_for('add_hook') }}";
 </script>
-<script src="{{ url_for('static', path='js/ai_assistant.js') }}?v=14"></script>
+<script src="{{ url_for('static', path='js/ai_assistant.js') }}?v=15"></script>
 {% endblock %}
