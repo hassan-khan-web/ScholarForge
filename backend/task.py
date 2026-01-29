@@ -1,7 +1,7 @@
 import os
 from celery import Celery
-import AI_engine
-import database
+from . import AI_engine
+from . import database
 
 REDIS_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
 

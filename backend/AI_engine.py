@@ -16,7 +16,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RL
 from reportlab.lib.styles import getSampleStyleSheet
 import fitz 
 
-from report_formats import get_template_instructions
+from .report_formats import get_template_instructions
 
 SMART_MODEL = "qwen/qwen3-coder:free"
 BACKUP_MODEL = "mistralai/devstral-2512:free"

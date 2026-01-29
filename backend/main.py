@@ -15,24 +15,30 @@ from celery.result import AsyncResult
 import fitz
 from docx import Document as DocxDocument
 
-from task import generate_report_task, celery_app
-import AI_engine 
-import chat_engine 
-import report_formats
-import database 
+# Relative imports for backend modules
+from .task import generate_report_task, celery_app
+from . import AI_engine 
+from . import chat_engine 
+from . import report_formats
+from . import database 
 
 app = FastAPI(title="ScholarForge")
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get("APP_SECRET_KEY", "super-secret-key"))
 
-if not os.path.exists("static"):
-    os.makedirs("static")
-if not os.path.exists("static/charts"):
-    os.makedirs("static/charts")
+# Get the parent directory (project root) for static and templates
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+if not os.path.exists(STATIC_DIR):
+    os.makedirs(STATIC_DIR)
+if not os.path.exists(os.path.join(STATIC_DIR, "charts")):
+    os.makedirs(os.path.join(STATIC_DIR, "charts"))
 
-templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 @app.on_event("startup")
 def startup():
