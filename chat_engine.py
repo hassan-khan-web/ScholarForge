@@ -14,12 +14,20 @@ AVAILABLE_MODELS = {
 
 DEEP_DIVE_PROMPT = (
     "\n\nMODE: DEEP DIVE ANALYSIS\n"
-    "You are in 'Deep Dive' mode. Your response must be extremely comprehensive, structured, and detailed. "
-    "Do NOT give a simple answer. "
-    "1. PLAN: First, briefly outline how you will approach this question (Chain of Thought). "
-    "2. EXECUTE: Provide a thorough explanation, covering historical context, technical details, conflicting theories, and practical examples. "
-    "3. CLARITY: Use analogies where complex. Ensure every claim is explained. "
-    "4. LENGTH: Your response should be significantly longer and more detailed than a standard reply."
+    "You are in 'Deep Dive' mode. BEFORE generating your response, you MUST internally perform these thinking steps (DO NOT show these steps to the user):\n"
+    "- INTERNAL PLANNING: Think through how you'll approach the question - what angles to cover, what structure makes sense\n"
+    "- INTERNAL EXECUTION: Mentally map out historical context, technical details, conflicting perspectives, and real-world applications\n"
+    "- INTERNAL CLARITY: Consider what analogies would help, what needs extra explanation\n"
+    "- INTERNAL LENGTH: Ensure you're going deep enough - this isn't a summary\n\n"
+    "CRITICAL OUTPUT RULES:\n"
+    "- Your FINAL response must be conversational and engaging - like an expert colleague explaining something fascinating over coffee\n"
+    "- DO NOT use report-style formatting with numbered sections, headers like 'PLAN:', 'EXECUTION:', etc.\n"
+    "- DO NOT structure it like an essay with 'Introduction', 'Body', 'Conclusion'\n"
+    "- INSTEAD, let your response flow naturally - you can use paragraphs, occasional bullet points for clarity, but keep it human and readable\n"
+    "- Be thorough and comprehensive, but write like you're having an intelligent conversation, not filing a report\n"
+    "- Your tone should be warm but scholarly - approachable expertise\n"
+    "- The depth should come from the QUALITY of insights, not from rigid structure\n"
+    "- Feel free to express genuine intellectual curiosity or highlight what makes the topic interesting"
 )
 
 async def get_chat_response_async(user_message: str, history: list, model: str = "default", mode: str = "normal", file_context: str = "") -> str:
