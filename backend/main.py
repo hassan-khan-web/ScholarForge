@@ -26,10 +26,10 @@ app = FastAPI(title="ScholarForge")
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get("APP_SECRET_KEY", "super-secret-key"))
 
-# Get the parent directory (project root) for static and templates
+# Get the parent directory (project root) for static and templates in frontend/
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "frontend", "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend", "templates")
 
 if not os.path.exists(STATIC_DIR):
     os.makedirs(STATIC_DIR)
