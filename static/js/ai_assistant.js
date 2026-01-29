@@ -171,7 +171,7 @@
     scrollToBottom();
   }
 
-  function renderAssistantMessage(text, msgId = null) {
+  function renderAssistantMessage(text, msgId = null, skipAnimation = false) {
     const container = document.getElementById('messages-container');
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message assistant-message';
@@ -181,7 +181,7 @@
 
     msgDiv.innerHTML = `
       <div class="message-bubble" id="${id}" data-raw-text="${escapeHtml(text).replace(/"/g, '&quot;')}">
-        <div class="message-text prose">${formattedText}</div>
+        <div class="message-text prose"></div>
         <div class="message-actions assistant-actions">
           <button class="action-btn" onclick="copyMessageText('${id}')" title="Copy">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,6 +220,46 @@
     `;
     container.appendChild(msgDiv);
     scrollToBottom();
+
+    const textEl = msgDiv.querySelector('.message-text');
+
+    // Skip animation for loaded history messages
+    if (skipAnimation) {
+      textEl.innerHTML = formattedText;
+      return;
+    }
+
+    // Fast typing animation effect
+    typeText(textEl, formattedText);
+  }
+
+  // Fast typing animation - reveals text progressively
+  function typeText(element, html) {
+    const chunkSize = 8; // Characters per chunk
+    const delay = 3; // Milliseconds between chunks (very fast)
+    let index = 0;
+
+    // For HTML content, we need to handle tags carefully
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    const plainText = tempDiv.textContent || tempDiv.innerText;
+
+    // Type plain text first, then replace with formatted version
+    function typeChunk() {
+      if (index < plainText.length) {
+        const nextChunk = plainText.substring(0, index + chunkSize);
+        element.textContent = nextChunk;
+        index += chunkSize;
+        scrollToBottom();
+        setTimeout(typeChunk, delay);
+      } else {
+        // Animation complete - show formatted HTML
+        element.innerHTML = html;
+        scrollToBottom();
+      }
+    }
+
+    typeChunk();
   }
 
   function showTypingIndicator() {
@@ -318,7 +358,7 @@
           if (msg.role === 'user') {
             renderUserMessage(msg.content);
           } else {
-            renderAssistantMessage(msg.content);
+            renderAssistantMessage(msg.content, null, true); // Skip animation for history
           }
         });
       } else {
