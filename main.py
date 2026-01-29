@@ -125,6 +125,13 @@ def get_history(session_id: int):
     msgs = database.get_session_messages(session_id)
     return [{"role": m.role, "content": m.content} for m in msgs]
 
+@app.get("/api/sessions/{session_id}/info")
+def get_session_info(session_id: int):
+    session = database.get_chat_session(session_id)
+    if session:
+        return {"id": session.id, "title": session.title, "folder_id": session.folder_id}
+    return JSONResponse(status_code=404, content={"error": "Session not found"})
+
 async def extract_text_from_file(file: UploadFile) -> str:
     content = ""
     try:

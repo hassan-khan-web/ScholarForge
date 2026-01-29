@@ -372,8 +372,32 @@
     }
   }
 
-  window.attemptNewChat = function () {
-    window.showToast('Select a folder from sidebar to create new chat');
+  window.attemptNewChat = async function () {
+    if (!currentSessionId) {
+      window.showToast('No active session. Please select a folder first.');
+      return;
+    }
+
+    try {
+      // Fetch current session info to get folder_id
+      const response = await fetch(`/api/sessions/${currentSessionId}/info`);
+      if (!response.ok) {
+        window.showToast('Could not find current session info');
+        return;
+      }
+      const sessionInfo = await response.json();
+      const folderId = sessionInfo.folder_id;
+
+      if (folderId) {
+        // Create new session in the same folder
+        await window.createSession(folderId, 'New Chat', true);
+      } else {
+        window.showToast('Could not determine folder for new chat');
+      }
+    } catch (err) {
+      console.error('Error creating new chat:', err);
+      window.showToast('Error creating new chat');
+    }
   };
 
   window.toggleChatModelSelect = function (id) {

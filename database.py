@@ -162,6 +162,13 @@ def delete_chat_session(session_id: int):
     finally:
         db.close()
 
+def get_chat_session(session_id: int):
+    db = SessionLocal()
+    try:
+        return db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    finally:
+        db.close()
+
 def get_session_messages(session_id: int):
     db = SessionLocal()
     try:
