@@ -276,17 +276,29 @@
   function formatMarkdown(text) {
     if (!text) return '';
     let html = escapeHtml(text);
+    // Remove horizontal rules (---, ***, ___)
+    html = html.replace(/^[-*_]{3,}$/gm, '');
+    // Code blocks
     html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Bold and italic
     html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-    html = html.replace(/^### (.+)$/gm, '<h3 class="font-bold text-base mt-3 mb-1">$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h2 class="font-bold text-lg mt-4 mb-2">$1</h2>');
-    html = html.replace(/^# (.+)$/gm, '<h1 class="font-bold text-xl mt-4 mb-2">$1</h1>');
-    html = html.replace(/^\* (.+)$/gm, '<li class="ml-4">$1</li>');
-    html = html.replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>');
-    html = html.replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal">$1</li>');
+    // Headings (CSS will handle styling)
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    // Lists
+    html = html.replace(/^\* (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    // Newlines to breaks
     html = html.replace(/\n/g, '<br>');
+    // Clean up extra breaks around block elements
+    html = html.replace(/<br>(<h[123]>)/g, '$1');
+    html = html.replace(/(<\/h[123]>)<br>/g, '$1');
+    html = html.replace(/<br>(<li>)/g, '$1');
+    html = html.replace(/(<\/li>)<br>/g, '$1');
     return html;
   }
 
