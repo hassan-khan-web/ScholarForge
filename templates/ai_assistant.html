@@ -20,7 +20,7 @@
 {% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/ai_assistant.css') }}?v=4">
+<link rel="stylesheet" href="{{ url_for('static', path='css/ai_assistant.css') }}?v=6">
 <div class="chat-page-container">
 
     <div id="welcome-state" class="welcome-overlay">
@@ -157,5 +157,5 @@
 <script>
     window.ADD_HOOK_URL = "{{ url_for('add_hook') }}";
 </script>
-<script src="{{ url_for('static', path='js/ai_assistant.js') }}?v=16"></script>
+<script src="{{ url_for('static', path='js/ai_assistant.js') }}?v=19"></script>
 {% endblock %}

@@ -9,6 +9,12 @@
     if (sessId) {
       window.loadSession(sessId);
       window.history.replaceState({}, document.title, "/chat");
+    } else {
+      // Restore last session from localStorage
+      const savedSessionId = localStorage.getItem('currentChatSessionId');
+      if (savedSessionId) {
+        window.loadSession(savedSessionId);
+      }
     }
 
     initFileUpload();
@@ -142,17 +148,19 @@
     }
 
     msgDiv.innerHTML = `
-      <div class="message-bubble" id="${msgId}">
-        <p class="message-text">${escapeHtml(text)}</p>
-        ${filesHtml}
+      <div class="user-msg-wrapper">
+        <div class="message-bubble" id="${msgId}" data-raw-text="${escapeHtml(text).replace(/"/g, '&quot;')}">
+          <p class="message-text">${escapeHtml(text)}</p>
+          ${filesHtml}
+        </div>
         <div class="message-actions user-actions">
           <button class="action-btn" onclick="copyMessageText('${msgId}')" title="Copy">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
             </svg>
           </button>
           <button class="action-btn" onclick="editUserMessage('${msgId}')" title="Edit">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
             </svg>
           </button>
@@ -313,6 +321,9 @@
   window.loadSession = function (id) {
     currentSessionId = id;
 
+    // Save to localStorage for persistence across reloads
+    localStorage.setItem('currentChatSessionId', id);
+
     const w = document.getElementById('welcome-state');
     if (w) w.classList.add('hidden');
 
@@ -421,7 +432,16 @@
     const msgEl = document.getElementById(msgId);
     if (!msgEl) return;
 
-    const rawText = msgEl.dataset.rawText || msgEl.querySelector('.message-text')?.innerText || '';
+    // Get raw text from data attribute and decode HTML entities
+    let rawText = msgEl.dataset.rawText || '';
+    if (rawText) {
+      const textarea = document.createElement('textarea');
+      textarea.innerHTML = rawText;
+      rawText = textarea.value;
+    } else {
+      rawText = msgEl.querySelector('.message-text')?.innerText || '';
+    }
+
     navigator.clipboard.writeText(rawText).then(() => {
       window.showToast('Copied to clipboard');
     }).catch(() => {
@@ -431,18 +451,96 @@
 
   window.editUserMessage = function (msgId) {
     const msgEl = document.getElementById(msgId);
-    if (!msgEl) return;
+    if (!msgEl || msgEl.classList.contains('editing')) return;
 
     const textEl = msgEl.querySelector('.message-text');
     if (!textEl) return;
 
-    const currentText = textEl.innerText;
-    const input = document.getElementById('chat-input');
-    if (input) {
-      input.value = currentText;
-      input.focus();
-      window.showToast('Message copied to input - edit and resend');
+    let rawText = msgEl.dataset.rawText || textEl.innerText;
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = rawText;
+    rawText = textarea.value;
+
+    msgEl.dataset.originalText = rawText;
+    msgEl.classList.add('editing');
+    textEl.contentEditable = 'true';
+    textEl.textContent = rawText;
+    textEl.focus();
+
+    const range = document.createRange();
+    range.selectNodeContents(textEl);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    const actionsEl = msgEl.closest('.user-msg-wrapper')?.querySelector('.message-actions');
+    if (actionsEl) {
+      actionsEl.dataset.originalHtml = actionsEl.innerHTML;
+      actionsEl.innerHTML = `
+        <button class="action-btn" onclick="saveUserMessage('${msgId}')" title="Save" style="color: #22c55e;">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </button>
+        <button class="action-btn" onclick="cancelEditUserMessage('${msgId}')" title="Cancel" style="color: #ef4444;">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      `;
+      actionsEl.style.opacity = '1';
     }
+
+    textEl.onkeydown = function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        window.saveUserMessage(msgId);
+      } else if (e.key === 'Escape') {
+        window.cancelEditUserMessage(msgId);
+      }
+    };
+  };
+
+  window.saveUserMessage = function (msgId) {
+    const msgEl = document.getElementById(msgId);
+    if (!msgEl) return;
+    const textEl = msgEl.querySelector('.message-text');
+    if (!textEl) return;
+
+    const newText = textEl.textContent.trim();
+    msgEl.dataset.rawText = escapeHtml(newText).replace(/"/g, '&quot;');
+    textEl.contentEditable = 'false';
+    textEl.onkeydown = null;
+    msgEl.classList.remove('editing');
+
+    const actionsEl = msgEl.closest('.user-msg-wrapper')?.querySelector('.message-actions');
+    if (actionsEl && actionsEl.dataset.originalHtml) {
+      actionsEl.innerHTML = actionsEl.dataset.originalHtml;
+      actionsEl.style.opacity = '';
+      delete actionsEl.dataset.originalHtml;
+    }
+    delete msgEl.dataset.originalText;
+    window.showToast('Message updated');
+  };
+
+  window.cancelEditUserMessage = function (msgId) {
+    const msgEl = document.getElementById(msgId);
+    if (!msgEl) return;
+    const textEl = msgEl.querySelector('.message-text');
+    if (!textEl) return;
+
+    textEl.textContent = msgEl.dataset.originalText || '';
+    textEl.contentEditable = 'false';
+    textEl.onkeydown = null;
+    msgEl.classList.remove('editing');
+
+    const actionsEl = msgEl.closest('.user-msg-wrapper')?.querySelector('.message-actions');
+    if (actionsEl && actionsEl.dataset.originalHtml) {
+      actionsEl.innerHTML = actionsEl.dataset.originalHtml;
+      actionsEl.style.opacity = '';
+      delete actionsEl.dataset.originalHtml;
+    }
+    delete msgEl.dataset.originalText;
   };
 
   window.likeMessage = function (msgId) {
