@@ -156,6 +156,21 @@
 
 <script>
     window.ADD_HOOK_URL = "{{ url_for('add_hook') }}";
+
+    // Pre-check for saved session to avoid flash of welcome screen
+    (function () {
+        const savedSessionId = localStorage.getItem('currentChatSessionId');
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessIdFromUrl = urlParams.get('session_id');
+
+        if (savedSessionId || sessIdFromUrl) {
+            // Hide welcome, show chat interface immediately
+            const welcomeEl = document.getElementById('welcome-state');
+            const chatEl = document.getElementById('chat-interface');
+            if (welcomeEl) welcomeEl.classList.add('hidden');
+            if (chatEl) chatEl.classList.remove('hidden');
+        }
+    })();
 </script>
-<script src="{{ url_for('static', path='js/ai_assistant.js') }}?v=19"></script>
+<script src="{{ url_for('static', path='js/ai_assistant.js') }}?v=20"></script>
 {% endblock %}
