@@ -132,6 +132,7 @@
     const container = document.getElementById('messages-container');
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message user-message';
+    const msgId = 'user-msg-' + Date.now();
 
     let filesHtml = '';
     if (fileNames.length > 0) {
@@ -141,25 +142,72 @@
     }
 
     msgDiv.innerHTML = `
-      <div class="message-bubble">
+      <div class="message-bubble" id="${msgId}">
         <p class="message-text">${escapeHtml(text)}</p>
         ${filesHtml}
+        <div class="message-actions user-actions">
+          <button class="action-btn" onclick="copyMessageText('${msgId}')" title="Copy">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+          </button>
+          <button class="action-btn" onclick="editUserMessage('${msgId}')" title="Edit">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+          </button>
+        </div>
       </div>
     `;
     container.appendChild(msgDiv);
     scrollToBottom();
   }
 
-  function renderAssistantMessage(text) {
+  function renderAssistantMessage(text, msgId = null) {
     const container = document.getElementById('messages-container');
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message assistant-message';
+    const id = msgId || ('asst-msg-' + Date.now());
 
     const formattedText = formatMarkdown(text);
 
     msgDiv.innerHTML = `
-      <div class="message-bubble">
+      <div class="message-bubble" id="${id}" data-raw-text="${escapeHtml(text).replace(/"/g, '&quot;')}">
         <div class="message-text prose">${formattedText}</div>
+        <div class="message-actions assistant-actions">
+          <button class="action-btn" onclick="copyMessageText('${id}')" title="Copy">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+          </button>
+          <button class="action-btn like-btn" onclick="likeMessage('${id}')" title="Like">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path>
+            </svg>
+          </button>
+          <button class="action-btn dislike-btn" onclick="dislikeMessage('${id}')" title="Dislike">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"></path>
+            </svg>
+          </button>
+          <div class="redo-container">
+            <button class="action-btn redo-btn" onclick="toggleRedoMenu('${id}')" title="Redo with different model">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </button>
+            <div class="redo-menu" id="redo-menu-${id}">
+              <div class="redo-menu-title">Regenerate with:</div>
+              <button class="redo-option" onclick="redoWithModel('${id}', 'default')">nvidia/Nemotron</button>
+              <button class="redo-option" onclick="redoWithModel('${id}', 'qwen-80b')">Qwen 2.5 72B</button>
+              <button class="redo-option" onclick="redoWithModel('${id}', 'mistral')">Mistral Small</button>
+              <button class="redo-option" onclick="redoWithModel('${id}', 'gemini')">Gemini 2.0 Flash</button>
+              <button class="redo-option" onclick="redoWithModel('${id}', 'gpt-oss')">GPT-4o (OSS)</button>
+              <button class="redo-option" onclick="redoWithModel('${id}', 'gemma')">Gemma 2 27B</button>
+              <button class="redo-option" onclick="redoWithModel('${id}', 'deepseek')">DeepSeek R1</button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
     container.appendChild(msgDiv);
@@ -364,5 +412,139 @@
   window.toggleRecording = function () {
     window.showToast('Voice recording coming soon');
   };
+
+  // ============================================
+  // MESSAGE ACTION HANDLERS
+  // ============================================
+
+  window.copyMessageText = function (msgId) {
+    const msgEl = document.getElementById(msgId);
+    if (!msgEl) return;
+
+    const rawText = msgEl.dataset.rawText || msgEl.querySelector('.message-text')?.innerText || '';
+    navigator.clipboard.writeText(rawText).then(() => {
+      window.showToast('Copied to clipboard');
+    }).catch(() => {
+      window.showToast('Failed to copy');
+    });
+  };
+
+  window.editUserMessage = function (msgId) {
+    const msgEl = document.getElementById(msgId);
+    if (!msgEl) return;
+
+    const textEl = msgEl.querySelector('.message-text');
+    if (!textEl) return;
+
+    const currentText = textEl.innerText;
+    const input = document.getElementById('chat-input');
+    if (input) {
+      input.value = currentText;
+      input.focus();
+      window.showToast('Message copied to input - edit and resend');
+    }
+  };
+
+  window.likeMessage = function (msgId) {
+    const btn = document.querySelector(`#${msgId} .like-btn`);
+    if (btn) {
+      btn.classList.toggle('active');
+      document.querySelector(`#${msgId} .dislike-btn`)?.classList.remove('active');
+    }
+    window.showToast('Feedback recorded');
+  };
+
+  window.dislikeMessage = function (msgId) {
+    const btn = document.querySelector(`#${msgId} .dislike-btn`);
+    if (btn) {
+      btn.classList.toggle('active');
+      document.querySelector(`#${msgId} .like-btn`)?.classList.remove('active');
+    }
+    window.showToast('Feedback recorded');
+  };
+
+  window.toggleRedoMenu = function (msgId) {
+    // Close other redo menus
+    document.querySelectorAll('.redo-menu.show').forEach(menu => {
+      if (menu.id !== `redo-menu-${msgId}`) {
+        menu.classList.remove('show');
+      }
+    });
+    const menu = document.getElementById(`redo-menu-${msgId}`);
+    if (menu) menu.classList.toggle('show');
+  };
+
+  window.redoWithModel = async function (msgId, model) {
+    const menu = document.getElementById(`redo-menu-${msgId}`);
+    if (menu) menu.classList.remove('show');
+
+    const msgEl = document.getElementById(msgId);
+    if (!msgEl) return;
+
+    // Find the previous user message
+    const msgContainer = msgEl.closest('.message');
+    let prevUserMsg = msgContainer?.previousElementSibling;
+    while (prevUserMsg && !prevUserMsg.classList.contains('user-message')) {
+      prevUserMsg = prevUserMsg.previousElementSibling;
+    }
+
+    if (!prevUserMsg) {
+      window.showToast('Could not find original query');
+      return;
+    }
+
+    const userText = prevUserMsg.querySelector('.message-text')?.innerText || '';
+    if (!userText) {
+      window.showToast('Could not find original query');
+      return;
+    }
+
+    // Show loading state
+    const textEl = msgEl.querySelector('.message-text');
+    const originalContent = textEl?.innerHTML;
+    if (textEl) {
+      textEl.innerHTML = '<div class="typing-dots inline-flex gap-1"><span></span><span></span><span></span></div> Regenerating...';
+    }
+
+    try {
+      const mode = document.getElementById('chat-mode')?.value || 'normal';
+      const formData = new FormData();
+      formData.append('message', userText);
+      formData.append('session_id', currentSessionId);
+      formData.append('model', model);
+      formData.append('mode', mode);
+
+      const response = await fetch('/chat', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        if (textEl) textEl.innerHTML = originalContent;
+        window.showToast('Error: ' + data.error);
+      } else {
+        if (textEl) {
+          textEl.innerHTML = formatMarkdown(data.response);
+          msgEl.dataset.rawText = escapeHtml(data.response).replace(/"/g, '&quot;');
+        }
+        window.showToast('Response regenerated');
+      }
+    } catch (err) {
+      if (textEl) textEl.innerHTML = originalContent;
+      window.showToast('Failed to regenerate');
+      console.error('Redo error:', err);
+    }
+  };
+
+  // Close redo menus when clicking outside
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.redo-container')) {
+      document.querySelectorAll('.redo-menu.show').forEach(menu => {
+        menu.classList.remove('show');
+      });
+    }
+  });
 
 })();
