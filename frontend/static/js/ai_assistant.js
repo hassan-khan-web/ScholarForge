@@ -78,6 +78,40 @@
       const message = (input?.value || '').trim();
       if (!message) return;
 
+      // --- Message Filtering Logic ---
+      const lowerMsg = message.toLowerCase();
+
+      // 1. Casual Greeting/Small Talk
+      // Matches exact phrases like "hey", "hello", "hi", "ok", "thanks"
+      const casualPattern = /^(hey|hello|hi|howdy|greetings|thank you|thanks|thx|ok|okay|cool|wow)$/i;
+
+      // 2. Appreciative
+      // Matches phrases containing appreciation
+      const appreciativePattern = /(good job|great work|nice one|you are (awesome|great|good|amazing)|love you|excellent work)/i;
+
+      // 3. Aggressive/Insulting
+      // Matches specific keywords anywhere in the message
+      const aggressivePattern = /(stupid|idiot|dumb|hate you|useless|shut up|crazy|mad)/i;
+
+      if (casualPattern.test(message)) {
+        input.value = '';
+        showSystemPopup('Notice', 'Please do not send casual conversational messages.');
+        return;
+      }
+
+      if (appreciativePattern.test(message)) {
+        input.value = '';
+        showSystemPopup('Notice', 'It\'s my job. Please refrain from giving such messages.');
+        return;
+      }
+
+      if (aggressivePattern.test(message)) {
+        input.value = '';
+        showSystemPopup('Warning', 'Please maintain a professional tone.');
+        return;
+      }
+      // -------------------------------
+
       const model = document.getElementById('model-select')?.value || 'default';
       const mode = document.getElementById('chat-mode')?.value || 'normal';
 
@@ -132,6 +166,46 @@
         input.focus();
       }
     });
+  }
+
+  function showSystemPopup(title, message, isWarning = false) {
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-modal-overlay active';
+    overlay.style.zIndex = '9999'; // Ensure it's on top of everything
+
+    const modal = document.createElement('div');
+    modal.className = 'bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-8 w-full max-w-sm border border-[var(--border-color)] modal-pop flex flex-col items-center text-center';
+
+    // Icon
+    const iconColor = isWarning || title.toLowerCase().includes('warning') ? 'text-red-500' : 'text-blue-500';
+    const iconSvg = isWarning || title.toLowerCase().includes('warning')
+      ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>'
+      : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+
+    modal.innerHTML = `
+      <div class="mb-4 ${iconColor}">
+        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${iconSvg}
+        </svg>
+      </div>
+      <h3 class="text-xl font-bold text-[var(--text-main)] mb-2">${escapeHtml(title)}</h3>
+      <p class="text-sm text-[var(--text-muted)] mb-8 leading-relaxed">${escapeHtml(message)}</p>
+      <button class="w-full px-5 py-3 text-sm font-medium bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all">
+        Got it
+      </button>
+    `;
+
+    const btn = modal.querySelector('button');
+    btn.onclick = () => {
+      overlay.classList.remove('active');
+      setTimeout(() => overlay.remove(), 200);
+    };
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Focus button for accessibility
+    setTimeout(() => btn.focus(), 100);
   }
 
   function renderUserMessage(text, fileNames = []) {
