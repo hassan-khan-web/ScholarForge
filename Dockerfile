@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY requires.txt .
-RUN pip install --no-cache-dir -r requires.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 
 FROM python:3.10-slim AS runner
