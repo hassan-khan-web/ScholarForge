@@ -203,13 +203,24 @@
         <div
             class="h-16 flex items-center justify-between px-6 border-b border-[var(--border-color)] bg-[var(--bg-main)]">
             <h3 class="font-bold text-[var(--text-main)]">Research Hooks</h3>
-            <button onclick="toggleHookPanel()" class="icon-btn"><svg class="w-4 h-4" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                    </path>
-                </svg></button>
+            <div class="flex items-center gap-2">
+                <button onclick="openMergePanel()"
+                    class="px-3 py-1.5 text-xs font-medium bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                    title="Merge Hooks into Report">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                    Merge Hooks
+                </button>
+                <button onclick="toggleHookPanel()" class="icon-btn p-1"><svg class="w-4 h-4" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg></button>
+            </div>
         </div>
-        <div id="hook-list-content" class="h-full overflow-y-auto custom-scrollbar p-4"></div>
+        <div id="hook-list-content" class="h-[calc(100%-4rem)] overflow-y-auto custom-scrollbar p-4"></div>
     </aside>
 
     <main class="flex-1 relative h-full overflow-hidden bg-[var(--bg-main)] flex flex-col">
@@ -284,6 +295,74 @@
 
     <div id="toast-notification" class="hidden"></div>
 
+    <!-- Merge Hooks Panel -->
+    <div id="merge-panel" class="custom-modal-overlay">
+        <div
+            class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl w-[95vw] h-[85vh] max-w-7xl border border-[var(--border-color)] modal-pop flex flex-col overflow-hidden">
+            <!-- Header -->
+            <div
+                class="h-14 flex items-center justify-between px-6 border-b border-[var(--border-color)] bg-[var(--bg-main)] shrink-0">
+                <h3 class="text-lg font-bold text-[var(--text-main)]">Merge Hooks into Report</h3>
+                <button onclick="closeMergePanel()" class="icon-btn p-1 hover:bg-[var(--hover-bg)] rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Content - 3 Columns -->
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Left: Report List (10%) -->
+                <div
+                    class="w-[10%] min-w-[140px] border-r border-[var(--border-color)] bg-[var(--bg-main)] flex flex-col">
+                    <div class="px-3 py-2 border-b border-[var(--border-color)]">
+                        <h4 class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Reports</h4>
+                    </div>
+                    <div id="merge-report-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                        <div class="text-xs text-[var(--text-muted)] p-2">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Middle: Report Content (45%) -->
+                <div class="w-[45%] flex flex-col bg-[var(--bg-panel)]">
+                    <div class="px-4 py-2 border-b border-[var(--border-color)] flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Report Content
+                        </h4>
+                        <span id="merge-report-title"
+                            class="text-xs text-[var(--accent-primary)] font-medium truncate max-w-[60%]"></span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4">
+                        <textarea id="merge-report-content"
+                            class="w-full h-full min-h-[300px] bg-[var(--bg-main)] border border-[var(--border-color)] rounded-xl p-4 text-sm text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] resize-none"
+                            placeholder="Select a report from the left panel to view and edit its content..."></textarea>
+                    </div>
+                    <div class="px-4 py-3 border-t border-[var(--border-color)] flex justify-end">
+                        <button onclick="saveMergeReport()"
+                            class="px-4 py-2 text-sm font-medium bg-[var(--accent-primary)] hover:opacity-90 text-white rounded-lg shadow-md transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Save
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Hooks List (45%) -->
+                <div class="w-[45%] border-l border-[var(--border-color)] flex flex-col bg-[var(--bg-main)]">
+                    <div class="px-4 py-2 border-b border-[var(--border-color)]">
+                        <h4 class="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Research Hooks
+                        </h4>
+                    </div>
+                    <div id="merge-hooks-list" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+                        <div class="text-xs text-[var(--text-muted)] p-2">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="confirm-modal" class="custom-modal-overlay">
         <div
             class="bg-[var(--bg-panel)] rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-[var(--border-color)]">
@@ -306,7 +385,7 @@
         </form>
     </div>
 
-    <script src="{{ url_for('static', path='js/global.js') }}?v=4"></script>
+    <script src="{{ url_for('static', path='js/global.js') }}?v=5"></script>
     {% block scripts %}{% endblock %}
 </body>
 

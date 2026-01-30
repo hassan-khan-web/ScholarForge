@@ -287,4 +287,225 @@
         });
     }
 
+    // ============================================
+    // MERGE PANEL FUNCTIONS
+    // ============================================
+
+    let currentMergeReportId = null;
+
+    window.openMergePanel = function () {
+        showModal('merge-panel');
+        loadMergeReports();
+        loadMergeHooks();
+    };
+
+    window.closeMergePanel = function () {
+        hideModal('merge-panel');
+        currentMergeReportId = null;
+        byId('merge-report-content').value = '';
+        byId('merge-report-title').textContent = '';
+    };
+
+    async function loadMergeReports() {
+        const container = byId('merge-report-list');
+        if (!container) return;
+
+        try {
+            const res = await fetch('/api/history');
+            const reports = await res.json();
+
+            if (!reports || reports.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6">
+                        <svg class="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-xs text-[var(--text-muted)]">No reports</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = reports.map(report => `
+                <button onclick="selectMergeReport(${report.id}, '${escapeAttr(report.topic)}')" 
+                    class="merge-report-item w-full text-left p-2 rounded-lg text-xs hover:bg-[var(--hover-bg)] transition-colors truncate ${currentMergeReportId === report.id ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]' : 'text-[var(--text-main)]'}"
+                    title="${escapeAttr(report.topic)}">
+                    ${escapeHtml(report.topic)}
+                </button>
+            `).join('');
+        } catch (e) {
+            console.error('Failed to load merge reports', e);
+            container.innerHTML = '<div class="text-xs text-red-400 p-2">Failed to load</div>';
+        }
+    }
+
+    window.selectMergeReport = async function (id, topic) {
+        currentMergeReportId = id;
+        byId('merge-report-title').textContent = topic;
+
+        // Highlight selected report
+        document.querySelectorAll('.merge-report-item').forEach(el => {
+            el.classList.remove('bg-[var(--accent-primary)]/10', 'text-[var(--accent-primary)]');
+            el.classList.add('text-[var(--text-main)]');
+        });
+        const selectedBtn = document.querySelector(`.merge-report-item[onclick*="selectMergeReport(${id}"]`);
+        if (selectedBtn) {
+            selectedBtn.classList.add('bg-[var(--accent-primary)]/10', 'text-[var(--accent-primary)]');
+            selectedBtn.classList.remove('text-[var(--text-main)]');
+        }
+
+        // Load report content
+        const contentArea = byId('merge-report-content');
+        contentArea.value = 'Loading...';
+
+        try {
+            const res = await fetch(`/api/report/${id}`);
+            const data = await res.json();
+            contentArea.value = data.content || '';
+        } catch (e) {
+            console.error('Failed to load report content', e);
+            contentArea.value = 'Failed to load report content';
+        }
+    };
+
+    async function loadMergeHooks() {
+        const container = byId('merge-hooks-list');
+        if (!container) return;
+
+        try {
+            const res = await fetch('/api/hooks');
+            const hooks = await res.json();
+
+            if (!hooks || hooks.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <svg class="w-10 h-10 mx-auto text-[var(--text-muted)] opacity-50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                        <p class="text-sm text-[var(--text-muted)]">No hooks saved</p>
+                        <p class="text-xs text-[var(--text-muted)] mt-1">Select text in chat and click Hook</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = hooks.map(hook => `
+                <div class="hook-merge-item group bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-lg p-3 hover:border-[var(--accent-primary)] transition-colors">
+                    <p class="text-sm text-[var(--text-main)] mb-3 line-clamp-4">${escapeHtml(hook.content)}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-[var(--text-muted)]">${hook.date || ''}</span>
+                        <button onclick="smartPushHook(${hook.id}, \`${escapeAttr(hook.content)}\`)" 
+                            class="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-indigo-500 hover:opacity-90 text-white rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                            title="Smart Push: AI will intelligently merge this hook into the report">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Smart Push
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error('Failed to load merge hooks', e);
+            container.innerHTML = '<div class="text-xs text-red-400 p-2">Failed to load hooks</div>';
+        }
+    }
+
+    window.saveMergeReport = async function () {
+        if (!currentMergeReportId) {
+            showToast('Please select a report first');
+            return;
+        }
+
+        const content = byId('merge-report-content').value;
+
+        try {
+            const res = await fetch(`/api/report/${currentMergeReportId}/content`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content })
+            });
+
+            if (res.ok) {
+                showToast('Report saved successfully');
+            } else {
+                showToast('Failed to save report');
+            }
+        } catch (e) {
+            console.error('Failed to save report', e);
+            showToast('Error saving report');
+        }
+    };
+
+    window.smartPushHook = async function (hookId, hookContent) {
+        if (!currentMergeReportId) {
+            showToast('Please select a report first');
+            return;
+        }
+
+        const contentArea = byId('merge-report-content');
+        const reportContent = contentArea.value;
+
+        if (!reportContent || reportContent === 'Loading...') {
+            showToast('Please wait for report to load');
+            return;
+        }
+
+        // Show loading state
+        const originalContent = contentArea.value;
+        contentArea.value = 'AI is merging the hook into your report...';
+        contentArea.disabled = true;
+
+        try {
+            const res = await fetch('/api/merge-hook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    report_content: reportContent,
+                    hook_content: hookContent
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.status === 'success' && data.merged_content) {
+                contentArea.value = data.merged_content;
+                showToast('Hook merged successfully! Don\'t forget to save.');
+            } else {
+                contentArea.value = originalContent;
+                showToast(data.error || 'Failed to merge hook');
+            }
+        } catch (e) {
+            console.error('Smart push error:', e);
+            contentArea.value = originalContent;
+            showToast('Error merging hook');
+        } finally {
+            contentArea.disabled = false;
+        }
+    };
+
+    // Helper functions
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function escapeAttr(text) {
+        if (!text) return '';
+        return text.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/`/g, '\\`');
+    }
+
+    // Add Escape key handler
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeAllDropdowns();
+            hideModal('settings-modal');
+            hideModal('folder-modal');
+            hideModal('merge-panel');
+            hideModal('confirm-modal');
+        }
+    });
+
 })();

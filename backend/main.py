@@ -352,9 +352,9 @@ Please merge the hook content into the report intelligently, maintaining proper 
         
         merged_content = await chat_engine.get_chat_response_async(user_prompt, [{"role": "system", "content": system_prompt}])
         
-        return {"merged_content": merged_content}
+        return {"status": "success", "merged_content": merged_content}
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        return JSONResponse(status_code=500, content={"status": "error", "error": str(e)})
 
 if __name__ == '__main__':
     import uvicorn
