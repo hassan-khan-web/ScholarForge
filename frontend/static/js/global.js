@@ -1,6 +1,7 @@
 (function () {
     const body = document.body;
     const THEME_KEY = 'sf_theme';
+    let _confirmCb = null;  // For custom confirm modal
 
     function byId(id) { return document.getElementById(id); }
 
@@ -12,8 +13,8 @@
     function applyTheme(name) {
         body.classList.remove('theme-dark', 'theme-tokyo');
         if (name === 'dark') body.classList.add('theme-dark');
-        else if (name === 'light') {  }
-        else {  body.classList.add('theme-tokyo'); }
+        else if (name === 'light') { }
+        else { body.classList.add('theme-tokyo'); }
         localStorage.setItem(THEME_KEY, name);
     }
 
@@ -50,6 +51,18 @@
     document.addEventListener('DOMContentLoaded', () => {
         initTheme();
         fetchFolders();
+
+        // Attach confirm modal event listeners
+        byId('btn-cancel-confirm')?.addEventListener('click', () => {
+            hideModal('confirm-modal');
+            _confirmCb = null;
+        });
+
+        byId('btn-do-confirm')?.addEventListener('click', () => {
+            hideModal('confirm-modal');
+            if (typeof _confirmCb === 'function') _confirmCb();
+            _confirmCb = null;
+        });
     });
 
     window.submitFolderCreation = async function () {
@@ -239,6 +252,16 @@
         }, 10);
     }
 
+    // Custom themed confirm dialog
+    function showConfirm(title, msg, cb) {
+        const t = byId('confirm-title');
+        const m = byId('confirm-msg');
+        if (t) t.textContent = title || 'Are you sure?';
+        if (m) m.textContent = msg || 'This action cannot be undone.';
+        _confirmCb = cb;
+        showModal('confirm-modal');
+    }
+
     function promptRenameFolder(id, oldName) {
         const n = prompt("Rename Folder", oldName);
         if (n && n !== oldName) {
@@ -247,9 +270,9 @@
         }
     }
     function confirmDeleteFolder(id) {
-        if (confirm("Delete folder and all chats?")) {
+        showConfirm("Delete Project", "Delete this folder and all its chats? This cannot be undone.", () => {
             fetch(`/api/folders/${id}`, { method: 'DELETE' }).then(fetchFolders);
-        }
+        });
     }
     function promptRenameSession(id, oldName) {
         const n = prompt("Rename Chat", oldName);
@@ -259,9 +282,9 @@
         }
     }
     function confirmDeleteSession(id) {
-        if (confirm("Delete chat?")) {
+        showConfirm("Delete Chat", "Delete this chat? This cannot be undone.", () => {
             fetch(`/api/sessions/${id}`, { method: 'DELETE' }).then(fetchFolders);
-        }
+        });
     }
 
 })();

@@ -82,7 +82,9 @@ body {
 	display: none;
 	align-items: center;
 	justify-content: center;
-	z-index: 60;
+	z-index: 9999;
+	background: rgba(0, 0, 0, 0.5);
+	backdrop-filter: blur(4px);
 }
 
 .custom-modal-overlay .glass-panel {
