@@ -31,7 +31,7 @@
 
     window.toggleHistory = function () { const p = byId('history-panel'); if (!p) return; if (p.style.display === 'block' || p.style.transform === 'translateX(0%)') { p.style.transform = 'translateX(100%)'; p.style.display = 'none'; } else { p.style.display = 'block'; p.style.transform = 'translateX(0%)'; } };
 
-    window.toggleHookPanel = function () { const p = byId('hook-panel'); if (!p) return; if (p.style.transform === 'translateX(0%)') { p.style.transform = 'translateX(100%)'; } else { p.style.transform = 'translateX(0%)'; } };
+    window.toggleHookPanel = function () { const p = byId('hook-panel'); if (!p) return; if (p.style.transform === 'translateX(0%)') { p.style.transform = 'translateX(100%)'; } else { p.style.transform = 'translateX(0%)'; if (window.fetchHooks) window.fetchHooks(); } };
 
     function showModal(id) { const m = byId(id); if (m) { m.classList.add('active'); if (id === 'folder-modal') setTimeout(() => byId('fm-input')?.focus(), 100); } }
     function hideModal(id) { const m = byId(id); if (m) { m.classList.remove('active'); } }

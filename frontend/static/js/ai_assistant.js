@@ -603,10 +603,85 @@
     if (selectedText) {
       saveHook(selectedText);
     } else {
-      window.openMergePanel?.();
+      openHookPanel();
     }
   }
   window.handleHookButtonClick = handleHookButtonClick;
+
+  // Open hook panel and load hooks
+  function openHookPanel() {
+    const panel = document.getElementById('hook-panel');
+    if (panel) {
+      panel.style.transform = 'translateX(0%)';
+      fetchHooks();
+    }
+  }
+  window.openHookPanel = openHookPanel;
+  window.openMergePanel = openHookPanel;
+
+  // Fetch hooks from API
+  async function fetchHooks() {
+    try {
+      const response = await fetch('/api/hooks');
+      const hooks = await response.json();
+      renderHooks(hooks);
+    } catch (err) {
+      console.error('Error fetching hooks:', err);
+      renderHooks([]);
+    }
+  }
+  window.fetchHooks = fetchHooks;
+
+  // Render hooks in the panel
+  function renderHooks(hooks) {
+    const container = document.getElementById('hook-list-content');
+    if (!container) return;
+
+    if (!hooks || hooks.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8">
+          <svg class="w-12 h-12 mx-auto text-[var(--text-muted)] opacity-50 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+          </svg>
+          <p class="text-sm text-[var(--text-muted)]">No hooks saved yet</p>
+          <p class="text-xs text-[var(--text-muted)] mt-1">Select text and click Hook to save</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = hooks.map(hook => `
+      <div class="hook-item group bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg p-3 mb-2 hover:border-[var(--accent-primary)] transition-colors">
+        <div class="flex justify-between items-start gap-2">
+          <p class="text-sm text-[var(--text-main)] flex-1 line-clamp-3">${escapeHtml(hook.content)}</p>
+          <button onclick="deleteHook(${hook.id})" class="opacity-0 group-hover:opacity-100 p-1 text-[var(--text-muted)] hover:text-red-500 rounded transition-all" title="Delete hook">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <p class="text-xs text-[var(--text-muted)] mt-2">${hook.date}</p>
+      </div>
+    `).join('');
+  }
+
+  // Delete a hook
+  async function deleteHook(hookId) {
+    try {
+      const response = await fetch(`/api/hooks/${hookId}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (data.status === 'success') {
+        window.showToast?.('Hook deleted');
+        fetchHooks(); // Refresh the list
+      } else {
+        window.showToast?.('Failed to delete hook');
+      }
+    } catch (err) {
+      console.error('Error deleting hook:', err);
+      window.showToast?.('Error deleting hook');
+    }
+  }
+  window.deleteHook = deleteHook;
 
   async function saveHook(content) {
     try {
@@ -618,8 +693,10 @@
 
       const data = await response.json();
       if (data.status === 'success') {
-        window.showToast('Hook saved successfully!');
+        window.showToast('Hook saved!');
         window.getSelection()?.removeAllRanges();
+        // Open the hook panel to show the saved hook
+        openHookPanel();
       } else {
         window.showToast('Failed to save hook');
       }
