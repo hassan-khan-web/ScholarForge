@@ -96,6 +96,33 @@
             const res = await fetch('/api/folders');
             currentFolders = await res.json();
             renderFolderTree();
+
+            // Check if we need to reset to welcome state (only on chat page)
+            if (window.resetToWelcomeState && typeof window.resetToWelcomeState === 'function') {
+                const currentSessionId = localStorage.getItem('currentChatSessionId');
+                if (currentSessionId) {
+                    let sessionExists = false;
+                    // Deep search for session in folders
+                    for (const folder of currentFolders) {
+                        if (folder.sessions && folder.sessions.some(s => s.id.toString() === currentSessionId.toString())) {
+                            sessionExists = true;
+                            break;
+                        }
+                    }
+
+                    if (!sessionExists) {
+                        window.resetToWelcomeState();
+                        showToast('Session closed or deleted');
+                    }
+                } else {
+                    // No session selected, ensure we are in welcome state
+                    // This handles the case where user manually cleared storage or landed on page fresh
+                    const welcome = document.getElementById('welcome-state');
+                    if (welcome && welcome.classList.contains('hidden')) {
+                        window.resetToWelcomeState();
+                    }
+                }
+            }
         } catch (e) { console.error('Error fetching folders:', e); }
     }
     window.refreshFolders = fetchFolders;

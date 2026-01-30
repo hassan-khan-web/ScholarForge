@@ -670,6 +670,29 @@
     loadSessionMessages(id);
   };
 
+  window.resetToWelcomeState = function () {
+    currentSessionId = null;
+    localStorage.removeItem('currentChatSessionId');
+
+    // Update UI
+    const w = document.getElementById('welcome-state');
+    const c = document.getElementById('chat-interface');
+
+    if (w) w.classList.remove('hidden');
+    if (c) c.classList.add('hidden');
+
+    document.getElementById('active-indicator')?.classList.add('hidden');
+
+    const titleEl = document.getElementById('active-session-title');
+    if (titleEl) titleEl.textContent = '';
+
+    const container = document.getElementById('messages-container');
+    if (container) container.innerHTML = '';
+
+    // Clean URL without reloading
+    window.history.replaceState({}, document.title, "/chat");
+  };
+
   function handleHookButtonClick() {
     const selection = window.getSelection();
     const selectedText = selection ? selection.toString().trim() : '';
