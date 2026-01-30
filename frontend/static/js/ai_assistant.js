@@ -375,18 +375,7 @@
       const index = codeBlocks.length;
       const language = lang || 'plaintext';
       const escapedCode = escapeHtml(code.trim());
-      codeBlocks.push(`<div class="code-block-wrapper">
-        <div class="code-block-header">
-          <span class="code-language">${language}</span>
-          <button class="code-copy-btn" onclick="copyCodeBlock(this)">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-            </svg>
-            Copy
-          </button>
-        </div>
-        <pre><code class="language-${language}">${escapedCode}</code></pre>
-      </div>`);
+      codeBlocks.push(`<div class="code-block-wrapper"><div class="code-block-header"><span class="code-language">${language}</span><button class="code-copy-btn" onclick="copyCodeBlock(this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>Copy</button></div><pre><code class="language-${language}">${escapedCode}</code></pre></div>`);
       return `__CODE_BLOCK_${index}__`;
     });
 
@@ -514,17 +503,49 @@
   // Copy code block function
   window.copyCodeBlock = function (btn) {
     const codeBlock = btn.closest('.code-block-wrapper').querySelector('code');
+    if (!codeBlock) {
+      window.showToast?.('No code to copy');
+      return;
+    }
     const text = codeBlock.textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      const originalText = btn.innerHTML;
-      btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-      </svg> Copied!`;
-      setTimeout(() => {
-        btn.innerHTML = originalText;
-      }, 2000);
-    });
+
+    // Try modern clipboard API first, fallback to execCommand
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showCopiedFeedback(btn);
+      }).catch(() => {
+        fallbackCopy(text, btn);
+      });
+    } else {
+      fallbackCopy(text, btn);
+    }
   };
+
+  function showCopiedFeedback(btn) {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg> Copied!`;
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+    }, 1500);
+  }
+
+  function fallbackCopy(text, btn) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showCopiedFeedback(btn);
+    } catch (err) {
+      window.showToast?.('Failed to copy');
+    }
+    document.body.removeChild(textarea);
+  }
 
   async function loadSessionMessages(sessionId) {
     try {
@@ -690,7 +711,10 @@
 
   window.copyMessageText = function (msgId) {
     const msgEl = document.getElementById(msgId);
-    if (!msgEl) return;
+    if (!msgEl) {
+      window.showToast?.('Message not found');
+      return;
+    }
 
     // Get raw text from data attribute and decode HTML entities
     let rawText = msgEl.dataset.rawText || '';
@@ -702,12 +726,40 @@
       rawText = msgEl.querySelector('.message-text')?.innerText || '';
     }
 
-    navigator.clipboard.writeText(rawText).then(() => {
-      window.showToast('Copied to clipboard');
-    }).catch(() => {
-      window.showToast('Failed to copy');
-    });
+    if (!rawText) {
+      window.showToast?.('No text to copy');
+      return;
+    }
+
+    // Try modern clipboard API first, fallback to execCommand
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(rawText).then(() => {
+        window.showToast?.('Copied to clipboard');
+      }).catch(() => {
+        fallbackCopyMessage(rawText);
+      });
+    } else {
+      fallbackCopyMessage(rawText);
+    }
   };
+
+  function fallbackCopyMessage(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, 99999); // For mobile devices
+    try {
+      document.execCommand('copy');
+      window.showToast?.('Copied to clipboard');
+    } catch (err) {
+      window.showToast?.('Failed to copy');
+    }
+    document.body.removeChild(textarea);
+  }
 
   window.editUserMessage = function (msgId) {
     const msgEl = document.getElementById(msgId);
