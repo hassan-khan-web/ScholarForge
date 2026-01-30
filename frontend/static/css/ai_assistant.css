@@ -83,8 +83,9 @@ body {
 	align-items: center;
 	justify-content: center;
 	z-index: 9999;
-	background: rgba(0, 0, 0, 0.5);
-	backdrop-filter: blur(4px);
+	background: rgba(0, 0, 0, 0);
+	backdrop-filter: blur(0px);
+	transition: background 0.25s ease-out, backdrop-filter 0.25s ease-out;
 }
 
 .custom-modal-overlay .glass-panel {
@@ -93,6 +94,41 @@ body {
 
 .custom-modal-overlay.active {
 	display: flex;
+	background: rgba(0, 0, 0, 0.5);
+	backdrop-filter: blur(4px);
+}
+
+/* Modal panel animation - horizontal width expand from center */
+.custom-modal-overlay>div {
+	transform: scaleX(0);
+	opacity: 0;
+	overflow: hidden;
+}
+
+.custom-modal-overlay.active>div {
+	animation: modalWidthExpand 0.3s ease-out forwards;
+}
+
+/* Keyframes for horizontal expand - width only, no height change */
+@keyframes modalWidthExpand {
+	0% {
+		transform: scaleX(0);
+		opacity: 0;
+	}
+
+	20% {
+		opacity: 1;
+	}
+
+	100% {
+		transform: scaleX(1);
+		opacity: 1;
+	}
+}
+
+/* Keep inner content rigid - counteract parent scale */
+.custom-modal-overlay>div>* {
+	transform-origin: center center;
 }
 
 .dropdown-menu {
