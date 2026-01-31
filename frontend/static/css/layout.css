@@ -1,14 +1,13 @@
-
 :root {
-	
+
 	--bg-main: #f3f6fc;
-	
+
 	--bg-panel: #ffffff;
 	--bg-sidebar: #ffffff;
 	--accent-primary: #3b82f6;
-	
+
 	--accent-secondary: #8b5cf6;
-	
+
 	--border-color: #e2e8f0;
 	--text-main: #0f172a;
 	--text-main: #0f172a;
@@ -22,9 +21,9 @@
 }
 
 .theme-dark {
-	
+
 	--bg-main: #020617;
-	
+
 	--bg-panel: #0f172a;
 	--bg-sidebar: #0f172a;
 	--accent-primary: #3b82f6;
@@ -82,14 +81,14 @@ body {
 	justify-content: flex-start;
 	padding-left: 0 !important;
 	padding-right: 0 !important;
-	
-	
+
+
 }
 
 
 :root {
 	--sidebar-width: 50px;
-	
+
 }
 
 
@@ -103,8 +102,8 @@ nav#sidebar {
 	height: 100vh;
 	transition: width 0.3s cubic-bezier(0.2, 0, 0, 1);
 	z-index: 50;
-	
-	
+
+
 	overflow-x: hidden !important;
 }
 
@@ -116,7 +115,7 @@ nav#sidebar:not(.expanded) .nav-item {
 	padding-right: 0;
 	justify-content: center;
 	border-radius: 0;
-	
+
 }
 
 nav#sidebar.expanded {
@@ -134,11 +133,11 @@ body.sidebar-expanded {
 	width: 100%;
 	height: 64px;
 	flex-shrink: 0;
-	
+
 	transition: width 0.3s ease;
 
-	
-	
+
+
 	padding-left: 7px;
 	padding-right: 7px;
 	justify-content: flex-start;
@@ -147,8 +146,8 @@ body.sidebar-expanded {
 
 nav#sidebar.expanded .sidebar-section {
 	padding-left: 7px;
-	
-	
+
+
 }
 
 
@@ -162,7 +161,7 @@ nav#sidebar .sidebar-section .icon-btn {
 	opacity: 0;
 	transition: opacity 0.2s ease;
 
-	
+
 	margin-left: auto !important;
 }
 
@@ -210,16 +209,16 @@ nav#sidebar.expanded .expanded-only.flex {
 	overflow: hidden;
 	white-space: nowrap;
 	display: block;
-	
+
 	transition: opacity 0.2s ease, width 0.3s ease;
 }
 
 nav#sidebar.expanded .nav-text {
 	opacity: 1;
 	width: 200px;
-	
+
 	transition-delay: 0.1s;
-	
+
 }
 
 nav#sidebar.expanded .nav-text.flex {
@@ -236,17 +235,17 @@ nav#sidebar.expanded button.nav-text {
 	align-items: center;
 	width: 100%;
 	height: 64px;
-	
+
 	flex-shrink: 0;
 	transition: all 0.3s ease;
 
-	
+
 	justify-content: flex-start;
 	padding: 0;
 }
 
 nav#sidebar.expanded .sidebar-section {
-	
+
 	justify-content: space-between;
 	padding-left: 0;
 	padding-right: 0;
@@ -262,7 +261,7 @@ nav#sidebar .sidebar-section .icon-btn {
 
 main header {
 	z-index: 30;
-	
+
 }
 
 
@@ -379,4 +378,53 @@ main header {
 .btn-primary:hover {
 	box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
 	transform: translateY(-1px);
+}
+
+/* Markdown Table Styling */
+table {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 1rem 0;
+	font-size: 0.9em;
+	border: 1px solid var(--border-color);
+	background: var(--bg-panel);
+	border-radius: 8px;
+	overflow: hidden;
+	display: table;
+}
+
+thead {
+	background-color: var(--hover-bg);
+	border-bottom: 2px solid var(--border-color);
+}
+
+th,
+td {
+	border: 1px solid var(--border-color);
+	padding: 12px 15px;
+	text-align: left;
+}
+
+th {
+	font-weight: 600;
+	color: var(--text-main);
+}
+
+td {
+	color: var(--text-muted);
+}
+
+tr:nth-child(even) {
+	background-color: var(--bg-main);
+}
+
+tr:hover {
+	background-color: var(--hover-bg);
+}
+
+.table-wrapper {
+	overflow-x: auto;
+	border-radius: 8px;
+	border: 1px solid var(--border-color);
+	margin: 1rem 0;
 }

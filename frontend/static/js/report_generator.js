@@ -238,13 +238,19 @@
 
       let content = data.report_content || '';
 
-      content = content.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-      content = content.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-      content = content.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-      content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      content = content.replace(/^\* (.*$)/gim, '<ul><li>$1</li></ul>');
-      content = content.replace(/<\/ul>\s*<ul>/g, '');
-      content = content.replace(/\n\n/g, '<br><br>');
+      // Use Marked for full Markdown rendering including tables
+      if (typeof marked !== 'undefined') {
+        content = marked.parse(content);
+      } else {
+        // Fallback if marked not loaded
+        content = content.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+        content = content.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+        content = content.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+        content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        content = content.replace(/^\* (.*$)/gim, '<ul><li>$1</li></ul>');
+        content = content.replace(/<\/ul>\s*<ul>/g, '');
+        content = content.replace(/\n\n/g, '<br><br>');
+      }
 
       if (data.chart_path) {
         content = `<div class="mb-8 p-4 bg-white/5 rounded-xl border border-white/10 flex justify-center"><img src="/${data.chart_path}" class="max-w-full rounded-lg shadow-lg" alt="Analysis Chart"></div>` + content;

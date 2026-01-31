@@ -442,137 +442,19 @@
 
   function formatMarkdown(text) {
     if (!text) return '';
-
-    // First, extract and protect code blocks from other processing
-    const codeBlocks = [];
-    let processedText = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
-      const index = codeBlocks.length;
-      const language = lang || 'plaintext';
-      const escapedCode = escapeHtml(code.trim());
-      codeBlocks.push(`<div class="code-block-wrapper"><div class="code-block-header"><span class="code-language">${language}</span><button class="code-copy-btn" onclick="copyCodeBlock(this)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>Copy</button></div><pre><code class="language-${language}">${escapedCode}</code></pre></div>`);
-      return `__CODE_BLOCK_${index}__`;
-    });
-
-    // Parse tables before other processing
-    processedText = processedText.replace(/(\|.+\|)\n(\|[-:| ]+\|)\n((?:\|.+\|\n?)+)/g, (match, headerRow, separatorRow, bodyRows) => {
-      // Parse header
-      const headers = headerRow.split('|').filter(cell => cell.trim()).map(cell => cell.trim());
-
-      // Parse alignment from separator
-      const alignments = separatorRow.split('|').filter(cell => cell.trim()).map(cell => {
-        const trimmed = cell.trim();
-        if (trimmed.startsWith(':') && trimmed.endsWith(':')) return 'center';
-        if (trimmed.endsWith(':')) return 'right';
-        return 'left';
-      });
-
-      // Parse body rows
-      const rows = bodyRows.trim().split('\n').map(row =>
-        row.split('|').filter(cell => cell.trim()).map(cell => cell.trim())
-      );
-
-      // Build table HTML
-      let tableHtml = '<div class="table-wrapper"><table class="markdown-table">';
-      tableHtml += '<thead><tr>';
-      headers.forEach((header, i) => {
-        tableHtml += `<th style="text-align: ${alignments[i] || 'left'}">${escapeHtml(header)}</th>`;
-      });
-      tableHtml += '</tr></thead>';
-      tableHtml += '<tbody>';
-      rows.forEach(row => {
-        tableHtml += '<tr>';
-        row.forEach((cell, i) => {
-          tableHtml += `<td style="text-align: ${alignments[i] || 'left'}">${escapeHtml(cell)}</td>`;
-        });
-        tableHtml += '</tr>';
-      });
-      tableHtml += '</tbody></table></div>';
-
-      return tableHtml;
-    });
-
-    let html = escapeHtml(processedText);
-
-    // Restore code blocks (they were already escaped properly)
-    codeBlocks.forEach((block, index) => {
-      html = html.replace(`__CODE_BLOCK_${index}__`, block);
-    });
-
-    // Remove horizontal rules (---, ***, ___)
-    html = html.replace(/^[-*_]{3,}$/gm, '');
-
-    // Inline code
-    html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-    // Bold and italic
-    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-
-    // Headings
-    html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
-    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-
-    // Lists
-    html = html.replace(/^\* (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/^\d+\. (.+)$/gm, '<li class="numbered">$1</li>');
-
-    // Wrap consecutive li elements in ul/ol
-    html = html.replace(/(<li class="numbered">[\s\S]*?<\/li>)(\s*<li class="numbered">[\s\S]*?<\/li>)*/g, '<ol>$&</ol>');
-    html = html.replace(/(<li>[\s\S]*?<\/li>)(\s*<li>[\s\S]*?<\/li>)*/g, (match) => {
-      if (!match.includes('<ol>')) return '<ul>' + match + '</ul>';
-      return match;
-    });
-
-    // Newlines to breaks (but not inside code blocks or tables)
-    html = html.replace(/\n/g, '<br>');
-
-    // Clean up extra breaks around block elements
-    html = html.replace(/<br>(<h[123]>)/g, '$1');
-    html = html.replace(/(<\/h[123]>)<br>/g, '$1');
-    html = html.replace(/<br>(<li)/g, '$1');
-    html = html.replace(/(<\/li>)<br>/g, '$1');
-    html = html.replace(/<br>(<ul>|<ol>)/g, '$1');
-    html = html.replace(/(<\/ul>|<\/ol>)<br>/g, '$1');
-    html = html.replace(/<br>(<div class="table-wrapper">)/g, '$1');
-    html = html.replace(/(<\/div>)<br>(<div class="table-wrapper">)/g, '$1$2');
-    html = html.replace(/<br>(<div class="code-block-wrapper">)/g, '$1');
-    html = html.replace(/(<\/div>)<br>/g, '$1');
-
-    // Clean up the table wrapper escaped content
-    html = html.replace(/&lt;div class="table-wrapper"&gt;/g, '<div class="table-wrapper">');
-    html = html.replace(/&lt;table class="markdown-table"&gt;/g, '<table class="markdown-table">');
-    html = html.replace(/&lt;\/table&gt;&lt;\/div&gt;/g, '</table></div>');
-    html = html.replace(/&lt;thead&gt;/g, '<thead>');
-    html = html.replace(/&lt;\/thead&gt;/g, '</thead>');
-    html = html.replace(/&lt;tbody&gt;/g, '<tbody>');
-    html = html.replace(/&lt;\/tbody&gt;/g, '</tbody>');
-    html = html.replace(/&lt;tr&gt;/g, '<tr>');
-    html = html.replace(/&lt;\/tr&gt;/g, '</tr>');
-    html = html.replace(/&lt;th([^&]*)&gt;/g, '<th$1>');
-    html = html.replace(/&lt;\/th&gt;/g, '</th>');
-    html = html.replace(/&lt;td([^&]*)&gt;/g, '<td$1>');
-    html = html.replace(/&lt;\/td&gt;/g, '</td>');
-
-    // Clean up code block wrapper escaped content  
-    html = html.replace(/&lt;div class="code-block-wrapper"&gt;/g, '<div class="code-block-wrapper">');
-    html = html.replace(/&lt;div class="code-block-header"&gt;/g, '<div class="code-block-header">');
-    html = html.replace(/&lt;span class="code-language"&gt;/g, '<span class="code-language">');
-    html = html.replace(/&lt;\/span&gt;/g, '</span>');
-    html = html.replace(/&lt;button class="code-copy-btn"([^&]*)&gt;/g, '<button class="code-copy-btn"$1>');
-    html = html.replace(/&lt;\/button&gt;/g, '</button>');
-    html = html.replace(/&lt;svg([^&]*)&gt;/g, '<svg$1>');
-    html = html.replace(/&lt;\/svg&gt;/g, '</svg>');
-    html = html.replace(/&lt;path([^&]*)&gt;&lt;\/path&gt;/g, '<path$1></path>');
-    html = html.replace(/&lt;pre&gt;/g, '<pre>');
-    html = html.replace(/&lt;\/pre&gt;/g, '</pre>');
-    html = html.replace(/&lt;code([^&]*)&gt;/g, '<code$1>');
-    html = html.replace(/&lt;\/code&gt;/g, '</code>');
-    html = html.replace(/&lt;\/div&gt;/g, '</div>');
-
-    return html;
+    try {
+      // Use marked library if available, otherwise return raw text (protected against XSS via escaping if necessary, though marked handles it)
+      // We assume marked is loaded globally via layout.html
+      if (typeof marked !== 'undefined') {
+        const html = marked.parse(text);
+        // Wrap tables in table-wrapper for horizontal scroll. Marked renders tables as <table>...</table>
+        return html.replace(/<table>/g, '<div class="table-wrapper"><table>').replace(/<\/table>/g, '</table></div>');
+      }
+      return escapeHtml(text).replace(/\n/g, '<br>');
+    } catch (e) {
+      console.error('Markdown parse error', e);
+      return escapeHtml(text);
+    }
   }
 
   // Copy code block function
