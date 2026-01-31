@@ -274,7 +274,8 @@ def write_section(section_title: str, topic: str, summary: str, full_report_cont
         "3. TABLES: You MUST include at least one Markdown table comparing data, pros/cons, or timelines.\n"
         "4. CITATIONS: Use [1], [2] notation corresponding to sources.\n"
         "5. TONE: Professional, dense, and analytical. Avoid fluff.\n"
-        "6. CONTENT: If this is 'Standard' or higher, include a 'Real World Application' subsection."
+        "6. CONTENT: If this is 'Standard' or higher, include a 'Real World Application' subsection.\n"
+        "7. REFERENCES: Do NOT output a 'References' list at the end of this section. Citations [x] are sufficient."
     )
     
     content = call_llm(SMART_MODEL, "You are a Report Writer. Use Markdown Tables and Charts.", base_prompt, temp=0.4)
@@ -354,6 +355,12 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
         section_content = write_section(section, query, summary, full_report, words_per_section)
         full_report += f"\n\n## {section}\n{section_content}\n"
     
+    # Append Consolidated References
+    full_report += "\n\n# References\n"
+    # Process search_content to look nice
+    clean_refs = search_content.replace("--- VERIFIED SOURCES ---", "").strip()
+    full_report += clean_refs
+
     _update_status("Step 7/7: Finalizing...")
     full_report = clean_ai_output(full_report)
     
