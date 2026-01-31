@@ -29,7 +29,7 @@
     };
     window.closeAllDropdowns = function () { document.querySelectorAll('.dropdown-menu.show').forEach(d => d.classList.remove('show')); };
 
-    window.toggleHistory = function () { const p = byId('history-panel'); if (!p) return; if (p.style.display === 'block' || p.style.transform === 'translateX(0%)') { p.style.transform = 'translateX(100%)'; p.style.display = 'none'; } else { p.style.display = 'block'; p.style.transform = 'translateX(0%)'; } };
+    window.toggleHistory = function () { const p = byId('history-panel'); if (!p) return; p.classList.toggle('-translate-x-full'); };
 
     window.toggleHookPanel = function () { const p = byId('hook-panel'); if (!p) return; if (p.style.transform === 'translateX(0%)') { p.style.transform = 'translateX(100%)'; } else { p.style.transform = 'translateX(0%)'; if (window.fetchHooks) window.fetchHooks(); } };
 

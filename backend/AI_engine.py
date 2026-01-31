@@ -89,24 +89,40 @@ def call_llm(target_model: str, system_prompt: str, user_prompt: str, temp: floa
         return call_llm(target_model, system_prompt, user_prompt, temp, attempt + 1)
 
 
-def extract_text_from_multiple_pdfs(file_bytes_list: list) -> str:
-    """Feature: Extract text from MULTIPLE uploaded PDFs"""
+def extract_text_from_files(file_data_list: list) -> str:
+    """Feature: Extract text from MULTIPLE uploaded files (PDF, DOCX, TXT)"""
     combined_text = "\n\n--- USER UPLOADED DOCUMENTS ---\n"
     
     try:
-        for idx, file_bytes in enumerate(file_bytes_list):
-            with fitz.open(stream=file_bytes, filetype="pdf") as doc:
-                doc_text = ""
-                for i, page in enumerate(doc):
-                    if i > 25: break
-                    doc_text += page.get_text()
+        for idx, file_data in enumerate(file_data_list):
+            filename = file_data.get('filename', f'Document_{idx+1}')
+            content = file_data.get('content')
+            doc_text = ""
+
+            try:
+                if filename.lower().endswith('.pdf'):
+                    with fitz.open(stream=content, filetype="pdf") as doc:
+                        for i, page in enumerate(doc):
+                            if i > 25: break
+                            doc_text += page.get_text()
+                elif filename.lower().endswith('.docx'):
+                    from io import BytesIO
+                    # Document is already imported from docx at top level
+                    doc = Document(BytesIO(content))
+                    for para in doc.paragraphs:
+                        doc_text += para.text + "\n"
+                elif filename.lower().endswith('.txt') or filename.lower().endswith('.md'):
+                    doc_text = content.decode('utf-8', errors='ignore')
                 
-                combined_text += f"\n[Document {idx+1} Content]:\n{doc_text[:15000]}\n" 
+                combined_text += f"\n[Document {idx+1} - {filename}]:\n{doc_text[:15000]}\n"
+            except Exception as e:
+                print(f"Error processing {filename}: {e}")
+                continue
         
         combined_text += "\n------------------------------\n"
         return combined_text
     except Exception as e:
-        print(f"PDF Error: {e}")
+        print(f"File Extraction Error: {e}")
         return ""
 
 def _get_article_text(url: str) -> str:
@@ -296,7 +312,7 @@ def generate_chart_from_data(summary: str, topic: str) -> str:
         return filepath
     except: return None
 
-def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15, pdf_bytes_list: list = None, task=None) -> tuple[str, str, str]: 
+def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15, file_data_list: list = None, task=None) -> tuple[str, str, str]: 
     def _update_status(message: str):
         print(message) 
         if task: task.update_state(state='PROGRESS', meta={'message': message})
@@ -304,9 +320,9 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
     _update_status("Step 1/7: Processing Inputs...")
     
     user_pdf_text = ""
-    if pdf_bytes_list:
-        user_pdf_text = extract_text_from_multiple_pdfs(pdf_bytes_list)
-        _update_status(f"    > Analyzed {len(pdf_bytes_list)} uploaded documents.")
+    if file_data_list:
+        user_pdf_text = extract_text_from_files(file_data_list)
+        _update_status(f"    > Analyzed {len(file_data_list)} uploaded documents.")
 
     _update_status("Step 2/7: Checking Information Needs...")
     

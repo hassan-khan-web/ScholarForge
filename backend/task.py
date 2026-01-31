@@ -12,7 +12,7 @@ celery_app = Celery(
 )
 
 @celery_app.task(bind=True)
-def generate_report_task(self, query: str, format_content: str, page_count: int, pdf_bytes_list: list = None):
+def generate_report_task(self, query: str, format_content: str, page_count: int, file_data_list: list = None):
     """
     Sequential Deep Research Task with optional User PDF(s).
     """
@@ -23,7 +23,7 @@ def generate_report_task(self, query: str, format_content: str, page_count: int,
             query, 
             format_content, 
             page_count,
-            pdf_bytes_list,
+            file_data_list,
             task=self
         )
 

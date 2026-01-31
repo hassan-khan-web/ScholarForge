@@ -235,14 +235,14 @@ async def start_report(
             if not format_content: return JSONResponse({'error': 'Custom format needed'}, status_code=400)
             user_fmt = "custom" 
 
-        pdf_data_list = []
+        file_data_list = []
         if pdf_files:
             for file in pdf_files:
                 if file.filename: 
                     content = await file.read()
-                    pdf_data_list.append(content)
+                    file_data_list.append({'filename': file.filename, 'content': content})
         
-        task = generate_report_task.delay(query, user_fmt, page_count, pdf_data_list)
+        task = generate_report_task.delay(query, user_fmt, page_count, file_data_list)
         return {"task_id": task.id}
     except Exception as e:
         return JSONResponse({'error': f'Failed: {str(e)}'}, status_code=500)

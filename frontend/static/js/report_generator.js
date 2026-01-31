@@ -12,8 +12,8 @@
   function applyTheme(name) {
     body.classList.remove('theme-dark', 'theme-tokyo');
     if (name === 'dark') body.classList.add('theme-dark');
-    else if (name === 'light') {  }
-    else {  body.classList.add('theme-tokyo'); }
+    else if (name === 'light') { }
+    else { body.classList.add('theme-tokyo'); }
     localStorage.setItem(THEME_KEY, name);
   }
 
@@ -257,6 +257,9 @@
       document.getElementById('dl-topic').value = document.getElementById('query').value;
       document.getElementById('dl-format').value = document.getElementById('format-select').value;
       document.getElementById('dl-chart-path').value = data.chart_path || '';
+
+      // Refresh history
+      loadHistory();
     }
   }
 
@@ -268,5 +271,90 @@
       showToast('Downloading ' + fmt.toUpperCase() + '...');
     }
   };
+
+  function loadHistory() {
+    const container = document.getElementById('history-list-content');
+    if (!container) return;
+
+    container.innerHTML = '<div class="text-xs text-[var(--text-muted)] p-2">Loading...</div>';
+
+    fetch('/api/history')
+      .then(r => r.json())
+      .then(data => {
+        container.innerHTML = '';
+        if (data.length === 0) {
+          container.innerHTML = '<div class="text-xs text-[var(--text-muted)] p-4 text-center">No reports generated yet.</div>';
+          return;
+        }
+
+        data.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'p-3 hover:bg-[var(--hover-bg)] cursor-pointer border-b border-[var(--border-color)] group transition-colors';
+          div.innerHTML = `
+            <div class="flex justify-between items-start mb-1">
+              <h4 class="text-xs font-bold text-[var(--text-main)] line-clamp-2 group-hover:text-blue-500 transition-colors">${item.topic}</h4>
+            </div>
+            <div class="flex justify-between items-center text-[10px] text-[var(--text-muted)]">
+              <span>${item.date}</span>
+              <button onclick="deleteReport(event, ${item.id})" class="p-1 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+          `;
+          div.onclick = (e) => {
+            if (!e.target.closest('button')) viewReport(item.id);
+          };
+          container.appendChild(div);
+        });
+      })
+      .catch(e => {
+        console.error(e);
+        container.innerHTML = '<div class="text-xs text-red-400 p-2">Failed to load history</div>';
+      });
+  }
+
+  window.viewReport = function (id) {
+    if (window.innerWidth < 768) toggleHistory(); // Close panel on mobile
+
+    resetView();
+    // Show loading state
+    document.getElementById('input-section')?.classList.add('hidden');
+    document.getElementById('progress-section')?.classList.add('hidden');
+    const resSec = document.getElementById('results-container');
+    resSec.classList.remove('hidden');
+    document.getElementById('report-output').innerHTML = '<div class="p-8 text-center text-[var(--text-muted)]">Loading report...</div>';
+
+    fetch('/api/report/' + id)
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        displayResults({ report_content: data.content, chart_path: null }); // Assuming stored reports are just text for now
+        // Update title override
+        document.getElementById('result-topic-display').textContent = data.topic;
+        document.getElementById('dl-topic').value = data.topic;
+      })
+      .catch(e => {
+        showToast('Error loading report: ' + e.message);
+        resetView();
+      });
+  };
+
+  window.deleteReport = function (e, id) {
+    e.stopPropagation();
+    showConfirm('Delete Report', 'Permanently delete this report?', () => {
+      fetch('/api/report/' + id, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(res => {
+          if (res.status === 'success') {
+            showToast('Report deleted');
+            loadHistory();
+          } else {
+            showToast('Error deleting report');
+          }
+        });
+    });
+  };
+
+  document.addEventListener('DOMContentLoaded', () => { loadHistory(); });
 
 })();
