@@ -327,7 +327,7 @@ body {
 	right: 0;
 	bottom: 0;
 	overflow-y: auto;
-	padding: 1.5rem;
+	padding: 1rem;
 	padding-bottom: 200px;
 	/* Fade mask for content approaching input box */
 	-webkit-mask-image: linear-gradient(to bottom,
@@ -418,7 +418,7 @@ body {
 
 .message {
 	animation: messageIn 0.3s ease-out;
-	margin-bottom: 1rem;
+	margin-bottom: 0.5rem;
 	max-width: 48rem;
 	margin-left: auto;
 	margin-right: auto;
@@ -433,7 +433,7 @@ body {
 	max-width: 100%;
 	background: transparent;
 	color: var(--text-main);
-	padding: 0.75rem 0;
+	padding: 0.25rem 0;
 	border-radius: 0;
 	box-shadow: none;
 	text-align: right;
@@ -459,14 +459,14 @@ body {
 	background: transparent;
 	border: none;
 	color: var(--text-main);
-	padding: 0.75rem 0;
+	padding: 0.25rem 0;
 	border-radius: 0;
 	box-shadow: none;
 }
 
 .message-bubble p,
 .message-bubble .message-text {
-	font-size: 0.875rem;
+	font-size: 1.1rem;
 	white-space: pre-wrap;
 	word-break: break-word;
 }
@@ -570,66 +570,76 @@ body {
 
 .prose h1,
 .message-text h1 {
-	font-size: 1.5rem;
+	font-size: 1.6rem;
 	font-weight: 700;
 	color: var(--text-main);
-	margin: 1.25rem 0 0.5rem 0;
+	margin: 0.5rem 0 0.25rem 0;
 	line-height: 1.3;
 }
 
 .prose h2,
 .message-text h2 {
-	font-size: 1.25rem;
+	font-size: 1.35rem;
 	font-weight: 600;
 	color: var(--text-main);
-	margin: 1rem 0 0.5rem 0;
+	margin: 0.35rem 0 0.15rem 0;
 	line-height: 1.3;
 }
 
 .prose h3,
 .message-text h3 {
-	font-size: 0.85rem;
+	font-size: 1.2rem;
 	font-weight: 600;
 	color: var(--text-main);
-	margin: 0.5rem 0 0.25rem 0;
+	margin: 0.25rem 0 0.125rem 0;
 	line-height: 1.4;
 	display: inline-block;
 }
 
 .prose h4,
 .message-text h4 {
-	font-size: 0.85rem;
+	font-size: 1.1rem;
 	font-weight: 600;
 	color: var(--text-main);
-	margin: 0.5rem 0 0.25rem 0;
+	margin: 0.25rem 0 0.125rem 0;
 	line-height: 1.4;
 	display: inline-block;
 }
 
-/* Remove hr separators - we don't want --- lines */
+/* Restored hr separators */
 .prose hr,
 .message-text hr {
-	display: none;
+	display: block;
+	height: 2px;
+	border: 0;
+	background: var(--border-color);
+	margin: 0.25rem 0 0.5rem 0;
+	opacity: 0.6;
 }
 
 .prose p,
 .message-text p {
-	margin: 0.5rem 0;
-	line-height: 1.6;
+	margin: 0.125rem 0;
+	line-height: 1.4;
 }
 
 .prose ul,
 .prose ol,
 .message-text ul,
 .message-text ol {
-	margin: 0.5rem 0;
+	margin: 0.125rem 0;
 	padding-left: 1.5rem;
 }
 
 .prose li,
 .message-text li {
-	margin: 0.25rem 0;
-	line-height: 1.5;
+	margin: 0;
+	line-height: 1.4;
+}
+
+.prose li p,
+.message-text li p {
+	margin: 0;
 }
 
 .prose strong,
@@ -677,7 +687,7 @@ body {
 .markdown-table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: 0.875rem;
+	font-size: 1.1rem;
 	background: var(--bg-panel);
 }
 
@@ -794,7 +804,7 @@ body {
 
 .code-block-wrapper code {
 	font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
-	font-size: 0.8rem;
+	font-size: 0.925rem;
 	line-height: 1.6;
 	color: var(--text-main);
 	background: transparent;

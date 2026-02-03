@@ -1,5 +1,5 @@
 import os
-from serpapi import GoogleSearch
+
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 import httpx
@@ -18,8 +18,8 @@ import fitz
 
 from .report_formats import get_template_instructions
 
-SMART_MODEL = "qwen/qwen3-coder:free"
-BACKUP_MODEL = "mistralai/devstral-2512:free"
+SMART_MODEL = "google/gemini-2.0-flash-exp:free"
+BACKUP_MODEL = "nvidia/llama-3.1-nemotron-70b-instruct:free"
 
 SEARCH_RESULTS_COUNT = 10
 MAX_RESULTS_TO_SCRAPE = 4
@@ -141,40 +141,55 @@ def _get_article_text(url: str) -> str:
     except: return ""
 
 def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> str:
-    """Feature: Structured Source Verification"""
+    """Feature: Structured Source Verification with Tavily"""
     try:
-        api_key = os.environ.get("SERPAPI_KEY") 
-        if not api_key: return "Error: SERPAPI_KEY not set."
-        params = {
-            "q": query,
-            "location": "US",
-            "hl": "en",
-            "gl": "us",
-            "num": 5,
-            "engine": "google",
-            "api_key": api_key
+        api_key = os.environ.get("SERP_KEY") 
+        if not api_key: return "Error: SERP_KEY not set."
+        
+        print(f"    > Searching Tavily for: {query}")
+        
+        url = "https://api.tavily.com/search"
+        payload = {
+            "api_key": api_key,
+            "query": query,
+            "search_depth": "basic",
+            "include_answer": False,
+            "include_images": False,
+            "include_item_list": False,
+            "max_results": 5
         }
-        search = GoogleSearch(params)
-        results = search.get_dict()
         
-        formatted_output = "--- VERIFIED SOURCES ---\n"
-        
-        if "organic_results" in results:
-            for i, result in enumerate(results["organic_results"]):
-                if i >= MAX_RESULTS_TO_SCRAPE: break
+        try:
+            with httpx.Client(timeout=15.0) as client:
+                response = client.post(url, json=payload)
                 
-                url = result.get("link", "")
-                title = result.get('title', 'Unknown Title')
-                snippet = result.get("snippet", "")
+            if response.status_code != 200:
+                return f"Tavily Search Error: {response.status_code} - {response.text}"
                 
-                full_content = ""
-                if url:
-                    raw = _get_article_text(url)
-                    if raw: full_content = f"\nEXTRACT: {raw}"
-                
-                formatted_output += f"SOURCE [{i+1}]\nTitle: {title}\nURL: {url}\nSummary: {snippet}{full_content}\n\n"
-                
-        return formatted_output
+            results = response.json()
+            formatted_output = "--- VERIFIED SOURCES ---\n"
+            
+            if "results" in results:
+                for i, result in enumerate(results["results"]):
+                    if i >= MAX_RESULTS_TO_SCRAPE: break
+                    
+                    link = result.get("url", "")
+                    title = result.get('title', 'Unknown Title')
+                    snippet = result.get("content", "")
+                    
+                    full_content = ""
+                    # Optional: still try to scrape if Tavily's content is too short, 
+                    # but Tavily usually gives good context. 
+                    # We can retain the _get_article_text for deeper dives if needed,
+                    # but for now we'll trust Tavily's snippet/content as primary.
+                    
+                    formatted_output += f"SOURCE [{i+1}]\nTitle: {title}\nURL: {link}\nSummary: {snippet}{full_content}\n\n"
+                    
+            return formatted_output
+            
+        except Exception as http_err:
+            return f"Tavily Request Error: {http_err}"
+            
     except Exception as e: return f"Search Error: {e}"
 
 
