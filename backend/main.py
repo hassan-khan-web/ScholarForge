@@ -227,6 +227,7 @@ async def start_report(
     format_key: str = Form(...),
     format_content: str = Form(None),
     page_count: int = Form(15),
+    use_council: bool = Form(False),
     pdf_files: List[UploadFile] = File(None) 
 ):
     try:
@@ -242,7 +243,7 @@ async def start_report(
                     content = await file.read()
                     file_data_list.append({'filename': file.filename, 'content': content})
         
-        task = generate_report_task.delay(query, user_fmt, page_count, file_data_list)
+        task = generate_report_task.delay(query, user_fmt, page_count, file_data_list, use_council)
         return {"task_id": task.id}
     except Exception as e:
         return JSONResponse({'error': f'Failed: {str(e)}'}, status_code=500)

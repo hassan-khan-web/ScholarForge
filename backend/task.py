@@ -12,7 +12,7 @@ celery_app = Celery(
 )
 
 @celery_app.task(bind=True)
-def generate_report_task(self, query: str, format_content: str, page_count: int, file_data_list: list = None):
+def generate_report_task(self, query: str, format_content: str, page_count: int, file_data_list: list = None, use_council: bool = False):
     """
     Sequential Deep Research Task with optional User PDF(s).
     """
@@ -24,7 +24,8 @@ def generate_report_task(self, query: str, format_content: str, page_count: int,
             format_content, 
             page_count,
             file_data_list,
-            task=self
+            task=self,
+            use_council=use_council
         )
 
         self.update_state(state='PROGRESS', meta={'message': 'Archiving Report...'})

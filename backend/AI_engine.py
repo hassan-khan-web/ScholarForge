@@ -328,7 +328,9 @@ def generate_chart_from_data(summary: str, topic: str) -> str:
         return filepath
     except: return None
 
-def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15, file_data_list: list = None, task=None) -> tuple[str, str, str]: 
+from . import council
+
+def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15, file_data_list: list = None, task=None, use_council: bool = False) -> tuple[str, str, str]: 
     def _update_status(message: str):
         print(message) 
         if task: task.update_state(state='PROGRESS', meta={'message': message})
@@ -367,7 +369,25 @@ def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15
     full_report = f"# {query.upper()}\n\n"
     for i, section in enumerate(outline):
         _update_status(f"Step 6/7: Writing Section {i+1}/{len(outline)}: {section}...")
-        section_content = write_section(section, query, summary, full_report, words_per_section)
+        
+        if use_council:
+            # COUNCIL MODE: Use the multi-agent recursive loop
+            import asyncio
+            # We need to run async council in this sync function
+            # Since this is running in Celery, we can use asyncio.run or similar
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            section_content = loop.run_until_complete(
+                council.run_council(section, query, summary, _update_status)
+            )
+        else:
+            # STANDARD MODE
+            section_content = write_section(section, query, summary, full_report, words_per_section)
+            
         full_report += f"\n\n## {section}\n{section_content}\n"
     
     # Append Consolidated References
