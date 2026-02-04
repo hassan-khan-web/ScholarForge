@@ -4,12 +4,13 @@ import asyncio
 import random
 
 # Shared Models List
+# THE COUNCIL: 5 Unique, Checked & Verified Models.
 LEGION_MODELS = [
-    "google/gemini-2.0-flash-001",           # Primary/Stable
-    "mistralai/mistral-7b-instruct:free",    # Diverse reasoning (Fallback)
-    "google/gemma-2-9b-it:free",             # Efficient
-    "qwen/qwen-2-7b-instruct:free",          # Logic/Code heavy
-    "deepseek/deepseek-r1:free"              # Deep reasoning
+    "google/gemini-2.0-flash-001",             # [0] Research Director (Primary/Stable)
+    "tngtech/tng-r1t-chimera:free",            # [1] Reasoning Specialist (Deep Reasoning)
+    "nvidia/nemotron-3-nano-30b-a3b:free",     # [2] Efficiency Expert (Fast/Concise)
+    "stepfun/step-3.5-flash:free",             # [3] The Artisan (Creative Writer)
+    "arcee-ai/trinity-large-preview:free"      # [4] The Inquisitor (Fact Checker)
 ]
 
 async def call_model_async(model: str, system_prompt: str, user_prompt: str) -> str:
