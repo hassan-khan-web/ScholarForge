@@ -28,8 +28,6 @@ async def agent_nexus(drafts: List[str], section_title: str) -> str:
 
     # Step 2: Final Synthesis
     prompt = (
-        
-    prompt = (
         f"Synthesize the following {len(drafts)} drafts for the section '{section_title}' into ONE superior, cohesive master draft.\n"
         "RULES:\n"
         "1. Remove all repetition/redundancy.\n"

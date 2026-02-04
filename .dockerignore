@@ -24,3 +24,14 @@ Thumbs.db
 data/
 static/charts/
 celerybeat-schedule
+
+# Build
+Dockerfile
+docker-compose.yml
+README.md
+node_modules
+tests/
+coverage/
+htmlcov/
+dist/
+build/
