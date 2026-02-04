@@ -126,6 +126,7 @@
     const inputSec = document.getElementById('input-section');
     const progSec = document.getElementById('progress-section');
     const submitBtn = document.getElementById('submit-btn');
+    const useCouncil = document.getElementById('council-toggle')?.checked; // Check toggle status
 
     if (!inputSec || !progSec) return showToast('Error: UI sections missing');
 
@@ -136,8 +137,17 @@
     inputSec.classList.add('hidden');
     progSec.classList.remove('hidden');
 
-    document.getElementById('progress-line-fill').style.height = '10%';
-    animateStep(1);
+    // Toggle View Mode
+    if (useCouncil) {
+      document.getElementById('standard-progress')?.classList.add('hidden');
+      document.getElementById('council-animation-container')?.classList.remove('hidden');
+      updateCouncilAnim('Initializing Council...');
+    } else {
+      document.getElementById('standard-progress')?.classList.remove('hidden');
+      document.getElementById('council-animation-container')?.classList.add('hidden');
+      document.getElementById('progress-line-fill').style.height = '10%';
+      animateStep(1);
+    }
 
     fetch(window.START_REPORT_URL, {
       method: 'POST',
@@ -147,7 +157,7 @@
       .then(data => {
         if (data.error) throw new Error(data.error);
         if (data.task_id) {
-          pollTaskStatus(data.task_id);
+          pollTaskStatus(data.task_id, useCouncil);
         } else {
           throw new Error('No task ID returned');
         }
@@ -193,36 +203,114 @@
     }
   }
 
-  function pollTaskStatus(taskId) {
+  // --- Council Animation Helpers ---
+  function updateCouncilAnim(msg) {
+    const statusText = document.getElementById('council-status-text');
+    if (statusText) statusText.textContent = msg;
+
+    // Reset All Active States First (optional, or keep cumulative)
+    // keeping cumulative for "flow"
+
+    // Determine State & Trigger Specific Particle Moves
+    if (msg.includes('Step 1') || msg.includes('Step 2') || msg.includes('Plan')) {
+      activateAgent('agent-planner');
+    }
+    else if (msg.includes('Step 3') || msg.includes('Search')) {
+      activateAgent('agent-researcher');
+      moveParticle('p-plan-res'); // Planner -> Researcher
+      activateConn('conn-planner');
+      activateConn('conn-researcher');
+    }
+    else if (msg.includes('Step 4') || msg.includes('Step 5') || msg.includes('Writ') || msg.includes('Draft')) {
+      activateAgent('agent-writer');
+      moveParticle('p-res-wri'); // Researcher -> Writer
+      activateConn('conn-researcher');
+      activateConn('conn-writer');
+    }
+    else if (msg.includes('Step 6') || msg.includes('Review') || msg.includes('Critic')) {
+      activateAgent('agent-reviewer');
+      moveParticle('p-wri-rev'); // Writer -> Reviewer
+      activateConn('conn-writer');
+      activateConn('conn-reviewer');
+    }
+    else if (msg.includes('Step 7') || msg.includes('Final')) {
+      activateAgent('agent-coordinator');
+      moveParticle('p-rev-coo'); // Reviewer -> Coordinator
+      activateConn('conn-reviewer');
+    }
+  }
+
+  function activateAgent(id) {
+    document.getElementById(id)?.classList.add('active');
+  }
+
+  function activateConn(id) {
+    document.getElementById(id)?.classList.add('active');
+  }
+
+  function moveParticle(animName) {
+    const p = document.getElementById('council-particle');
+    if (!p) return;
+    // Reset animation to trigger reflow
+    p.style.animation = 'none';
+    p.style.opacity = '0';
+    p.offsetHeight; /* trigger reflow */
+
+    p.classList.add('particle-moving');
+    p.style.animationName = animName;
+    p.style.opacity = '1';
+  }
+
+  function finishCouncilAnim() {
+    // Light up everything green
+    document.querySelectorAll('.agent-node').forEach(n => n.classList.add('success'));
+    const container = document.getElementById('council-animation-container');
+    if (container) container.classList.add('council-finished');
+  }
+
+
+  function pollTaskStatus(taskId, useCouncil = false) {
     const url = window.REPORT_STATUS_URL_TEMPLATE.replace('TASK_ID_PLACEHOLDER', taskId);
 
     fetch(url)
       .then(r => r.json())
       .then(data => {
         if (data.status === 'SUCCESS') {
-          animateStep(4);
-          setTimeout(() => displayResults(data), 1000);
+          if (useCouncil) {
+            updateCouncilAnim('Finalizing: Merging Reports...');
+            finishCouncilAnim();
+            setTimeout(() => displayResults(data), 1200);
+          } else {
+            animateStep(4);
+            setTimeout(() => displayResults(data), 1000);
+          }
         } else if (data.status === 'FAILURE') {
           showToast('Error: ' + (data.error || 'Unknown error'));
           setTimeout(resetView, 3000);
         } else {
           const msg = data.message || '';
-          if (msg.includes('Step 1') || msg.includes('Step 2')) animateStep(1);
-          else if (msg.includes('Step 3') || msg.includes('Search')) animateStep(1);
-          else if (msg.includes('Step 4') || msg.includes('Visuals')) animateStep(2);
-          else if (msg.includes('Step 5') || msg.includes('Structure')) animateStep(2);
-          else if (msg.includes('Step 6') || msg.includes('Writing')) animateStep(3);
-          else if (msg.includes('Step 7')) animateStep(4);
 
-          const activeStep = document.querySelector('.scale-100.opacity-100 p.text-xs');
-          if (activeStep) activeStep.textContent = msg.length > 50 ? msg.substring(0, 47) + '...' : msg;
+          if (useCouncil) {
+            updateCouncilAnim(msg);
+          } else {
+            // Standard Linear Update
+            if (msg.includes('Step 1') || msg.includes('Step 2')) animateStep(1);
+            else if (msg.includes('Step 3') || msg.includes('Search')) animateStep(1);
+            else if (msg.includes('Step 4') || msg.includes('Visuals')) animateStep(2);
+            else if (msg.includes('Step 5') || msg.includes('Structure')) animateStep(2);
+            else if (msg.includes('Step 6') || msg.includes('Writing')) animateStep(3);
+            else if (msg.includes('Step 7')) animateStep(4);
 
-          setTimeout(() => pollTaskStatus(taskId), 2000);
+            const activeStep = document.querySelector('.scale-100.opacity-100 p.text-xs');
+            if (activeStep) activeStep.textContent = msg.length > 50 ? msg.substring(0, 47) + '...' : msg;
+          }
+
+          setTimeout(() => pollTaskStatus(taskId, useCouncil), 2000);
         }
       })
       .catch(e => {
         console.error(e);
-        setTimeout(() => pollTaskStatus(taskId), 3000);
+        setTimeout(() => pollTaskStatus(taskId, useCouncil), 3000);
       });
   }
 

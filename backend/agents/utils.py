@@ -5,11 +5,11 @@ import random
 
 # Shared Models List
 LEGION_MODELS = [
-    "google/gemini-2.0-flash-exp:free",      # Primary/Old
-    "mistralai/devstral-2512:free",          # Diverse reasoning
-    "google/gemma-3-27b-it:free",            # Efficient
-    "qwen/qwen3-next-80b-a3b-instruct:free", # Logic/Code heavy
-    "deepseek/deepseek-r1-0528:free"         # Deep reasoning
+    "google/gemini-2.0-flash-001",           # Primary/Stable
+    "mistralai/mistral-7b-instruct:free",    # Diverse reasoning (Fallback)
+    "google/gemma-2-9b-it:free",             # Efficient
+    "qwen/qwen-2-7b-instruct:free",          # Logic/Code heavy
+    "deepseek/deepseek-r1:free"              # Deep reasoning
 ]
 
 async def call_model_async(model: str, system_prompt: str, user_prompt: str) -> str:

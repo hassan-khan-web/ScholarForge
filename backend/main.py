@@ -39,6 +39,8 @@ if not os.path.exists(os.path.join(STATIC_DIR, "charts")):
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+templates.env.auto_reload = True
+templates.env.cache = None
 
 @app.on_event("startup")
 def startup():
