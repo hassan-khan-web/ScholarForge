@@ -296,7 +296,7 @@ main header {
 @keyframes modalScaleIn {
 	0% {
 		opacity: 0;
-		transform: scale(0.95);
+		transform: scale(0.92);
 	}
 
 	100% {
@@ -306,7 +306,7 @@ main header {
 }
 
 .modal-pop {
-	animation: modalScaleIn 0.2s ease-out forwards;
+	animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 

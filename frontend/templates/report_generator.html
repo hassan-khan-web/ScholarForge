@@ -9,30 +9,37 @@
 
 <div class="w-full h-full overflow-y-auto custom-scrollbar relative flex flex-col items-center justify-center p-6 z-10">
     <main id="input-section"
-        class="w-full h-full flex items-center justify-center p-6 transition-all duration-500 ease-in-out">
+        class="w-full h-full flex flex-col items-center justify-center p-6 transition-all duration-500 ease-in-out">
+
+        <div class="typing-container mb-8">
+            <h1 class="text-3xl md:text-5xl font-bold typing-text font-mono tracking-tight pb-2">
+                <span class="text-[var(--accent-primary)]">AI powered</span> <span
+                    class="text-[var(--text-main)]">Research report generator</span>
+            </h1>
+            <span class="text-3xl md:text-5xl font-bold font-mono pb-2 cursor-blink">_</span>
+        </div>
+
         <div
-            class="w-full max-w-4xl bg-[var(--bg-panel)] rounded-2xl shadow-2xl border border-[var(--border-color)] overflow-hidden flex flex-col md:flex-row min-h-[500px]">
+            class="w-full max-w-6xl bg-[var(--bg-panel)] rounded-2xl shadow-2xl border border-[var(--border-color)] overflow-hidden flex flex-col md:flex-row min-h-[600px]">
 
             <div
-                class="w-full md:w-1/3 bg-gradient-to-br from-blue-600 to-indigo-700 p-6 flex flex-col justify-between text-white relative overflow-hidden">
+                class="w-full md:w-1/3 bg-gradient-to-br from-blue-600 to-indigo-700 p-8 flex flex-col justify-between text-white relative overflow-hidden">
                 <div class="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-white opacity-5 blur-3xl"></div>
 
                 <div class="relative z-10">
                     <div class="flex items-center gap-2 mb-4">
                         <h1 class="text-3xl font-bold tracking-tight">ScholarForge</h1>
                     </div>
-                    <p class="text-blue-100 text-xs leading-relaxed mb-4">
-                        Advanced algorithmic research agent. Configuring deep-dive analysis parameters.
-                    </p>
-                    <div class="space-y-2">
+
+                    <div class="space-y-2 mt-4">
                         <div
-                            class="flex items-center gap-2 text-[10px] font-medium text-blue-50 bg-blue-800/30 p-1.5 rounded-lg border border-blue-500/30">
+                            class="flex items-center gap-2 text-[10px] font-medium text-blue-50 bg-blue-800/30 p-1.5 rounded-lg border border-blue-500/30 w-fit">
                             <span
                                 class="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></span>
                             <span>System Online</span>
                         </div>
                         <div
-                            class="flex items-center gap-2 text-[10px] font-medium text-blue-50 bg-blue-800/30 p-1.5 rounded-lg border border-blue-500/30">
+                            class="flex items-center gap-2 text-[10px] font-medium text-blue-50 bg-blue-800/30 p-1.5 rounded-lg border border-blue-500/30 w-fit">
                             <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
                             <span>Model: Hybrid</span>
                         </div>
@@ -45,19 +52,20 @@
                 </div>
             </div>
 
-            <form id="report-form" class="w-full md:w-2/3 p-5 flex flex-col gap-3 bg-[var(--bg-panel)] h-full relative">
+            <form id="report-form" class="w-full md:w-2/3 p-6 flex flex-col bg-[var(--bg-panel)] h-full relative">
 
-                <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-5 flex-1 pb-20">
+                    <!-- Added padding-bottom to make space for absolute footer -->
                     <div class="space-y-1">
                         <label for="query"
                             class="text-[10px] font-bold text-[var(--accent-primary)] uppercase tracking-wider">Research
                             Objective</label>
                         <input type="text" id="query" name="query"
-                            class="w-full text-base font-medium border-b border-[var(--border-color)] py-1.5 bg-transparent text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors placeholder:text-[var(--text-muted)]/50"
+                            class="w-full text-lg font-medium border-b border-[var(--border-color)] py-2 bg-transparent text-[var(--text-main)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors placeholder:text-[var(--text-muted)]/50"
                             placeholder="e.g. Impact of AI on Global Economics..." required autocomplete="off">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-5">
                         <div class="space-y-1">
                             <label
                                 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Output
@@ -67,7 +75,7 @@
                                 <div
                                     class="border border-[var(--border-color)] rounded-lg p-0.5 bg-[var(--bg-main)] flex flex-col gap-1">
                                     <button type="button" onclick="toggleCustomSelect('format-select')"
-                                        class="w-full flex justify-between items-center p-2 text-xs font-medium text-[var(--text-main)] hover:bg-[var(--hover-bg)] rounded-md transition-colors text-left">
+                                        class="w-full flex justify-between items-center p-2.5 text-xs font-medium text-[var(--text-main)] hover:bg-[var(--hover-bg)] rounded-md transition-colors text-left">
                                         <span id="format-select-trigger-text">Literature Review</span>
                                         <svg class="w-3.5 h-3.5 text-[var(--text-muted)]" fill="none"
                                             stroke="currentColor" viewBox="0 0 24 24">
@@ -109,7 +117,7 @@
                                 <input type="hidden" id="page-select" name="page_count" value="10">
                                 <div class="border border-[var(--border-color)] rounded-lg p-0.5 bg-[var(--bg-main)]">
                                     <button type="button" onclick="toggleCustomSelect('page-select')"
-                                        class="w-full flex justify-between items-center p-2 text-xs font-medium text-[var(--text-main)] hover:bg-[var(--hover-bg)] rounded-md transition-colors text-left">
+                                        class="w-full flex justify-between items-center p-2.5 text-xs font-medium text-[var(--text-main)] hover:bg-[var(--hover-bg)] rounded-md transition-colors text-left">
                                         <span id="page-select-trigger-text">Standard (10 Pages)</span>
                                         <svg class="w-3.5 h-3.5 text-[var(--text-muted)]" fill="none"
                                             stroke="currentColor" viewBox="0 0 24 24">
@@ -142,16 +150,12 @@
                         </div>
                     </div>
 
-
-
-
-
                     <div id="custom-format-container" class="hidden transition-all duration-300">
                         <label
                             class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Instruction
                             Logic</label>
-                        <textarea id="custom-format-input" name="format_content" rows="2"
-                            class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg p-2 text-xs text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]"
+                        <textarea id="custom-format-input" name="format_content" rows="3"
+                            class="w-full bg-[var(--bg-main)] border border-[var(--border-color)] rounded-lg p-3 text-xs text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]"
                             placeholder="Describe the report structure..."></textarea>
                     </div>
 
@@ -159,10 +163,10 @@
                         <label
                             class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Reference</label>
                         <label for="pdf-upload"
-                            class="flex w-full cursor-pointer items-center justify-center gap-3 px-4 py-3 rounded-lg border border-dashed border-[var(--border-color)] hover:border-[var(--accent-primary)] hover:bg-[var(--hover-bg)] transition-all group">
+                            class="flex w-full cursor-pointer items-center justify-center gap-3 px-4 py-4 rounded-lg border border-dashed border-[var(--border-color)] hover:border-[var(--accent-primary)] hover:bg-[var(--hover-bg)] transition-all group">
                             <div
-                                class="p-1.5 bg-blue-50 text-blue-500 rounded-full group-hover:scale-110 transition-transform">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="p-2 bg-blue-50 text-blue-500 rounded-full group-hover:scale-110 transition-transform">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
                                     </path>
@@ -179,7 +183,9 @@
                     </div>
                 </div>
 
-                <div class="mt-auto pt-2 flex items-center justify-between" style="margin-top: auto !important;">
+                <!-- Footer - Absolute Bottom -->
+                <div
+                    class="absolute bottom-6 left-6 right-6 flex items-center justify-between pt-4 border-t border-[var(--border-color)] bg-[var(--bg-panel)] z-10">
                     <!-- Council Mode Toggle -->
                     <div class="flex items-center gap-3">
                         <label class="relative inline-flex items-center cursor-pointer">
@@ -200,7 +206,7 @@
                         </div>
                     </div>
                     <button type="submit" id="submit-btn"
-                        class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-lg shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
+                        class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-lg shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2">
                         <span>Generate Report</span>
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

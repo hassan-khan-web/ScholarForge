@@ -250,7 +250,7 @@
         ]);
     };
 
-    function showContextMenu(x, y, options) {
+    window.showContextMenu = function (x, y, options) {
         const existing = document.getElementById('custom-context-menu');
         if (existing) existing.remove();
 
@@ -279,6 +279,29 @@
         }, 10);
     }
 
+    // Custom themed prompt dialog
+    let _promptCb = null;
+
+    function showPrompt(title, msg, value, cb) {
+        const t = byId('prompt-title');
+        const m = byId('prompt-msg');
+        const i = byId('prompt-input');
+        if (t) t.textContent = title || 'Enter Value';
+        if (m) m.textContent = msg || '';
+        if (i) { i.value = value || ''; }
+        _promptCb = cb;
+        showModal('prompt-modal');
+        setTimeout(() => i?.focus(), 100);
+    }
+
+    byId('btn-cancel-prompt')?.addEventListener('click', () => { hideModal('prompt-modal'); _promptCb = null; });
+    byId('btn-do-prompt')?.addEventListener('click', () => {
+        const val = byId('prompt-input')?.value;
+        hideModal('prompt-modal');
+        if (typeof _promptCb === 'function') _promptCb(val);
+        _promptCb = null;
+    });
+
     // Custom themed confirm dialog
     function showConfirm(title, msg, cb) {
         const t = byId('confirm-title');
@@ -290,24 +313,29 @@
     }
 
     function promptRenameFolder(id, oldName) {
-        const n = prompt("Rename Folder", oldName);
-        if (n && n !== oldName) {
-            fetch(`/api/folders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: n }) })
-                .then(fetchFolders);
-        }
+        showPrompt("Rename Project", "Enter a new name for this project:", oldName, (n) => {
+            if (n && n !== oldName) {
+                fetch(`/api/folders/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: n }) })
+                    .then(fetchFolders);
+            }
+        });
     }
+
     function confirmDeleteFolder(id) {
         showConfirm("Delete Project", "Delete this folder and all its chats? This cannot be undone.", () => {
             fetch(`/api/folders/${id}`, { method: 'DELETE' }).then(fetchFolders);
         });
     }
+
     function promptRenameSession(id, oldName) {
-        const n = prompt("Rename Chat", oldName);
-        if (n && n !== oldName) {
-            fetch(`/api/sessions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: n }) })
-                .then(fetchFolders);
-        }
+        showPrompt("Rename Chat", "Enter a new title for this chat:", oldName, (n) => {
+            if (n && n !== oldName) {
+                fetch(`/api/sessions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: n }) })
+                    .then(fetchFolders);
+            }
+        });
     }
+
     function confirmDeleteSession(id) {
         showConfirm("Delete Chat", "Delete this chat? This cannot be undone.", () => {
             fetch(`/api/sessions/${id}`, { method: 'DELETE' }).then(fetchFolders);

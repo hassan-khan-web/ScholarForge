@@ -5,11 +5,10 @@ import random
 
 # Shared Models List
 # THE COUNCIL: 5 Unique, Checked & Verified Models.
-LEGION_MODELS = [
     "google/gemini-2.0-flash-001",             # [0] Research Director (Primary/Stable)
     "tngtech/tng-r1t-chimera:free",            # [1] Reasoning Specialist (Deep Reasoning)
     "nvidia/nemotron-3-nano-30b-a3b:free",     # [2] Efficiency Expert (Fast/Concise)
-    "stepfun/step-3.5-flash:free",             # [3] The Artisan (Creative Writer)
+    "google/gemma-3n-e2b-it:free",             # [3] The Artisan (Creative Writer)
     "arcee-ai/trinity-large-preview:free"      # [4] The Inquisitor (Fact Checker)
 ]
 
