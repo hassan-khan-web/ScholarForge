@@ -88,7 +88,3 @@ You can verify the connection to the configured AI models via the handy debuggin
 # Ensure your virtual environment is active and variables are loaded
 python test_model_connection.py
 ```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
