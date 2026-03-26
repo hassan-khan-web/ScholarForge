@@ -423,7 +423,7 @@ def _prepare_markdown(content, topic, chart_path=None):
 def convert_to_docx(content, topic, path, chart_path=None):
     md = _prepare_markdown(content, topic, chart_path)
     try:
-        pypandoc.convert_text(md, 'docx', format='md', outputfile=path)
+        pypandoc.convert_text(md, 'docx', format='markdown-raw_tex-raw_html', outputfile=path)
         return "Success"
     except Exception as e:
         print(f"Error converting to DOCX: {e}")
@@ -432,7 +432,7 @@ def convert_to_docx(content, topic, path, chart_path=None):
 def convert_to_pdf(content, topic, path, chart_path=None):
     md = _prepare_markdown(content, topic, chart_path)
     try:
-        pypandoc.convert_text(md, 'pdf', format='md', outputfile=path, extra_args=[
+        pypandoc.convert_text(md, 'pdf', format='markdown-raw_tex-raw_html', outputfile=path, extra_args=[
             '--pdf-engine=xelatex', 
             '-V', 'geometry:margin=1in',
             '--pdf-engine-opt=-interaction=nonstopmode'
