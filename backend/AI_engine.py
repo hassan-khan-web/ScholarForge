@@ -485,6 +485,6 @@ def convert_to_pdf(content, topic, path, chart_path=None):
         if not stripped: continue
         clean_text = format_pdf_text(stripped)
         if stripped.startswith('##'): story.append(Paragraph(clean_text.replace('#', ''), styles['Heading2']))
-        elif stripped.startswith('*') or stripped.startswith('-'): story.append(Paragraph(f"• {clean_text[2:]}", styles['Normal']))
+        elif stripped.startswith('* ') or stripped.startswith('- '): story.append(Paragraph(f"• {format_pdf_text(stripped[2:])}", styles['Normal']))
         else: story.append(Paragraph(clean_text, styles['Normal']))
     doc.build(story); return "Success"

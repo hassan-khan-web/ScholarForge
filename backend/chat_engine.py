@@ -4,12 +4,10 @@ import httpx
 
 AVAILABLE_MODELS = {
     "default": "nvidia/nemotron-nano-12b-v2-vl:free",
-    "qwen-80b": "qwen/qwen3-next-80b-a3b-instruct:free",
-    "mistral": "mistralai/devstral-2512:free",
-    "gemini": "google/gemini-2.0-flash-exp:free",
-    "gpt-oss": "openai/gpt-oss-120b:free",
+    "llama-70b": "llama-3.3-70b-versatile",
+    "gpt-oss": "openai/gpt-oss-120b",
     "gemma": "google/gemma-3-27b-it:free",
-    "deepseek": "deepseek/deepseek-r1-0528:free"
+    "llama-8b": "llama-3.1-8b-instant"
 }
 
 # Standard mode: ChatGPT/Gemini style responses
@@ -48,16 +46,14 @@ import asyncio
 import random
 
 # Fallback order for models (will try these if primary model fails)
-FALLBACK_ORDER = ["gemini", "gemma", "mistral", "qwen-80b", "default", "deepseek"]
+FALLBACK_ORDER = ["llama-70b", "llama-8b", "gpt-oss", "gemma", "default"]
 
 async def get_chat_response_async(user_message: str, history: list, model: str = "default", mode: str = "normal", file_context: str = "") -> str:
     """
     Async version of chat response using HTTPX.
     Supports model selection, response modes, file context, and automatic retry with fallback.
     """
-    api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key: 
-        return "Error: OPENROUTER_API_KEY environment variable not set."
+    # API keys resolved dynamically per model in the loop below
 
     # Choose system prompt based on mode
     if mode == "deep_dive":
@@ -90,13 +86,27 @@ async def get_chat_response_async(user_message: str, history: list, model: str =
     for model_key in models_to_try:
         selected_model = AVAILABLE_MODELS.get(model_key, AVAILABLE_MODELS["default"])
         
+        is_groq = selected_model.startswith("llama-")
+        if is_groq:
+            api_key = os.environ.get("GROQ_API_KEY")
+            api_url = "https://api.groq.com/openai/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        else:
+            api_key = os.environ.get("OPENROUTER_API_KEY")
+            api_url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json", "HTTP-Referer": "http://localhost:5000"}
+
+        if not api_key:
+            last_error = f"API Key missing for {selected_model}"
+            continue
+
         # Try up to 3 times per model with exponential backoff
         for attempt in range(3):
             try:
                 async with httpx.AsyncClient() as client:
                     response = await client.post(
-                        url="https://openrouter.ai/api/v1/chat/completions",
-                        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                        url=api_url,
+                        headers=headers,
                         json={"model": selected_model, "messages": messages, "temperature": 0.7},
                         timeout=90.0
                     )

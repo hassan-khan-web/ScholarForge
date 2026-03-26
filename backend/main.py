@@ -71,15 +71,15 @@ class HookRequest(BaseModel):
 
 @app.get("/")
 async def index(request: Request):
-    return templates.TemplateResponse("report_generator.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="report_generator.html")
 
 @app.get("/chat")
 async def chat_page(request: Request):
-    return templates.TemplateResponse('ai_assistant.html', {"request": request})
+    return templates.TemplateResponse(request=request, name="ai_assistant.html")
 
 @app.get("/search")
 async def search_page(request: Request):
-    return templates.TemplateResponse('search.html', {"request": request})
+    return templates.TemplateResponse(request=request, name="search.html")
 
 @app.post("/api/system/reset-db")
 def reset_database():

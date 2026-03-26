@@ -5,39 +5,43 @@ import random
 
 # Shared Models List
 # THE COUNCIL: 5 Unique, Checked & Verified Models.
+LEGION_MODELS = [
     "google/gemini-2.0-flash-001",             # [0] Research Director (Primary/Stable)
-    "tngtech/tng-r1t-chimera:free",            # [1] Reasoning Specialist (Deep Reasoning)
+    "llama-3.3-70b-versatile",                 # [1] Reasoning Specialist (Deep Reasoning via Groq)
     "nvidia/nemotron-3-nano-30b-a3b:free",     # [2] Efficiency Expert (Fast/Concise)
-    "google/gemma-3n-e2b-it:free",             # [3] The Artisan (Creative Writer)
-    "arcee-ai/trinity-large-preview:free"      # [4] The Inquisitor (Fact Checker)
+    "llama-3.1-8b-instant",                    # [3] The Artisan (Creative Writer via Groq - Replaced Gemma due to Context Limits)
+    "llama-3.1-8b-instant"                     # [4] The Inquisitor (Fact Checker via Groq)
 ]
 
 async def call_model_async(model: str, system_prompt: str, user_prompt: str) -> str:
-    """Helper to call OpenRouter async with retries"""
-    api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key: return "Error: No API Key"
+    """Helper to call OpenRouter or Groq async with retries"""
+    is_groq = model.startswith("llama-")
     
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:5000",
-        "X-Title": "ScholarForge Council"
-    }
+    if is_groq:
+        api_key = os.environ.get("GROQ_API_KEY")
+        if not api_key: return "Error: No GROQ_API_KEY"
+        api_url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+    else:
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+        if not api_key: return "Error: No OPENROUTER_API_KEY"
+        api_url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:5000",
+            "X-Title": "ScholarForge Council"
+        }
     
-    data = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        "temperature": 0.7,
-        "max_tokens": 4000
-    }
+    data = {"model": model, "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}], "temperature": 0.7, "max_tokens": 4000}
 
     for attempt in range(3):
         try:
             async with httpx.AsyncClient(timeout=120.0) as client:
-                resp = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+                resp = await client.post(api_url, headers=headers, json=data)
                 
                 if resp.status_code == 200:
                     try:
