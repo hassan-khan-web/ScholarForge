@@ -411,80 +411,29 @@ def convert_to_json(content, topic, path):
     data = {"topic": topic, "content": content, "generated_by": "ScholarForge"}
     with open(path, "w", encoding="utf-8") as f: json.dump(data, f, indent=4)
     return "Success"
-def add_formatted_text(paragraph, text):
-    parts = re.split(r'(\*\*[^*]+\*\*)', text)
-    for part in parts:
-        if part.startswith('**') and part.endswith('**'):
-            run = paragraph.add_run(part[2:-2])
-            run.bold = True
-            run.font.color.rgb = RGBColor(0, 0, 0)
-        else: paragraph.add_run(part)
-def _add_markdown_table_to_docx(doc, table_block):
-    lines = [l.strip() for l in table_block.strip().split('\n') if l.strip()]
-    if len(lines) < 3: return
-    rows = []
-    for line in lines:
-        if '---' in line: continue 
-        cells = [c.strip().replace('**','') for c in line.strip('|').split('|')]
-        rows.append(cells)
-    if not rows: return
-    table = doc.add_table(rows=len(rows), cols=len(rows[0]))
-    table.style = 'Table Grid'
-    for r_idx, row_data in enumerate(rows):
-        for c_idx, cell_data in enumerate(row_data):
-            if c_idx < len(table.columns):
-                cell = table.cell(r_idx, c_idx)
-                cell.text = cell_data
-                if r_idx == 0: cell.paragraphs[0].runs[0].bold = True
-def convert_to_docx(content, topic, path, chart_path=None):
-    doc = Document()
-    doc.add_heading(topic, 0)
-    if chart_path and os.path.exists(chart_path):
-        try: doc.add_picture(chart_path, width=Inches(6)); doc.add_paragraph("Figure 1: Analysis", style='Caption')
-        except: pass
-    lines = content.split('\n')
-    table_buffer = []
-    in_table = False
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith('|') and '|' in stripped[1:]:
-            in_table = True; table_buffer.append(stripped); continue
-        elif in_table:
-            _add_markdown_table_to_docx(doc, "\n".join(table_buffer)); table_buffer = []; in_table = False
-        if not stripped: continue
-        if stripped.startswith('## '): doc.add_heading(stripped.replace('## ', ''), level=2)
-        elif stripped.startswith('# '): doc.add_heading(stripped.replace('# ', ''), level=1)
-        elif stripped.startswith('### '): doc.add_heading(stripped.replace('### ', ''), level=3)
-        elif stripped.startswith('* ') or stripped.startswith('- '): p = doc.add_paragraph(style='List Bullet'); add_formatted_text(p, stripped[2:])
-        else: p = doc.add_paragraph(); p.paragraph_format.space_after = Pt(6); add_formatted_text(p, stripped)
-    if in_table and table_buffer: _add_markdown_table_to_docx(doc, "\n".join(table_buffer))
-    doc.save(path); return "Success"
+import pypandoc
 
-def format_pdf_text(text):
-    text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-    return re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+def _prepare_markdown(content, topic, chart_path=None):
+    md = f"# {topic}\n\n"
+    if chart_path and os.path.exists(chart_path):
+        md += f"![Figure 1: Analysis]({chart_path})\n\n"
+    md += content
+    return md
+
+def convert_to_docx(content, topic, path, chart_path=None):
+    md = _prepare_markdown(content, topic, chart_path)
+    try:
+        pypandoc.convert_text(md, 'docx', format='md', outputfile=path)
+        return "Success"
+    except Exception as e:
+        print(f"Error converting to DOCX: {e}")
+        return str(e)
 
 def convert_to_pdf(content, topic, path, chart_path=None):
-    doc = SimpleDocTemplate(path, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
-    styles = getSampleStyleSheet()
-    story = [Paragraph(topic, styles['Title']), Spacer(1, 12)]
-    if chart_path and os.path.exists(chart_path):
-        try: story.append(RLImage(chart_path, width=450, height=250)); story.append(Spacer(1, 12))
-        except: pass
-    lines = content.split('\n')
-    table_buffer = []
-    in_table = False
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith('|') and '|' in stripped[1:]:
-            in_table = True; table_buffer.append(stripped); continue
-        elif in_table:
-            data = [[c.strip().replace('**','') for c in row.strip('|').split('|') if '---' not in row] for row in table_buffer if '---' not in row]
-            if data: story.append(Table(data, style=[('GRID', (0,0), (-1,-1), 1, colors.black)])); story.append(Spacer(1, 12))
-            table_buffer = []; in_table = False
-        if not stripped: continue
-        clean_text = format_pdf_text(stripped)
-        if stripped.startswith('##'): story.append(Paragraph(clean_text.replace('#', ''), styles['Heading2']))
-        elif stripped.startswith('* ') or stripped.startswith('- '): story.append(Paragraph(f"• {format_pdf_text(stripped[2:])}", styles['Normal']))
-        else: story.append(Paragraph(clean_text, styles['Normal']))
-    doc.build(story); return "Success"
+    md = _prepare_markdown(content, topic, chart_path)
+    try:
+        pypandoc.convert_text(md, 'pdf', format='md', outputfile=path, extra_args=['--pdf-engine=xelatex', '-V', 'geometry:margin=1in'])
+        return "Success"
+    except Exception as e:
+        print(f"Error converting to PDF: {e}")
+        return str(e)
