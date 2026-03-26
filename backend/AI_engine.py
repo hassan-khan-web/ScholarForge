@@ -432,8 +432,15 @@ def convert_to_docx(content, topic, path, chart_path=None):
 def convert_to_pdf(content, topic, path, chart_path=None):
     md = _prepare_markdown(content, topic, chart_path)
     try:
-        pypandoc.convert_text(md, 'pdf', format='md', outputfile=path, extra_args=['--pdf-engine=xelatex', '-V', 'geometry:margin=1in'])
+        pypandoc.convert_text(md, 'pdf', format='md', outputfile=path, extra_args=[
+            '--pdf-engine=xelatex', 
+            '-V', 'geometry:margin=1in',
+            '--pdf-engine-opt=-interaction=nonstopmode'
+        ])
         return "Success"
     except Exception as e:
-        print(f"Error converting to PDF: {e}")
+        print(f"LaTeX Warning: {e}")
+        # XeLaTeX returns non-zero exit codes for minor syntax errors, but often still successfully generates the PDF file.
+        if os.path.exists(path) and os.path.getsize(path) > 1000:
+            return "Success"
         return str(e)
