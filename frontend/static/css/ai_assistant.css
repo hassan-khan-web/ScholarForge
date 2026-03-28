@@ -946,3 +946,55 @@ body {
 .redo-option:last-child {
 	border-radius: 0 0 8px 8px;
 }
+/* AI Thought Process Accordion */
+.ai-thought-process {
+  margin: 0.5rem 0 1rem 0;
+  border-left: 2px solid var(--accent-primary);
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0 0.5rem 0.5rem 0;
+  overflow: hidden;
+  font-size: 0.9em;
+}
+
+.ai-thought-process summary {
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-muted);
+  list-style: none; /* remove default arrow in some browsers */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.ai-thought-process summary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+}
+
+.ai-thought-process summary::-webkit-details-marker {
+  display: none;
+}
+
+.think-icon {
+  font-size: 1.1em;
+}
+
+.think-snippet {
+  font-style: italic;
+  opacity: 0.8;
+  margin-left: 0.25rem;
+  font-weight: normal;
+}
+
+.ai-thought-process .thought-content {
+  padding: 1rem;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: inherit;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}

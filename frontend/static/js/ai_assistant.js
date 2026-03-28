@@ -443,6 +443,25 @@
   function formatMarkdown(text) {
     if (!text) return '';
     try {
+      // Intercept <think> tags for Deep Dive mode and convert them into a visual accordion
+      text = text.replace(/<think>([\s\S]*?)<\/think>/gi, (match, thoughtProcess) => {
+        const cleanContent = thoughtProcess.trim();
+        // Give a short 2-3 word snippet to the user giving them an idea of what occurred
+        const words = cleanContent.split(/[\s]+/).filter(w => w.length > 0);
+        const snippet = words.length > 0 ? words.slice(0, 3).join(' ') + '...' : 'Analyzing deep context...';
+        
+        return `
+<details class="ai-thought-process">
+  <summary>
+    <span class="think-icon">💡</span> Thinking: <span class="think-snippet">"${snippet}"</span>
+  </summary>
+  <div class="thought-content">
+    ${escapeHtml(cleanContent).replace(/\n/g, '<br>')}
+  </div>
+</details>
+`;
+      });
+
       // Use marked library if available, otherwise return raw text (protected against XSS via escaping if necessary, though marked handles it)
       // We assume marked is loaded globally via layout.html
       if (typeof marked !== 'undefined') {

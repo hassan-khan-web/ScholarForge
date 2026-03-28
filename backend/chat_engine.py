@@ -38,7 +38,8 @@ DEEP_DIVE_PROMPT = (
     "- Use `##` for the 5 main section headings above.\n"
     "- Use `###` for nested sub-topics.\n"
     "- Never use simple bulleted lists without bolding the prefix term and providing a dense paragraph of explanation for each point.\n"
-    "- Tone: Encyclopedic, highly clinical, objective, and extremely detailed."
+    "- Tone: Encyclopedic, highly clinical, objective, and extremely detailed.\n"
+    "- THINKING PROCESS: You MUST internally reason and structure your answer before writing it. Enclose your ENTIRE thought process precisely in `<think>` and `</think>` HTML tags at the very beginning of your response. Start your response immediately with `<think>`."
 )
 
 import asyncio
