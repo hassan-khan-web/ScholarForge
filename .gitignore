@@ -2,6 +2,7 @@ node_modules
 .env
 .venv/
 venv/
+ROADMAP.md
 
 # Python
 __pycache__/
