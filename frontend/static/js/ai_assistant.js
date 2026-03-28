@@ -444,7 +444,8 @@
     if (!text) return '';
     try {
       // Intercept <think> tags for Deep Dive mode and convert them into a visual accordion
-      text = text.replace(/<think>([\s\S]*?)<\/think>/gi, (match, thoughtProcess) => {
+      // This regex handles missing closing tags (if the model cuts off mid-thought)
+      text = text.replace(/<think>([\s\S]*?)(?:<\/think>|$)/gi, (match, thoughtProcess) => {
         const cleanContent = thoughtProcess.trim();
         // Give a short 2-3 word snippet to the user giving them an idea of what occurred
         const words = cleanContent.split(/[\s]+/).filter(w => w.length > 0);
@@ -453,7 +454,7 @@
         return `
 <details class="ai-thought-process">
   <summary>
-    <span class="think-icon">💡</span> Thinking: <span class="think-snippet">"${snippet}"</span>
+    <span class="think-icon">💡</span> Thinking: <span class="think-snippet">"${escapeHtml(snippet)}"</span>
   </summary>
   <div class="thought-content">
     ${escapeHtml(cleanContent).replace(/\n/g, '<br>')}
