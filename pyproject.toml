@@ -41,6 +41,7 @@ dependencies = [
     "pypandoc>=1.11",
     "slowapi>=0.1.9",
     "pydantic-settings>=2.0.0",
+    "alembic>=1.18.0",
 ]
 
 [project.optional-dependencies]

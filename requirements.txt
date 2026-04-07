@@ -21,3 +21,4 @@ uvicorn[standard]
 watchdog
 pypandoc
 slowapi
+alembic

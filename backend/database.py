@@ -1,8 +1,15 @@
 import os
 from datetime import datetime, timezone
+from contextlib import contextmanager
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, event, text
-from sqlalchemy.orm import sessionmaker, relationship, declarative_base
+from sqlalchemy.orm import sessionmaker, relationship, declarative_base, Session
 from sqlalchemy.engine import Engine
+from sqlalchemy.pool import QueuePool, StaticPool
+from typing import Generator
+
+from .logging_config import setup_logging
+
+logger = setup_logging("scholarforge.database")
 
 DB_FOLDER = os.path.join(os.path.dirname(__file__), "data")
 if not os.path.exists(DB_FOLDER):
@@ -13,15 +20,31 @@ SQLALCHEMY_DATABASE_URL = os.environ.get(
     f"sqlite:///{DB_FOLDER}/scholarforge.db"
 )
 
+# Configure connection pooling based on database type
 if "sqlite" in SQLALCHEMY_DATABASE_URL:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+    # SQLite uses StaticPool for single-threaded usage
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        echo=False  # Set to True for SQL debugging
+    )
     @event.listens_for(Engine, "connect")
     def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.close()
 else:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    # PostgreSQL/MySQL use QueuePool with connection pooling
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        poolclass=QueuePool,
+        pool_size=10,  # Number of connections to maintain
+        max_overflow=20,  # Maximum overflow connections
+        pool_pre_ping=True,  # Verify connections before using
+        pool_recycle=3600,  # Recycle connections every hour
+        echo=False  # Set to True for SQL debugging
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -64,195 +87,276 @@ class Hook(Base):
     content = Column(Text)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-def init_db():
+
+# ============================================================================
+# DATABASE SESSION MANAGEMENT
+# ============================================================================
+
+@contextmanager
+def get_db_session() -> Generator[Session, None, None]:
+    """
+    Context manager for database sessions.
+    Ensures proper cleanup even if exceptions occur.
+    
+    Usage:
+        with get_db_session() as db:
+            user = db.query(User).first()
+    """
+    db = SessionLocal()
     try:
-        Base.metadata.create_all(bind=engine)
+        yield db
+        db.commit()
     except Exception as e:
-        print(f"DB Init Error: {e}")
+        db.rollback()
+        logger.error(f"Database transaction error: {e}", exc_info=e)
+        raise
+    finally:
+        db.close()
+
+
+def get_db() -> Generator[Session, None, None]:
+    """
+    FastAPI dependency for request-scoped database sessions.
+    
+    Usage in FastAPI endpoints:
+        @app.get("/items")
+        def get_items(db: Session = Depends(get_db)):
+            return db.query(Item).all()
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def init_db():
+    """Initialize database: create tables if they don't exist."""
+    try:
+        logger.info("Initializing database schema...")
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database schema initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization error: {e}", exc_info=e)
+        raise
 
 
 def create_folder(name: str):
-    db = SessionLocal()
     try:
-        existing = db.query(ProjectFolder).filter(ProjectFolder.name == name).first()
-        if existing: raise Exception("Folder exists")
-        folder = ProjectFolder(name=name)
-        db.add(folder)
-        db.commit()
-        db.refresh(folder)
-        return folder
+        with get_db_session() as db:
+            existing = db.query(ProjectFolder).filter(ProjectFolder.name == name).first()
+            if existing:
+                raise Exception("Folder with this name already exists")
+            folder = ProjectFolder(name=name)
+            db.add(folder)
+            db.flush()  # Flush to get the ID without committing
+            db.refresh(folder)
+            logger.info(f"Created folder: {name} (ID: {folder.id})")
+            return folder
     except Exception as e:
-        db.rollback()
-        raise e
-    finally:
-        db.close()
+        logger.error(f"Error creating folder {name}: {e}")
+        raise
 
 def rename_folder(folder_id: int, new_name: str):
-    db = SessionLocal()
     try:
-        folder = db.query(ProjectFolder).filter(ProjectFolder.id == folder_id).first()
-        if folder:
-            folder.name = new_name
-            db.commit()
-            return True
-        return False
-    finally:
-        db.close()
+        with get_db_session() as db:
+            folder = db.query(ProjectFolder).filter(ProjectFolder.id == folder_id).first()
+            if folder:
+                folder.name = new_name
+                logger.info(f"Renamed folder {folder_id} to: {new_name}")
+                return True
+            logger.warning(f"Folder not found: {folder_id}")
+            return False
+    except Exception as e:
+        logger.error(f"Error renaming folder {folder_id}: {e}")
+        raise
 
 def delete_folder(folder_id: int):
-    db = SessionLocal()
     try:
-        folder = db.query(ProjectFolder).filter(ProjectFolder.id == folder_id).first()
-        if folder:
-            db.delete(folder)
-            db.commit()
-            return True
-        return False
-    finally:
-        db.close()
+        with get_db_session() as db:
+            folder = db.query(ProjectFolder).filter(ProjectFolder.id == folder_id).first()
+            if folder:
+                db.delete(folder)
+                logger.info(f"Deleted folder: {folder_id}")
+                return True
+            logger.warning(f"Folder not found: {folder_id}")
+            return False
+    except Exception as e:
+        logger.error(f"Error deleting folder {folder_id}: {e}")
+        raise
 
 def get_folders_with_sessions():
-    db = SessionLocal()
     try:
-        folders = db.query(ProjectFolder).order_by(ProjectFolder.created_at.desc()).all()
-        result = []
-        for f in folders:
-            sessions = sorted(f.sessions, key=lambda s: s.created_at, reverse=True)
-            result.append({
-                "id": f.id,
-                "name": f.name,
-                "sessions": [{"id": s.id, "title": s.title, "created_at": s.created_at.strftime("%b %d, %H:%M") if s.created_at else None} for s in sessions]
-            })
-        return result
-    finally:
-        db.close()
+        with get_db_session() as db:
+            folders = db.query(ProjectFolder).order_by(ProjectFolder.created_at.desc()).all()
+            result = []
+            for f in folders:
+                sessions = sorted(f.sessions, key=lambda s: s.created_at, reverse=True)
+                result.append({
+                    "id": f.id,
+                    "name": f.name,
+                    "sessions": [{"id": s.id, "title": s.title, "created_at": s.created_at.strftime("%b %d, %H:%M") if s.created_at else None} for s in sessions]
+                })
+            return result
+    except Exception as e:
+        logger.error(f"Error fetching folders: {e}")
+        raise
 
 def create_chat_session(folder_id: int, title: str):
-    db = SessionLocal()
     try:
-        session = ChatSession(folder_id=folder_id, title=title)
-        db.add(session)
-        db.commit()
-        db.refresh(session)
-        return session
-    finally:
-        db.close()
+        with get_db_session() as db:
+            session = ChatSession(folder_id=folder_id, title=title)
+            db.add(session)
+            db.flush()
+            db.refresh(session)
+            logger.info(f"Created chat session: {title} (ID: {session.id}) in folder {folder_id}")
+            return session
+    except Exception as e:
+        logger.error(f"Error creating chat session: {e}")
+        raise
 
 def rename_chat_session(session_id: int, new_title: str):
-    db = SessionLocal()
     try:
-        session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
-        if session:
-            session.title = new_title
-            db.commit()
-            return True
-        return False
-    finally:
-        db.close()
+        with get_db_session() as db:
+            session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+            if session:
+                session.title = new_title
+                logger.info(f"Renamed chat session {session_id} to: {new_title}")
+                return True
+            logger.warning(f"Chat session not found: {session_id}")
+            return False
+    except Exception as e:
+        logger.error(f"Error renaming chat session {session_id}: {e}")
+        raise
 
 def delete_chat_session(session_id: int):
-    db = SessionLocal()
     try:
-        session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
-        if session:
-            db.delete(session)
-            db.commit()
-            return True
-        return False
-    finally:
-        db.close()
+        with get_db_session() as db:
+            session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+            if session:
+                db.delete(session)
+                logger.info(f"Deleted chat session: {session_id}")
+                return True
+            logger.warning(f"Chat session not found: {session_id}")
+            return False
+    except Exception as e:
+        logger.error(f"Error deleting chat session {session_id}: {e}")
+        raise
 
 def get_chat_session(session_id: int):
-    db = SessionLocal()
     try:
-        return db.query(ChatSession).filter(ChatSession.id == session_id).first()
-    finally:
-        db.close()
+        with get_db_session() as db:
+            session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+            logger.debug(f"Retrieved chat session: {session_id}")
+            return session
+    except Exception as e:
+        logger.error(f"Error retrieving chat session {session_id}: {e}")
+        raise
 
 def get_session_messages(session_id: int):
-    db = SessionLocal()
     try:
-        return db.query(ChatMessage).filter(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.asc()).all()
-    finally:
-        db.close()
+        with get_db_session() as db:
+            messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).order_by(ChatMessage.created_at.asc()).all()
+            logger.debug(f"Retrieved {len(messages)} messages from session {session_id}")
+            return messages
+    except Exception as e:
+        logger.error(f"Error retrieving session messages {session_id}: {e}")
+        raise
 
 def save_chat_message(session_id: int, role: str, content: str):
-    db = SessionLocal()
     try:
-        msg = ChatMessage(session_id=session_id, role=role, content=content)
-        db.add(msg)
-        db.commit()
-    finally:
-        db.close()
+        with get_db_session() as db:
+            msg = ChatMessage(session_id=session_id, role=role, content=content)
+            db.add(msg)
+            logger.debug(f"Saved {role} message to session {session_id}")
+    except Exception as e:
+        logger.error(f"Error saving chat message: {e}")
+        raise
 
 def save_report(topic: str, content: str):
-    db = SessionLocal()
     try:
-        new_report = ReportDB(topic=topic, content=content)
-        db.add(new_report)
-        db.commit()
-    finally:
-        db.close()
+        with get_db_session() as db:
+            new_report = ReportDB(topic=topic, content=content)
+            db.add(new_report)
+            logger.info(f"Saved report: {topic}")
+    except Exception as e:
+        logger.error(f"Error saving report: {e}")
+        raise
 
 def get_all_reports():
-    db = SessionLocal()
     try:
-        return db.query(ReportDB.id, ReportDB.topic, ReportDB.created_at).order_by(ReportDB.created_at.desc()).all()
-    finally:
-        db.close()
+        with get_db_session() as db:
+            reports = db.query(ReportDB.id, ReportDB.topic, ReportDB.created_at).order_by(ReportDB.created_at.desc()).all()
+            logger.debug(f"Retrieved {len(reports)} reports")
+            return reports
+    except Exception as e:
+        logger.error(f"Error retrieving reports: {e}")
+        raise
 
 def get_report_content(report_id: int):
-    db = SessionLocal()
     try:
-        return db.query(ReportDB).filter(ReportDB.id == report_id).first()
-    finally:
-        db.close()
+        with get_db_session() as db:
+            report = db.query(ReportDB).filter(ReportDB.id == report_id).first()
+            logger.debug(f"Retrieved report content: {report_id}")
+            return report
+    except Exception as e:
+        logger.error(f"Error retrieving report {report_id}: {e}")
+        raise
 
 def delete_report(report_id: int):
-    db = SessionLocal()
     try:
-        report = db.query(ReportDB).filter(ReportDB.id == report_id).first()
-        if report:
-            db.delete(report)
-            db.commit()
-            return True
-        return False
-    finally:
-        db.close()
+        with get_db_session() as db:
+            report = db.query(ReportDB).filter(ReportDB.id == report_id).first()
+            if report:
+                db.delete(report)
+                logger.info(f"Deleted report: {report_id}")
+                return True
+            logger.warning(f"Report not found: {report_id}")
+            return False
+    except Exception as e:
+        logger.error(f"Error deleting report {report_id}: {e}")
+        raise
 
 def delete_all_reports():
-    db = SessionLocal()
     try:
-        db.query(ReportDB).delete()
-        db.commit()
-        return True
-    finally:
-        db.close()
+        with get_db_session() as db:
+            count = db.query(ReportDB).delete()
+            logger.info(f"Deleted all reports: {count} records")
+            return True
+    except Exception as e:
+        logger.error(f"Error deleting all reports: {e}")
+        raise
 
 def save_hook(content: str):
-    db = SessionLocal()
     try:
-        new_hook = Hook(content=content)
-        db.add(new_hook)
-        db.commit()
-    finally:
-        db.close()
+        with get_db_session() as db:
+            new_hook = Hook(content=content)
+            db.add(new_hook)
+            logger.info(f"Saved hook")
+    except Exception as e:
+        logger.error(f"Error saving hook: {e}")
+        raise
 
 def get_all_hooks():
-    db = SessionLocal()
     try:
-        return db.query(Hook).order_by(Hook.created_at.desc()).all()
-    finally:
-        db.close()
+        with get_db_session() as db:
+            hooks = db.query(Hook).order_by(Hook.created_at.desc()).all()
+            logger.debug(f"Retrieved {len(hooks)} hooks")
+            return hooks
+    except Exception as e:
+        logger.error(f"Error retrieving hooks: {e}")
+        raise
 
 def delete_hook(hook_id: int):
-    db = SessionLocal()
     try:
-        hook = db.query(Hook).filter(Hook.id == hook_id).first()
-        if hook:
-            db.delete(hook)
-            db.commit()
-            return True
-        return False
-    finally:
-        db.close()
+        with get_db_session() as db:
+            hook = db.query(Hook).filter(Hook.id == hook_id).first()
+            if hook:
+                db.delete(hook)
+                logger.info(f"Deleted hook: {hook_id}")
+                return True
+            logger.warning(f"Hook not found: {hook_id}")
+            return False
+    except Exception as e:
+        logger.error(f"Error deleting hook {hook_id}: {e}")
+        raise
