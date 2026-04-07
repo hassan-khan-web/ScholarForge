@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ master, main, develop ]
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: read
+
 jobs:
   lint:
     name: Lint Code
@@ -63,12 +68,11 @@ jobs:
           name: test-results
           path: test-results.xml
       
-      - name: Publish test results
+      - name: Publish test results to job summary
         if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: test-results.xml
-          check_name: Test Results
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          cat test-results.xml >> $GITHUB_STEP_SUMMARY || echo "No test results file"
 
   build-docker:
     name: Build Docker Image
