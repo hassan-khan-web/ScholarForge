@@ -58,7 +58,7 @@ jobs:
       
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: test-results.xml
@@ -118,7 +118,7 @@ jobs:
       
       - name: Upload security results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-results
           path: bandit-report.json
