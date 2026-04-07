@@ -11,10 +11,48 @@ permissions:
   checks: write
   pull-requests: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CACHE_VERSION: v1
+
 jobs:
+  detect-changes:
+    name: Detect Changed Files
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      docker: ${{ steps.changes.outputs.docker }}
+      requirements: ${{ steps.changes.outputs.requirements }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect file changes
+        id: changes
+        run: |
+          # Get list of changed files
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_REF="${{ github.base_ref }}"
+            CHANGED_FILES=$(git diff --name-only origin/$BASE_REF...HEAD)
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 2>/dev/null || git ls-files)
+          fi
+          
+          # Check which files changed
+          echo "backend=$(echo "$CHANGED_FILES" | grep -q -E '^backend/|^tests/' && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "docker=$(echo "$CHANGED_FILES" | grep -q -E '^Dockerfile|^docker-compose' && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "requirements=$(echo "$CHANGED_FILES" | grep -q 'requirements.txt' && echo true || echo false)" >> $GITHUB_OUTPUT
+
   lint:
     name: Lint Code
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
     
     steps:
       - name: Checkout code
@@ -26,8 +64,16 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
       
+      - name: Restore linter cache
+        uses: actions/cache@v3
+        with:
+          path: .ruff_cache
+          key: ruff-${{ env.CACHE_VERSION }}-${{ hashFiles('backend/**/*.py') }}
+          restore-keys: |
+            ruff-${{ env.CACHE_VERSION }}-
+      
       - name: Install ruff
-        run: pip install ruff
+        run: pip install ruff --quiet
       
       - name: Lint with ruff
         run: |
@@ -41,6 +87,7 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     needs: lint
+    if: always()
     
     steps:
       - name: Checkout code
@@ -52,14 +99,134 @@ jobs:
           python-version: '3.10'
           cache: 'pip'
       
+      - name: Restore pytest cache
+        uses: actions/cache@v3
+        with:
+          path: .pytest_cache
+          key: pytest-${{ env.CACHE_VERSION }}-${{ hashFiles('tests/**/*.py', 'backend/**/*.py', 'requirements.txt') }}
+          restore-keys: |
+            pytest-${{ env.CACHE_VERSION }}-
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt --quiet
       
       - name: Run pytest
         run: |
-          pytest tests/ -v --tb=short --junit-xml=test-results.xml
+          pytest tests/ -v --tb=short --junit-xml=test-results.xml --cache-clear
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.xml
+          retention-days: 30
+
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          tags: scholarforge:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+        continue-on-error: true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Restore bandit cache
+        uses: actions/cache@v3
+        with:
+          path: .bandit_cache
+          key: bandit-${{ env.CACHE_VERSION }}-${{ hashFiles('backend/**/*.py') }}
+          restore-keys: |
+            bandit-${{ env.CACHE_VERSION }}-
+      
+      - name: Install security tools
+        run: pip install bandit --quiet
+      
+      - name: Run bandit
+        run: |
+          bandit -r backend/ -ll -f json -o bandit-report.json
+        continue-on-error: true
+      
+      - name: Upload security results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-results
+          path: bandit-report.json
+          retention-days: 30
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Restore coverage cache
+        uses: actions/cache@v3
+        with:
+          path: .coverage_cache
+          key: coverage-${{ env.CACHE_VERSION }}-${{ hashFiles('tests/**/*.py', 'backend/**/*.py') }}
+          restore-keys: |
+            coverage-${{ env.CACHE_VERSION }}-
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest-cov --quiet
+      
+      - name: Generate coverage report
+        run: |
+          pytest tests/ --cov=backend --cov-report=xml --cov-report=term --cov-cache-file=.coverage_cache/.coverage
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
       
       - name: Upload test results
         if: always()

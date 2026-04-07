@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timezone
 from contextlib import contextmanager
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, event, text
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, event
 from sqlalchemy.orm import sessionmaker, relationship, declarative_base, Session
 from sqlalchemy.engine import Engine
 from sqlalchemy.pool import QueuePool, StaticPool
@@ -332,7 +332,7 @@ def save_hook(content: str):
         with get_db_session() as db:
             new_hook = Hook(content=content)
             db.add(new_hook)
-            logger.info(f"Saved hook")
+            logger.info("Saved hook")
     except Exception as e:
         logger.error(f"Error saving hook: {e}")
         raise

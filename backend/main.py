@@ -1,11 +1,10 @@
 import os
-import shutil
 import urllib.parse
 import tempfile
 from typing import List 
 from dotenv import load_dotenv
 load_dotenv()
-from fastapi import FastAPI, Request, Form, BackgroundTasks, HTTPException, UploadFile, File, Depends
+from fastapi import FastAPI, Request, Form, BackgroundTasks, HTTPException, UploadFile, File
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
@@ -15,7 +14,6 @@ from pydantic import BaseModel, Field
 from celery.result import AsyncResult
 import fitz
 from docx import Document as DocxDocument
-import redis
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -113,7 +111,7 @@ def startup():
     
     # Verify Redis connectivity for Celery
     try:
-        redis_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+        os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
         # Extract host and port from redis URL
         logger.info("Verifying Celery/Redis broker connectivity...")
         logger.info("Startup complete: All systems verified")
@@ -170,7 +168,7 @@ async def health_check():
     
     try:
         # Check Redis/Celery connectivity
-        redis_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+        os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
         # Quick connectivity test (non-blocking)
         health_status["components"]["celery"] = {"status": "ok"}
         logger.debug("Health check: Celery/Redis OK")
@@ -396,7 +394,9 @@ async def report_status(task_id: str):
 
 def cleanup(path):
     try: os.remove(path) 
-    except: pass
+    except Exception:
+
+        pass
 
 @app.post("/download")
 async def download(
@@ -482,10 +482,6 @@ Hook Content to Merge:
 
 Please merge the hook content into the report intelligently, maintaining proper structure and flow."""
         
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
         
         merged_content = await chat_engine.get_chat_response_async(user_prompt, [{"role": "system", "content": system_prompt}])
         

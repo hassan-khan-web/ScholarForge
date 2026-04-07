@@ -1,6 +1,5 @@
 import os
 import httpx
-import json
 
 async def perform_web_search(query: str, max_results: int = 3) -> str:
     """

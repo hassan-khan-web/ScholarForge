@@ -1,7 +1,6 @@
 import os
 
 from docx import Document
-from docx.shared import Inches, Pt, RGBColor
 import httpx
 from bs4 import BeautifulSoup
 import json
@@ -10,10 +9,6 @@ import matplotlib
 matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 import pandas as pd
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet
 import fitz 
 
 from .report_formats import get_template_instructions
@@ -36,11 +31,14 @@ def clean_ai_output(text: str) -> str:
     return text.strip()
 
 def clean_section_output(text: str, section_title: str) -> str:
-    if not text: return ""
+    if not text:
+        return ""
     text = clean_ai_output(text)
     lines = text.split('\n')
-    while lines and not lines[0].strip(): lines.pop(0)
-    if not lines: return ""
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    if not lines:
+        return ""
     first_line = lines[0].strip().lower()
     clean_title = section_title.lower().replace('#', '').strip()
     clean_first = first_line.replace('#', '').strip()
@@ -106,7 +104,8 @@ def extract_text_from_files(file_data_list: list) -> str:
                 if filename.lower().endswith('.pdf'):
                     with fitz.open(stream=content, filetype="pdf") as doc:
                         for i, page in enumerate(doc):
-                            if i > 25: break
+                            if i > 25:
+                                    break
                             doc_text += page.get_text()
                 elif filename.lower().endswith('.docx'):
                     from io import BytesIO
@@ -133,21 +132,26 @@ def _get_article_text(url: str) -> str:
         headers = {'User-Agent': 'Mozilla/5.0'}
         with httpx.Client(timeout=10.0, follow_redirects=True) as client:
             response = client.get(url, headers=headers)
-        if response.status_code != 200: return ""
+        if response.status_code != 200:
+            return ""
         
         if "application/pdf" in response.headers.get("Content-Type", "") or url.endswith(".pdf"):
             return "" 
             
         soup = BeautifulSoup(response.text, 'lxml')
-        for tag in soup(['script', 'style', 'nav', 'footer', 'aside']): tag.decompose()
+        for tag in soup(['script', 'style', 'nav', 'footer', 'aside']):
+            tag.decompose()
         return soup.get_text(separator='\n', strip=True)[:5000] # Increased scrape limit
-    except: return ""
+    except Exception:
+
+        return ""
 
 def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> str:
     """Feature: Structured Source Verification with Tavily"""
     try:
-        api_key = os.environ.get("SERP_KEY") 
-        if not api_key: return "Error: SERP_KEY not set."
+        api_key = os.environ.get("SERP_KEY")
+        if not api_key:
+            return "Error: SERP_KEY not set."
         
         logger.info(f"Searching Tavily for: {query}")
         
@@ -174,7 +178,8 @@ def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> s
             
             if "results" in results:
                 for i, result in enumerate(results["results"]):
-                    if i >= MAX_RESULTS_TO_SCRAPE: break
+                    if i >= MAX_RESULTS_TO_SCRAPE:
+                        break
                     
                     link = result.get("url", "")
                     title = result.get('title', 'Unknown Title')
@@ -193,7 +198,8 @@ def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> s
         except Exception as http_err:
             return f"Tavily Request Error: {http_err}"
             
-    except Exception as e: return f"Search Error: {e}"
+    except Exception as e:
+        return f"Search Error: {e}"
 
 
 def recursive_gap_analysis(section_title: str, existing_summary: str, topic: str) -> str:
@@ -329,7 +335,9 @@ def generate_chart_from_data(summary: str, topic: str) -> str:
         fig.savefig(filepath, dpi=100)
         plt.close(fig)
         return filepath
-    except: return None
+    except Exception:
+
+        return None
 
 from . import council
 

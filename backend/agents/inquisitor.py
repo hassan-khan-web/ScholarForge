@@ -28,7 +28,9 @@ async def agent_inquisitor(content: str, topic: str) -> dict:
                 for claim in claims:
                     search_res = await perform_web_search(claim, max_results=1)
                     verification_notes += f"\nCLAIM: {claim}\nVERIFICATION: {search_res[:500]}...\n"
-    except: pass
+    except Exception:
+
+        pass
 
     # Step 2: Final Verdict with Verification Data
     prompt = (
@@ -53,7 +55,9 @@ async def agent_inquisitor(content: str, topic: str) -> dict:
         match = re.search(r'\{.*\}', resp.replace('\n', ' '), re.DOTALL)
         if match:
             return json.loads(match.group(0))
-    except: pass
+    except Exception:
+
+        pass
     
     # Default to approved if parsing fails to avoid infinite loops
     print("    [!] Inquisitor result parse failed, defaulting to PASS")

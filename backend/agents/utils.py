@@ -49,7 +49,9 @@ async def call_model_async(model: str, system_prompt: str, user_prompt: str) -> 
                 if resp.status_code == 200:
                     try:
                         return resp.json()['choices'][0]['message']['content']
-                    except: return ""
+                    except Exception:
+
+                        return ""
                 
                 # Rate limit handling
                 if resp.status_code == 429:
