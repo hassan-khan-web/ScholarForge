@@ -20,7 +20,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from prometheus_fastapi_instrumentator import Instrumentator
-from prometheus_fastapi_instrumentator.metrics import DEFAULT_METRICS
+from prometheus_fastapi_instrumentator.metrics import default
 
 # Relative imports for backend modules
 from .task import generate_report_task, celery_app
@@ -57,7 +57,7 @@ app.add_middleware(SessionMiddleware, secret_key=os.environ.get("APP_SECRET_KEY"
 # Setup Prometheus metrics instrumentation
 # This automatically tracks request latency, response codes, and other metrics
 # Metrics available at GET /metrics
-Instrumentator().add(DEFAULT_METRICS).instrument(app).expose(
+Instrumentator().add(default()).instrument(app).expose(
     app=app,
     endpoint="/metrics",
     include_in_schema=False,  # Hide from OpenAPI docs
