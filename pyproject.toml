@@ -39,6 +39,8 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "watchdog>=3.0.0",
     "pypandoc>=1.11",
+    "slowapi>=0.1.9",
+    "pydantic-settings>=2.0.0",
 ]
 
 [project.optional-dependencies]

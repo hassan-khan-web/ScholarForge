@@ -2,6 +2,9 @@ import os
 import httpx
 import asyncio
 import random
+from ..logging_config import setup_logging
+
+logger = setup_logging("scholarforge.agents")
 
 # Shared Models List
 # THE COUNCIL: 5 Unique, Checked & Verified Models.
@@ -54,10 +57,10 @@ async def call_model_async(model: str, system_prompt: str, user_prompt: str) -> 
                     continue
                 
                 # Try next attempt on error
-                print(f"Council Agent Error ({model}): {resp.status_code}")
+                logger.error(f"Council Agent Error ({model}): {resp.status_code}")
                 await asyncio.sleep(2)
         except Exception as e:
-            print(f"Council Exception ({model}): {e}")
+            logger.error(f"Council Exception ({model}): {e}", exc_info=e)
             await asyncio.sleep(2)
             
     return f"[Agent Failure: {model}]"

@@ -17,6 +17,9 @@ from reportlab.lib.styles import getSampleStyleSheet
 import fitz 
 
 from .report_formats import get_template_instructions
+from .logging_config import setup_logging
+
+logger = setup_logging("scholarforge.ai_engine")
 
 SMART_MODEL = "google/gemini-2.0-flash-exp:free"
 BACKUP_MODEL = "nvidia/llama-3.1-nemotron-70b-instruct:free"
@@ -50,7 +53,7 @@ def call_llm(target_model: str, system_prompt: str, user_prompt: str, temp: floa
     current_model = target_model
     if attempt == 2:
         current_model = BACKUP_MODEL
-        print(f"    >>> Model Switch: {current_model}")
+        logger.info(f"Model Switch: {current_model}")
     elif attempt > 2:
         return "Error: AI models unavailable."
 
@@ -80,12 +83,12 @@ def call_llm(target_model: str, system_prompt: str, user_prompt: str, temp: floa
                 }
             )
             if response.status_code != 200:
-                print(f"    [!] AI Error ({current_model}): {response.status_code}")
+                logger.error(f"AI Error ({current_model}): {response.status_code}")
                 return call_llm(target_model, system_prompt, user_prompt, temp, attempt + 1)
                 
             return clean_ai_output(response.json()['choices'][0]['message']['content'])
     except Exception as e:
-        print(f"    [!] Exception ({current_model}): {e}")
+        logger.error(f"Exception ({current_model}): {e}", exc_info=e)
         return call_llm(target_model, system_prompt, user_prompt, temp, attempt + 1)
 
 
@@ -116,13 +119,13 @@ def extract_text_from_files(file_data_list: list) -> str:
                 
                 combined_text += f"\n[Document {idx+1} - {filename}]:\n{doc_text[:15000]}\n"
             except Exception as e:
-                print(f"Error processing {filename}: {e}")
+                logger.error(f"Error processing {filename}: {e}", exc_info=e)
                 continue
         
         combined_text += "\n------------------------------\n"
         return combined_text
     except Exception as e:
-        print(f"File Extraction Error: {e}")
+        logger.error(f"File Extraction Error: {e}", exc_info=e)
         return ""
 
 def _get_article_text(url: str) -> str:
@@ -146,7 +149,7 @@ def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> s
         api_key = os.environ.get("SERP_KEY") 
         if not api_key: return "Error: SERP_KEY not set."
         
-        print(f"    > Searching Tavily for: {query}")
+        logger.info(f"Searching Tavily for: {query}")
         
         url = "https://api.tavily.com/search"
         payload = {
@@ -195,7 +198,7 @@ def get_search_results(query: str, max_results: int = SEARCH_RESULTS_COUNT) -> s
 
 def recursive_gap_analysis(section_title: str, existing_summary: str, topic: str) -> str:
     """Feature: Recursive Research. Checks if we need more info."""
-    print(f"    > Analyzing gap for: {section_title}")
+    logger.info(f"Analyzing gap for: {section_title}")
     prompt = (
         f"We are writing a report on '{topic}'.\n"
         f"Current Section: '{section_title}'\n"
@@ -210,12 +213,12 @@ def recursive_gap_analysis(section_title: str, existing_summary: str, topic: str
         return "" 
     
     new_query = decision.strip().replace('"', '')
-    print(f"    >>> RECURSIVE SEARCH TRIGGERED: {new_query}")
+    logger.info(f"Recursive search triggered for: {new_query}")
     return get_search_results(new_query, max_results=2)
 
 def assess_search_need(query: str, existing_context: str) -> str:
     """Feature: Check if we actually need to search the web."""
-    print(f"    > Assessing search need for: {query}")
+    logger.debug(f"Assessing search need for: {query}")
     prompt = (
         f"Query: '{query}'\n"
         f"Existing Context Length: {len(existing_context)} chars\n"
@@ -332,7 +335,7 @@ from . import council
 
 def run_ai_engine_with_return(query: str, user_format: str, page_count: int = 15, file_data_list: list = None, task=None, use_council: bool = False) -> tuple[str, str, str]: 
     def _update_status(message: str):
-        print(message) 
+        logger.info(message) 
         if task: task.update_state(state='PROGRESS', meta={'message': message})
 
     _update_status("Step 1/7: Processing Inputs...")
@@ -426,7 +429,7 @@ def convert_to_docx(content, topic, path, chart_path=None):
         pypandoc.convert_text(md, 'docx', format='markdown-raw_tex-raw_html', outputfile=path)
         return "Success"
     except Exception as e:
-        print(f"Error converting to DOCX: {e}")
+        logger.error(f"Error converting to DOCX: {e}", exc_info=e)
         return str(e)
 
 def convert_to_pdf(content, topic, path, chart_path=None):
@@ -439,7 +442,7 @@ def convert_to_pdf(content, topic, path, chart_path=None):
         ])
         return "Success"
     except Exception as e:
-        print(f"LaTeX Warning: {e}")
+        logger.warning(f"LaTeX Warning: {e}")
         # XeLaTeX returns non-zero exit codes for minor syntax errors, but often still successfully generates the PDF file.
         if os.path.exists(path) and os.path.getsize(path) > 1000:
             return "Success"

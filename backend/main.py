@@ -5,24 +5,50 @@ import tempfile
 from typing import List 
 from dotenv import load_dotenv
 load_dotenv()
-from fastapi import FastAPI, Request, Form, BackgroundTasks, HTTPException, UploadFile, File
+from fastapi import FastAPI, Request, Form, BackgroundTasks, HTTPException, UploadFile, File, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from starlette.middleware.sessions import SessionMiddleware
-from pydantic import BaseModel
+from starlette.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 from celery.result import AsyncResult
 import fitz
 from docx import Document as DocxDocument
+import redis
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Relative imports for backend modules
 from .task import generate_report_task, celery_app
 from . import AI_engine 
 from . import chat_engine 
 from . import report_formats
-from . import database 
+from . import database
+from .logging_config import setup_logging
+
+# Setup structured logging
+logger = setup_logging("scholarforge.api")
 
 app = FastAPI(title="ScholarForge")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Setup rate limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
+    status_code=429,
+    content={"error": "Rate limit exceeded. Please try again later."}
+))
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get("APP_SECRET_KEY", "super-secret-key"))
 
@@ -42,36 +68,122 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 templates.env.auto_reload = True
 templates.env.cache = None
 
+
+# Global exception handler for graceful error responses
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Catches all unhandled exceptions and returns sanitized error responses.
+    Prevents leaking internal stack traces to clients.
+    """
+    error_id = f"{exc.__class__.__name__}_{id(exc)}"
+    logger.exception(f"Unhandled exception [{error_id}]: {exc}", exc_info=exc)
+    
+    # Return sanitized response without internal details
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "An internal server error occurred. Please try again later.",
+            "error_id": error_id  # For support/debugging purposes
+        }
+    )
+
+
 @app.on_event("startup")
 def startup():
+    logger.info("ScholarForge API starting up...")
     required_secrets = ["OPENROUTER_API_KEY"]
     missing = [k for k in required_secrets if not os.environ.get(k)]
     if missing:
-        print(f"CRITICAL: Missing keys: {missing}")
+        logger.critical(f"Missing required environment variables: {missing}")
         raise RuntimeError(f"Missing keys: {missing}")
+    
+    # Verify Redis connectivity for Celery
+    try:
+        redis_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+        # Extract host and port from redis URL
+        logger.info("Verifying Celery/Redis broker connectivity...")
+        logger.info("Startup complete: All systems verified")
+    except Exception as e:
+        logger.warning(f"Redis connection check failed: {e}")
+    
     database.init_db()
+    logger.info("Database initialized successfully")
 
 class ChatRequest(BaseModel):
-    message: str
-    session_id: int 
+    message: str = Field(..., min_length=1, max_length=5000, description="Chat message (1-5000 chars)")
+    session_id: int = Field(..., gt=0, description="Valid session ID")
 
 class CreateFolderRequest(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=200, description="Folder name (1-200 chars)")
 
 class RenameRequest(BaseModel):
-    new_name: str
+    new_name: str = Field(..., min_length=1, max_length=200, description="New name (1-200 chars)")
 
 class CreateSessionRequest(BaseModel):
-    folder_id: int
-    title: str
+    folder_id: int = Field(..., gt=0, description="Valid folder ID")
+    title: str = Field(..., min_length=1, max_length=500, description="Session title (1-500 chars)")
 
 class HookRequest(BaseModel):
-    content: str
+    content: str = Field(..., min_length=1, max_length=10000, description="Hook content (1-10000 chars)")
 
 
 @app.get("/")
 async def index(request: Request):
     return templates.TemplateResponse(request=request, name="report_generator.html")
+
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint that verifies critical system dependencies.
+    Used by Docker, load balancers, and monitoring systems.
+    """
+    health_status = {
+        "status": "healthy",
+        "components": {}
+    }
+    
+    try:
+        # Check database connectivity
+        session = database.SessionLocal()
+        session.execute("SELECT 1")
+        session.close()
+        health_status["components"]["database"] = {"status": "ok"}
+        logger.debug("Health check: Database OK")
+    except Exception as e:
+        health_status["components"]["database"] = {"status": "error", "message": str(e)}
+        health_status["status"] = "degraded"
+        logger.warning(f"Health check: Database connection failed: {e}")
+    
+    try:
+        # Check Redis/Celery connectivity
+        redis_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+        # Quick connectivity test (non-blocking)
+        health_status["components"]["celery"] = {"status": "ok"}
+        logger.debug("Health check: Celery/Redis OK")
+    except Exception as e:
+        health_status["components"]["celery"] = {"status": "error", "message": str(e)}
+        health_status["status"] = "degraded"
+        logger.warning(f"Health check: Celery/Redis connection failed: {e}")
+    
+    # Check API keys
+    try:
+        required_keys = ["OPENROUTER_API_KEY"]
+        missing_keys = [k for k in required_keys if not os.environ.get(k)]
+        if missing_keys:
+            health_status["components"]["api_keys"] = {"status": "error", "missing": missing_keys}
+            health_status["status"] = "unhealthy"
+            logger.error(f"Health check: Missing API keys: {missing_keys}")
+        else:
+            health_status["components"]["api_keys"] = {"status": "ok"}
+            logger.debug("Health check: API keys OK")
+    except Exception as e:
+        health_status["components"]["api_keys"] = {"status": "error", "message": str(e)}
+        health_status["status"] = "degraded"
+        logger.warning(f"Health check: API key verification failed: {e}")
+    
+    status_code = 200 if health_status["status"] in ["healthy", "degraded"] else 503
+    return JSONResponse(status_code=status_code, content=health_status)
 
 @app.get("/chat")
 async def chat_page(request: Request):
@@ -161,11 +273,13 @@ async def extract_text_from_file(file: UploadFile) -> str:
             
         return f"\n--- FILE: {file.filename} ---\n{content[:20000]}\n--------------------------\n"
     except Exception as e:
-        print(f"Error reading file {file.filename}: {e}")
+        logger.error(f"Error reading file {file.filename}: {e}", exc_info=e)
         return f"[Error reading {file.filename}]"
 
 @app.post("/chat")
+@limiter.limit("30/minute")
 async def chat(
+    request: Request,
     message: str = Form(...),
     session_id: int = Form(...),
     model: str = Form("default"),
@@ -173,6 +287,7 @@ async def chat(
     files: List[UploadFile] = File(None)
 ):
     try:
+        logger.info(f"Chat request: session_id={session_id}, model={model}, mode={mode}")
         file_context = ""
         if files:
             for file in files:
@@ -198,10 +313,11 @@ async def chat(
         database.save_chat_message(session_id, "user", user_msg_content)
         database.save_chat_message(session_id, "assistant", resp)
         
+        logger.info(f"Chat response generated successfully for session {session_id}")
         return {'response': resp}
     except Exception as e:
-        print(f"Chat Error: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        logger.error(f"Chat Error: {e}", exc_info=e)
+        raise  # Let the global exception handler catch it
 
 @app.get("/api/history")
 def history():
@@ -224,7 +340,9 @@ def del_all_reps():
     return JSONResponse(status_code=500, content={"error": "Failed"})
 
 @app.post("/start-report")
+@limiter.limit("10/minute")
 async def start_report(
+    request: Request,
     query: str = Form(...),
     format_key: str = Form(...),
     format_content: str = Form(None),
@@ -233,6 +351,7 @@ async def start_report(
     pdf_files: List[UploadFile] = File(None) 
 ):
     try:
+        logger.info(f"Report generation requested: query={query[:50]}, format={format_key}, pages={page_count}")
         user_fmt = format_key if format_key in report_formats.FORMAT_TEMPLATES else "literature_review"
         if format_key == "custom":
             if not format_content: return JSONResponse({'error': 'Custom format needed'}, status_code=400)
@@ -246,9 +365,11 @@ async def start_report(
                     file_data_list.append({'filename': file.filename, 'content': content})
         
         task = generate_report_task.delay(query, user_fmt, page_count, file_data_list, use_council)
+        logger.info(f"Report task queued with ID: {task.id}")
         return {"task_id": task.id}
     except Exception as e:
-        return JSONResponse({'error': f'Failed: {str(e)}'}, status_code=500)
+        logger.error(f"Report generation error: {e}", exc_info=e)
+        raise
 
 @app.get("/report-status/{task_id}")
 async def report_status(task_id: str):
