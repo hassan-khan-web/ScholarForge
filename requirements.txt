@@ -24,3 +24,12 @@ slowapi
 alembic
 prometheus-fastapi-instrumentator
 flower
+
+# Testing dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=7.0.0
+
+# Development dependencies
+ruff>=0.1.0
+bandit>=1.7.5
