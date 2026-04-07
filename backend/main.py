@@ -19,6 +19,8 @@ import redis
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator.metrics import DEFAULT_METRICS
 
 # Relative imports for backend modules
 from .task import generate_report_task, celery_app
@@ -51,6 +53,17 @@ app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
 ))
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get("APP_SECRET_KEY", "super-secret-key"))
+
+# Setup Prometheus metrics instrumentation
+# This automatically tracks request latency, response codes, and other metrics
+# Metrics available at GET /metrics
+Instrumentator().add(DEFAULT_METRICS).instrument(app).expose(
+    app=app,
+    endpoint="/metrics",
+    include_in_schema=False,  # Hide from OpenAPI docs
+    tags=["monitoring"]
+)
+logger.info("Prometheus metrics instrumentation enabled at GET /metrics")
 
 # Get the parent directory (project root) for static and templates in frontend/
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

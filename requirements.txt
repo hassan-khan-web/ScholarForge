@@ -22,3 +22,5 @@ watchdog
 pypandoc
 slowapi
 alembic
+prometheus-fastapi-instrumentator
+flower
